@@ -192,7 +192,11 @@ export default {
         const previewLogo = ref(null)
 
         const organizationLogo = computed(() => {
-            return 'http://localhost:5000/organizations/' + slug.value + '/logo/' + logo.value
+            let URL = 'https://invoicer-api.wayand.dk'
+            if (location.hostname === 'localhost' || location.hostname === '192.168.0.173') {
+                URL = 'http://localhost:5000'
+            }
+            return URL + '/organizations/' + slug.value + '/logo/' + logo.value
         })
 
         const selectImage = () => fileInput.value.click()

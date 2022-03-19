@@ -49,7 +49,7 @@ export default {
         },
         SET_ORGANIZATION(state, organization) {
             state.organization = organization
-            if (Object.keys(state.organization.invoice_setting).length <= 1) {
+            if (Object.keys(state.organization?.invoice_setting || {}).length <= 1) {
                 state.organization.invoice_setting = {
                     organization_id: state.organization.id,
                     default_account_id: 0,
