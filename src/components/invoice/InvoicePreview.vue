@@ -124,7 +124,11 @@ export default {
         const settingDefaultDepositAccount = computed(() => store.getters.getAccountById(organization.value.invoice_setting?.default_deposit_account_id))
 
         const organizationLogo = computed(() => {
-            return 'http://localhost:5000/organizations/' + organization.value.slug + '/logo/' + organization.value.logo
+            let URL = 'https://invoicer-api.wayand.dk'
+            if (location.hostname === 'localhost' || location.hostname === '192.168.0.173') {
+                URL = 'http://localhost:5000'
+            }
+            return URL + '/organizations/' + organization.value.slug + '/logo/' + organization.value.logo
         })
         const total_ex_vat = computed(() => {
             return invoice.value.lines?.reduce(
