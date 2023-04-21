@@ -16,6 +16,8 @@ import AuthTwoFactorSetup from '../views/settings/AuthTwoFactorSetup'
 import AuthManagement from '../views/settings/AuthManagement'
 import Products from '../views/settings/Products'
 import NotFound from '../views/NotFound'
+import NotConfirmed from '../views/NotConfirmed'
+import ConfirmEmail from '../views/ConfirmEmail'
 import NetworkError from '../views/NetworkError'
 import store from '../store'
 
@@ -114,6 +116,19 @@ const routes = [
         meta: { hideForAuth: true, title: 'Invoicer - Login' }
     },
     {
+        path: '/confirm-email/:token',
+        name: 'ConfirmEmail',
+        component: ConfirmEmail,
+        props: true,
+        meta: { requiresAuth: true, title: 'Invoicer - Confirm Email' }
+    },
+    {
+        path: '/not-confirmed',
+        name: 'NotConfirmed',
+        component: NotConfirmed,
+        meta: { requiresAuth: true, title: 'Invoicer - Not Confirmed' }
+    },
+    {
         path: '/forgot-password',
         name: 'ForgotPassword',
         component: ForgotPassword,
@@ -157,7 +172,23 @@ const setPageMetaFields = (to) => {
 
 router.beforeEach((to,from, next) => {
     setPageMetaFields(to)
+
     const loggedIn = store.getters.loggedIn
+    const isEmailConfirmed = store.getters.isEmailConfirmed
+    if (to.path == '/not-confirmed' && loggedIn && isEmailConfirmed) {
+        console.log('to.path:', to.path, 'loggedIn:', loggedIn, 'isEmailConfirmed:',isEmailConfirmed)
+        return next({
+            name: 'Dashboard'
+        })
+    }
+
+    if (loggedIn && !isEmailConfirmed && to.path != '/not-confirmed' && to.name != 'ConfirmEmail') {
+        next({
+            name: 'NotConfirmed',
+        })
+        return
+    }
+
     if (!loggedIn && to.matched.some(record => record.meta.requiresAuth) && to.path != '/login') {
         
         next({

@@ -4,7 +4,7 @@
             <div class="card-body">
                 <div class="row">
                     <div class="text-center">
-                        <img width="100" height="120" class="rounded float-end" style="max-height: 120px; width: auto;" :src="organizationLogo">
+                        <img v-if="organization.slug" width="200" height="auto" class="rounded float-end" style="max-height: 120px; max-width: 200px; height: auto;" :src="organizationLogo">
                     </div>
                 </div>
 

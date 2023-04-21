@@ -9,7 +9,10 @@
                     </div>
                     <h1 class="auth-title">{{ otpLogin ? 'Two-Factor Authentication' : 'Log in' }}</h1>
                     <p v-if="!otpLogin" class="auth-subtitle mb-5">Log in with your data that you entered during registration.</p>
-                    <p v-if="otpLogin" class="auth-subtitle mb-5">Enter an authenticator app code or a recovery code:</p>
+                    <p v-if="otpLogin" class="auth-subtitle mb-5">
+                        <span v-if="otpAuthType=='2fa_otp_email'">Enter the OTP sent to your registered email address.</span>
+                        <span v-else>Enter an authenticator app code or a recovery code:</span>
+                    </p>
                     
                     <div v-if="error" class="alert alert-danger" role="alert">
                         <span v-for="(e, index) in error" :key="index">
@@ -43,14 +46,21 @@
                         </template>
                         <template v-if="otpLogin">
                             <div class="form-group position-relative has-icon-left mb-4">
-                                <input v-model="otp_2fa" type="text" class="form-control form-control-xl" placeholder="2FA">
+                                <input v-model="otp_2fa" type="text" class="form-control form-control-xl" :placeholder="otpAuthType=='2fa_otp_email'?'OTP From Email':'2FA Mobile'">
                                 <div class="form-control-icon">
                                     <i class="bi bi-shield-lock"></i>
                                 </div>
                             </div>
                         </template>
+                        <template v-if="otpLogin && !otpAuthType">
+                            <span>Error - 2FA Email is the Default 2fa Authentication!!!</span>
+                        </template>
                         <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5">Log in</button>
                     </form>
+                    <div v-if="otpLogin && otpAuthType=='2fa_otp_email'" class="text-center mt-5 text-lg fs-4">
+                        <p class="text-gray-600">Didn't get the email or totp expired? <button class="btn btn-outline btn-lg" @click="resend">Resend email</button>.</p>
+                        <p v-if="emailResent">The TOTP email is resent!</p>
+                    </div>
                     <div v-if="false" class="text-center mt-5 text-lg fs-4">
                         <p class="text-gray-600">Don't have an account? <a href="auth-register.html" class="font-bold">Sign up</a>.</p>
                         <p><a class="font-bold" href="auth-forgot-password.html">Forgot password?</a>.</p>
@@ -78,7 +88,10 @@ export default {
         const store = useStore()
 
         const otpLogin = ref(false)
+
+        const otpAuthType = ref('')
         
+        const emailResent = ref(false)
         const email = ref('')
         const password = ref('')
         const otp_2fa = ref('')
@@ -89,20 +102,22 @@ export default {
             PasswordFieldType.value === 'password' ? PasswordFieldType.value = 'text' : PasswordFieldType.value = 'password'
         }
 
+        async function resend() {
+            console.log('totp email resending..')
+            const result = await store.dispatch('resendTOTPEmail')
+            console.log('result: ', result.data)
+            emailResent.value = true
+        }
+
         function login() {
             if (!otpLogin.value) {
                 if (email.value.length > 1 && password.value.length > 1) {
                     store.dispatch('login', { email: email.value, password: password.value })
                         .then( (response) => {
                             if (response.status === 206 && response.data.message === '2fa_otp') {
+                                otpAuthType.value = response.data.twoFactorType
                                 otpLogin.value = true
                                 error.value = ''
-                            } else {
-                                if (route.query.redirect) {
-                                    router.push(route.query.redirect)
-                                } else {
-                                    router.push({ name: "Dashboard" })
-                                }
                             }
                         })
                         .catch( e => {
@@ -140,9 +155,12 @@ export default {
 
         return {
             otpLogin,
+            otpAuthType,
             email,
             password,
             otp_2fa,
+            emailResent,
+            resend,
             login,
             PasswordFieldType,
             togglePasswordFieldType,
