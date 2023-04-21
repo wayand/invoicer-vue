@@ -15,13 +15,18 @@ export default {
         user: state => state.user,
         layout: state => state.layout,
         loggedIn: state => !!state.user,
-        isTokenValid: state => !state.user.tokenExp ? false : tokenAlive(state.user.tokenExp)
+        isTokenValid: state => !state.user.tokenExp ? false : tokenAlive(state.user.tokenExp),
+        isEmailConfirmed: state => state.user ? state.user.isEmailConfirmed : false
     },
     mutations: {
+        UPDATE_IS_EMAIL_CONFIRMED(state, bool) {
+            state.user.isEmailConfirmed = bool
+        },
         UPDATE_USER_DATA(state, user) {
             state.user.email = user.email
             state.user.name = user.name
             state.user.isTwoFactorAuth = user.is_two_factor_auth
+            state.user.twoFactorAuthType = user.two_factor_auth_type
         },
         SET_ACCESS_TOKEN(state, accessToken) {
             state.accessToken = accessToken
@@ -37,7 +42,9 @@ export default {
                 tokenExp: decodedJwt.exp,
                 email: decodedJwt.sub,
                 name: decodedJwt.name,
+                isEmailConfirmed: decodedJwt.isEmailConfirmed,
                 isTwoFactorAuth: decodedJwt.isTwoFactorAuth,
+                twoFactorAuthType:decodedJwt.twoFactorAuthType,
                 organizationId: decodedJwt.organizationId,
                 organizationSlug: decodedJwt.organizationSlug,
                 aud: decodedJwt.aud
@@ -93,10 +100,25 @@ export default {
         changePassword(_, credentials) {
             return AuthService.changePassword(credentials)
         },
-        getAuthUser({ commit }) {
+        getAuthUser({ commit, dispatch }) {
             return AuthService.getAuthUser()
                 .then(response => {
                     commit('UPDATE_USER_DATA', response.data)
+                    dispatch('refresh')
+                    return response
+                })
+        },
+        resendTOTPEmail() {
+            return AuthService.resendTOTPEmail()
+        },
+        resendConfirmationEmail() {
+            return AuthService.resendConfirmationEmail()
+        },
+        confirmEmail({ commit, dispatch }, token) {
+            return AuthService.confirmEmail(token)
+                .then(response => {
+                    commit('UPDATE_IS_EMAIL_CONFIRMED', true)
+                    dispatch('refresh')
                     return response
                 })
         },

@@ -10,7 +10,7 @@ if (location.hostname === 'localhost' || location.hostname === '192.168.0.173') 
 
 export const HTTP = axios.create({
     baseURL: baseURL,
-    withCredentials: false,
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json'
     }

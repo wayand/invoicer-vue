@@ -32,13 +32,26 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-8">
-                                    <h6>Mobile App Authentication <span :class="`badge bg-light-${user.isTwoFactorAuth ? 'success' : 'danger'}`">{{ user.isTwoFactorAuth ? 'Enabled' : 'Disabled' }}</span></h6>
-                                    <p v-if="user.isTwoFactorAuth" class="text-muted">A TOTP method has been added for your account. <a @click="deleteMethod" href="#">Delete method</a></p>
-                                    <p v-if="!user.isTwoFactorAuth" class="text-muted">Secure your account with TOTP two-factor authentication..</p>
+                                    <h6>Mobile App Authentication <span :class="`badge bg-light-${user.twoFactorAuthType == '2fa_mobile_app' ? 'success' : 'danger'}`">{{ user.twoFactorAuthType == '2fa_mobile_app' ? 'Enabled' : 'Disabled' }}</span></h6>
+                                    <p v-if="user.twoFactorAuthType == '2fa_mobile_app'" class="text-muted">A TOTP method has been added for your account. <a @click="deleteMethod" href="#">Delete method</a></p>
+                                    <p v-else class="text-muted">Secure your account with TOTP two-factor authentication..</p>
                                 </div>
                                 <div class="col-4">
                                     <div class="buttons">
                                         <router-link :to="{ name: 'AuthTwoFactorSetup'}" class="btn btn-primary">{{ user.isTwoFactorAuth ? 'Reconfigure' : 'Add' }}</router-link>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-8">
+                                    <h6>Email Authentication <span :class="`badge bg-light-${user.twoFactorAuthType == '2fa_otp_email' ? 'success' : 'danger'}`">{{ user.twoFactorAuthType == '2fa_otp_email' ? 'Enabled' : 'Disabled' }}</span></h6>
+                                    <p>Secure your account with TOTP via Email</p>
+                                </div>
+                                <div class="col-4">
+                                    <div class="buttons">
+                                        <button class="btn btn-outline-secondary disabled">Default method</button>
                                     </div>
                                 </div>
                             </div>

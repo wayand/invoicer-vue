@@ -36,6 +36,15 @@ export default {
     },
     resetPassword(payload) {
         return HTTP.post('/auth/reset-password', payload)
+    },
+    resendConfirmationEmail() {
+        return HTTP.post('/auth/resend-confirmation-email')
+    },
+    resendTOTPEmail() {
+        return HTTP.post('/auth/resend-totp-email')
+    },
+    confirmEmail(token) {
+        return HTTP.post('/auth/confirm-email/'+token)
     }
 
 }

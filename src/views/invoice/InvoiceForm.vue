@@ -241,7 +241,7 @@ export default {
         const settingDefaultDepositAccount = computed(() => store.getters.getAccountById(organization.value.invoice_setting?.default_deposit_account_id))
 
         const invoiceNumber = computed(() => {
-            if (store.getters.invoiceSetting?.invoice_no_mode === 'Sequential' && props.invoiceId === false) {
+            if (store.getters.invoiceSetting?.invoice_no_mode === 'sequential' && props.invoiceId === false) {
                 return String(store.getters.invoiceSetting.next_invoice_no)
             } else {
                 return store.getters.invoice.invoice_no
