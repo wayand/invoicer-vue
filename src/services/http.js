@@ -4,7 +4,9 @@ import router from '@/router'
 
 let baseURL = 'https://invoicer-api.wayand.dk'
 
-if (location.hostname === 'localhost' || location.hostname === '192.168.0.173') {
+if (location.hostname === 'localhost' || 
+    location.hostname === '192.168.0.173' || 
+    location.hostname.includes('.local')) {
     baseURL = 'http://localhost:5000'
 }
 

@@ -15,21 +15,26 @@
                         {{ invoice.client?.zipcode }} {{ invoice.client?.city }}<br> 
                     </div>
                     <div class="col-md-5 col-5 text-end">
-                        <span class="fw-bold">{{ organization.name }}</span><br>
-                        {{ organization.street }}<br>
-                        {{ organization.zipcode }} {{ organization.city }}<br>
-                        {{ organization.country?.name }}
-                        
-                        <p><br></p>
-                        CVR-nr.: {{ organization.registration_no }}<br>
-                        Tlf.: {{ organization.phone }}<br>
-                        {{ organization.email }}
+                        <table class="table">
+                            <tbody>
+                            <tr><td>
+                            <span class="fw-bold">{{ organization.name }}</span><br>
+                            {{ organization.street }}<br>
+                            {{ organization.zipcode }} {{ organization.city }}<br>
+                            {{ organization.country?.name }}
+                            
+                            <p></p>
+                            
+                            CVR-nr.: {{ organization.registration_no }}<br>
+                            Tlf.: {{ organization.phone }}<br>
+                            {{ organization.email }}
+                        </td></tr></tbody></table>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="table-responsive">
-                        <table class="table table-light">
+                        <table class="table">
                             <tbody>
                                 <tr>
                                     <td class="title">Faktura</td>
@@ -153,7 +158,7 @@ export default {
 .invoice-preview {
     padding: 0 20px;
     width: 800px;
-    color: #000;
+    /* color: #000; */
     font-size: 12px;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
@@ -161,10 +166,10 @@ export default {
     font-size: 35px;
 }
 .invoice-preview .table {
-    color: #000;
+    /* color: #000; */
 }
 .invoice-preview .table td {
     vertical-align: bottom;
-    border-color: #000;
+    /* border-color: #000; */
 }
 </style>
