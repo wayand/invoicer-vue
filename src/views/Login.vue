@@ -31,7 +31,7 @@
                                     <i class="bi bi-person"></i>
                                 </div>
                             </div>
-                            <div class="form-group position-relative has-icon-left has-extra-icon-right mb-4">                                
+                            <div class="form-group position-relative has-icon-left mb-4">                                
                                 <input :type="PasswordFieldType" v-model="password" class="form-control form-control-xl" placeholder="Password">
                                 <div class="form-control-icon">
                                     <i class="bi bi-shield-lock"></i>
