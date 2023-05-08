@@ -2,6 +2,7 @@ import { createApp } from 'vue'
 import router from './router'
 import App from './App.vue'
 import Store from './store'
+import "bootstrap/dist/js/bootstrap.bundle"
 import "toastify-js/src/toastify.css"
 import { tokenAlive } from "@/services/jwtHelper"
 import PromiseDialog from '@/components/common/promiseDialog'
