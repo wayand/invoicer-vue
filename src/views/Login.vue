@@ -31,14 +31,14 @@
                                     <i class="bi bi-person"></i>
                                 </div>
                             </div>
-                            <div class="form-group position-relative has-icon-left has-extra-icon-right mb-4">
+                            <div class="form-group position-relative has-icon-left has-extra-icon-right mb-4">                                
+                                <input :type="PasswordFieldType" v-model="password" class="form-control form-control-xl" placeholder="Password">
                                 <div class="form-control-icon">
                                     <i class="bi bi-shield-lock"></i>
                                 </div>
-                                <input :type="PasswordFieldType" v-model="password" class="form-control form-control-xl" placeholder="Password">
-                                <span @click="togglePasswordFieldType" class="left-pan">
+                                <div @click="togglePasswordFieldType" class="left-pan">
                                     <i :class="`bi bi-eye-${PasswordFieldType === 'text' ? 'slash-' : ''}fill`"></i>
-                                </span>
+                                </div>
                             </div>
                             <div class="d-flex align-items-end">
                                 <router-link :to="{ name: 'ForgotPassword' }">Forgot your password?</router-link>
@@ -171,61 +171,27 @@ export default {
 }
 </script>
 <style scoped>
-body {
-    background-color: white;
-}
+body{background-color:var(--bs-body-bg)}
+#auth{height:100vh;overflow-x:hidden}
+#auth #auth-right{height:100%;background:url(/assets/static/images/bg/4853433.png),linear-gradient(90deg,#2d499d,#3f5491)}
+#auth #auth-left{padding:5rem 8rem}
+#auth #auth-left .auth-title{font-size:4rem;margin-bottom:1rem}
+#auth #auth-left .auth-subtitle{font-size:1.7rem;line-height:2.5rem;color:#a8aebb}
+#auth #auth-left .auth-logo{margin-bottom:7rem}
+#auth #auth-left .auth-logo img{height:2rem}
+@media screen and (max-width: 1399.9px){#auth #auth-left{padding:3rem}}
+@media screen and (max-width: 767px){#auth #auth-left{padding:5rem}}
+@media screen and (max-width: 576px){#auth #auth-left{padding:5rem 3rem}}
+html[data-bs-theme=dark] #auth-right{background:url(/assets/static/images/bg/4853433.png),linear-gradient(90deg,#2d499d,#3f5491)}
 
-#auth {
-    height: 100vh;
-    overflow-x: hidden;
-}
-#auth #auth-right {
-    height: 100%;
-    background: url(/assets/images/bg/4853433.jpg), linear-gradient(90deg, #2d499d, #3f5491);
-}
-#auth #auth-left {
-    padding: 5rem 8rem;
-}
-#auth #auth-left .auth-title {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-}
-#auth #auth-left .auth-subtitle {
-    font-size: 1.7rem;
-    line-height: 2.5rem;
-    color: #a8aebb;
-}
-#auth #auth-left .auth-logo {
-    margin-bottom: 7rem;
-}
-#auth #auth-left .auth-logo img {
-    height: 2rem;
-}
-@media screen and (max-width: 767px) {
-    #auth #auth-left {
-        padding: 5rem;
-    }
-}
-
-/** password toggle */
-.has-extra-icon-right span {
-    position: absolute;
-    right: 10px;
-    top: 15px;
-    padding: 2px;
-    border-left: 1px solid #d1d5db;
-    font-size: 18px;
-}
-
+/** custom password toggle */
 .left-pan {
     cursor: pointer;
-    padding-left: 7px
-}
-
-.left-pan i {
-    padding-left: 10px
-}
-[class*=" bi-"]::before {
-    line-height: inherit;
+    position: absolute;
+    padding: 0 0.6rem;
+    border-left: 1px solid #d1d5db;
+    right: 0;
+    top: 1rem;
+    font-size: 1.1rem;
 }
 </style>
