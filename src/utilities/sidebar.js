@@ -106,10 +106,10 @@ export class Sidebar {
         // Perfect Scrollbar Init
         if (typeof PerfectScrollbar == "function") {
             const container = document.querySelector(".sidebar-wrapper")
-            const ps = new PerfectScrollbar(container, {
+            new PerfectScrollbar(container, {
                 wheelPropagation: false,
             })
-            console.log('utilities/sidebar.js 105. UnUsed ps: ', ps)
+            //console.log('utilities/sidebar.js 105. UnUsed ps: ', ps)
         }
 
         // Scroll into active sidebar
@@ -234,14 +234,14 @@ export const onFirstLoad = (sidebarEL) => {
     for (var i = 0; i < submenus.length; i++) {
         let submenu = submenus[i]
         const sidebarItem = submenu.parentElement
-        const height = submenu.clientHeight
-        console.log('utilities/sidebar.js 229. UnUsed height: ', height)
+        //const height = submenu.clientHeight
+        //console.log('utilities/sidebar.js 229. UnUsed height: ', height)
 
         if(sidebarItem.classList.contains('active')) submenu.classList.add('submenu-open')
         else submenu.classList.add('submenu-closed')
         setTimeout(() => {
-            const height = calculateChildrenHeight(submenu, true)
-            console.log('utilities/sidebar.js 235. UnUsed height: ', height)
+            calculateChildrenHeight(submenu, true)
+            //console.log('utilities/sidebar.js 235. UnUsed height: ', height)
         }, 50);
     }
 }

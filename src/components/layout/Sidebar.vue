@@ -20,7 +20,7 @@
                             </g>
                         </svg>
                         <div class="form-check form-switch fs-6">
-                            <input class="form-check-input me-0" type="checkbox" id="toggle-dark" style="cursor: pointer">
+                            <input class="form-check-input me-0" type="checkbox" v-model="isDarkMode" @click="toggleDarkMode" style="cursor: pointer">
                             <label class="form-check-label"></label>
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" role="img" class="iconify iconify--mdi" width="20" height="20" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
@@ -99,27 +99,40 @@
 <script>
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import * as SideBarNav from '@/utilities/sidebar'
+import { UseSetTheme, UseInitTheme } from '@/composables/useDarkTheme'
 
 export default {
     setup() {
+        const sidebar = ref()
+        const isDarkMode = ref(false)
+
         const store = useStore()
         const router = useRouter()
         const route = useRoute()
         const activeRoute = computed(() => router.currentRoute.value.path)
+
+        onMounted(() => {
+            const sidebarEl = sidebar.value
+            SideBarNav.init(sidebarEl)
+
+            UseInitTheme(isDarkMode)
+        })
         return {
             user: computed(() => store.getters.user),
             isActive: to => {
                 return activeRoute.value.startsWith(to)
             },
-            route
+            route,
+            UseInitTheme,
+            toggleDarkMode: (e) => {
+                UseSetTheme(e.target.checked ? 'dark' : 'light', isDarkMode, true)
+            },
+            sidebar,
+            isDarkMode,
         }
-    },
-    mounted() {
-        const sidebarEl = this.$refs.sidebar;
-        SideBarNav.init(sidebarEl)
-    },
+    }
 }
 </script>
 <style scoped>
