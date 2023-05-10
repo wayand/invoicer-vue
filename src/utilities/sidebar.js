@@ -94,12 +94,18 @@ export class Sidebar {
         }
 
         // all a tag link with class submenu-link
-        const links = this.sidebarEL.querySelectorAll('.submenu-link')
+        const links = this.sidebarEL.querySelectorAll('.submenu-link, .sidebar-item:not(.has-sub) > .sidebar-link')
         links.forEach(link => {
-            link.addEventListener('click', () => {
+            console.log('link: ', link)
+            link.addEventListener('click', (e) => {
+                e.preventDefault()
                 const linkSubmenu = link.closest('.submenu')
-                linkSubmenu.classList.remove("submenu-closed")
-                linkSubmenu.classList.add("submenu-open")
+                if (linkSubmenu) {
+                    linkSubmenu.classList.remove("submenu-closed")
+                    linkSubmenu.classList.add("submenu-open")
+                }
+                
+                if (!isDesktop(window)) this.toggle()
             })
         })
 
