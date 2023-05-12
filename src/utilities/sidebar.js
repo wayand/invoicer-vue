@@ -96,7 +96,6 @@ export class Sidebar {
         // all a tag link with class submenu-link
         const links = this.sidebarEL.querySelectorAll('.submenu-link, .sidebar-item:not(.has-sub) > .sidebar-link')
         links.forEach(link => {
-            console.log('link: ', link)
             link.addEventListener('click', (e) => {
                 e.preventDefault()
                 const linkSubmenu = link.closest('.submenu')
