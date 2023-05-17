@@ -18,5 +18,5 @@ export default {
 }
 </script>
 <style scoped>
-@import "/assets/css/pages/error.css";
+/*@import "/assets/static/css/pages/error.css";*/
 </style>
