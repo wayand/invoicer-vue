@@ -35,5 +35,5 @@ export default {
 }
 </script>
 <style>
-@import "/assets/css/pages/error.css";
+/* @import "/assets/css/pages/error.css"; */
 </style>

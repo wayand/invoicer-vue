@@ -3,9 +3,6 @@ import Dashboard from '../views/Dashboard'
 import Login from '../views/Login'
 import ForgotPassword from '../views/ForgotPassword'
 import ResetPassword from '../views/ResetPassword'
-import Invoices from '../views/invoice/Invoices'
-import InvoiceForm from '../views/invoice/InvoiceForm'
-import ShowInvoice from '../views/invoice/ShowInvoice'
 import AnnualReport from '../views/reports/AnnualReport'
 import Organization from '../views/settings/Organization'
 import InvoiceSetting from '../views/settings/InvoiceSetting'
@@ -31,26 +28,26 @@ const routes = [
     {
         path: '/invoices',
         name: 'Invoices',
-        component: Invoices,
+        component: () => import('@/views/invoice/Invoices'),
         meta: { requiresAuth: true, title: 'Invoicer - Invoices' }
     },
     {
         path: '/invoices/new',
         name: 'NewInvoice',
-        component: InvoiceForm,
+        component: () => import('@/views/invoice/InvoiceForm'),
         meta: { requiresAuth: true, title: 'Invoicer - Create new invoice' }
     },
     {
         path: '/invoices/:invoiceId(\\d+)',
         name: 'ShowInvoice',
-        component: ShowInvoice,
+        component: () => import('@/views/invoice/ShowInvoice'),
         props: true,
         meta: { requiresAuth: true, title: 'Invoicer - Show invoice' }
     },
     {
         path: '/invoices/:invoiceId(\\d+)/edit',
         name: 'EditInvoice',
-        component: InvoiceForm,
+        component: () => import('../views/invoice/InvoiceForm'),
         props: true,
         meta: { requiresAuth: true, title: 'Invoicer - Edit invoice' }
     },
@@ -161,7 +158,7 @@ const routes = [
 ]
 
 const router = createRouter({
-    history: createWebHistory(process.env.BASE_URL),
+    history: createWebHistory(import.meta.env.BASE_URL),
     linkActiveClass: 'active',
     routes
 })

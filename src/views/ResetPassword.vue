@@ -5,7 +5,7 @@
             <div class="col-lg-5 col-12">
                 <div id="auth-left">
                     <div class="auth-logo">
-                        <a href="index.html"><img src="assets/static/images/logo/logo.png" alt="Logo"></a>
+                        <a href="index.html"><img src="/assets/static/images/logo/logo.png" alt="Logo"></a>
                     </div>
                     <h1 class="auth-title">Reset your password</h1>
                     <p class="auth-subtitle mb-5">Copy the reset code from your email and paste it below..</p>
@@ -135,7 +135,7 @@ body {
 }
 #auth #auth-right {
     height: 100%;
-    background: url(/assets/images/bg/4853433.jpg), linear-gradient(90deg, #2d499d, #3f5491);
+    background: url(/assets/static/images/bg/4853433.png), linear-gradient(90deg, #2d499d, #3f5491);
 }
 #auth #auth-left {
     padding: 5rem 8rem;

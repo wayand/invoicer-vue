@@ -28,7 +28,7 @@
         <td class="w-10 total">{{ $filters.toCurrency(total) }}</td>
         <td class="w-auto">
             <a href="javascript:void(0)">
-                <svg v-if="count > 1" @click="$emit('deleteLine', lineIndex)" class="bi" width="1em" height="1em" fill="currentColor"><use xlink:href="/assets/vendors/bootstrap-icons/bootstrap-icons.svg#trash"></use></svg>
+                <svg v-if="count > 1" @click="$emit('deleteLine', lineIndex)" class="bi" width="1em" height="1em" fill="currentColor"><use xlink:href="/assets/extensions/bootstrap-icons/bootstrap-icons.svg#trash"></use></svg>
             </a>
         </td>
     </tr>
