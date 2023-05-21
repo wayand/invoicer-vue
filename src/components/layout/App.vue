@@ -22,7 +22,11 @@ export default {
     },
 }
 </script>
-<style>
+<style lang="scss">
+@import "@/assets/scss/app.scss";
+@import "@/assets/scss/themes/dark/app-dark.scss";
+@import "@/assets/scss/iconly.scss";
+
     .page-content {
         min-width: 1024px;
     }
