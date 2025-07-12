@@ -16,7 +16,7 @@ export default defineConfig({
     },
     server: {
         port: 8080,
-        host: 'invoicer.local',
+        host: 'localhost',
         hot: true
     },
     // build: {
