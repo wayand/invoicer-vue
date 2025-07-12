@@ -33,7 +33,7 @@ jobs:
             ssh-keyscan -H ${{ secrets.HETZNER_IP_ADDRESS }} >> ~/.ssh/known_hosts
 
         - name: Copy files via SCP
-          run: scp -r dist/* www-data@${{ secrets.HETZNER_IP_ADDRESS }}:/srv/docker/invoicer/invoicer-vue/
+          run: rsync -avz --delete dist/* www-data@${{ secrets.HETZNER_IP_ADDRESS }}:/srv/docker/invoicer/invoicer-vue/
 
         - name: Run deploy script
           run: ssh www-data@${{ secrets.HETZNER_IP_ADDRESS }} "bash /srv/docker/invoicer/deploy.sh"
