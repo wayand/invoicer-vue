@@ -1,4 +1,6 @@
-# invoicer-vue
+# Invoicer-Vue
+
+This is the frontend of the [invoicer.wayand.dk](https://invoicer.wayand.dk) website, providing a seamless user interface for managing invoices.
 
 ## Project setup
 ```
