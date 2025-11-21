@@ -1,7 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { fileURLToPath, URL } from 'url';
-import path from 'path'
+import { fileURLToPath, URL } from 'url'
 import pluginRewriteAll from 'vite-plugin-rewrite-all'
 
 export default defineConfig({
@@ -10,9 +9,9 @@ export default defineConfig({
         extensions: ['.js', '.vue'],
         alias: {
             "@": fileURLToPath(new URL('./src', import.meta.url)),
-            '~bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
-            '~bootstrap-icons': path.resolve(__dirname, 'node_modules/bootstrap-icons'),
-            '~perfect-scrollbar': path.resolve(__dirname, 'node_modules/perfect-scrollbar'),
+            '~bootstrap': fileURLToPath(new URL('./node_modules/bootstrap', import.meta.url)),
+            '~bootstrap-icons': fileURLToPath(new URL('./node_modules/bootstrap-icons', import.meta.url)),
+            '~perfect-scrollbar': fileURLToPath(new URL('./node_modules/perfect-scrollbar', import.meta.url))
         }
     },
     server: {
