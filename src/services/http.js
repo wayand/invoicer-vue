@@ -3,11 +3,14 @@ import store from '@/store'
 import router from '@/router'
 
 let baseURL = 'https://invoicer-api.wayand.dk'
+const env = import.meta.env.MODE
 
-if (location.hostname === 'localhost' || 
-    location.hostname === '192.168.0.173' || 
+if (location.hostname === 'localhost' ||
+    location.hostname === '192.168.0.127' ||
     location.hostname.includes('.local')) {
-    baseURL = 'http://localhost:5000'
+    baseURL = import.meta.env.VITE_API_URL
+    console.log('backend baseURL::', baseURL)
+    console.log('env::', env)
 }
 
 export const HTTP = axios.create({

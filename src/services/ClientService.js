@@ -2,10 +2,10 @@ import { HTTP } from './http'
 
 export default {
     getAll(organizationId) {
-        return HTTP.get(`/organizations/${organizationId}/clients`)
+        return HTTP.get(`/organizations/${organizationId}/contacts`)
     },
     getOne(organizationId, clientId) {
-        return HTTP.get(`/organizations/${organizationId}/clients/${clientId}`)
+        return HTTP.get(`/organizations/${organizationId}/contacts/${clientId}`)
     },
     update(organizationId, client) {
         if (client.type !== 'company') {
@@ -15,7 +15,7 @@ export default {
         }
         // eslint-disable-next-line no-unused-vars
         const { id: clientId, created_at, updated_at, ...requiredFields } = client
-        return HTTP.put(`/organizations/${organizationId}/clients/${clientId}`, requiredFields)
+        return HTTP.put(`/organizations/${organizationId}/contacts/${clientId}`, requiredFields)
     },
     create(organizationId, client) {
         if (client.type !== 'company') {
@@ -23,9 +23,9 @@ export default {
             const {contactperson_email, contactperson_name, ...requiredFields} = client
             client = requiredFields
         }
-        return HTTP.post(`/organizations/${organizationId}/clients`, client)
+        return HTTP.post(`/organizations/${organizationId}/contacts`, client)
     },
     delete(organizationId, clientId) {
-        return HTTP.delete(`/organizations/${organizationId}/clients/${clientId}`)
+        return HTTP.delete(`/organizations/${organizationId}/contacts/${clientId}`)
     }
 }

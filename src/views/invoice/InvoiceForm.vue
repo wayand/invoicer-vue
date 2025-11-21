@@ -1,5 +1,5 @@
 <template>
-    <div class="page-heading">        
+    <div class="page-heading">
         <div class="page-title">
             <div class="row justify-content-between">
                 <div class="col-12 col-md-6 order-md-1 order-last">
@@ -86,7 +86,7 @@
                                             <div class="row">
                                                 <div class="col-md-5">
                                                     <label>Due date</label>
-                                                </div>                                               
+                                                </div>
                                                 <div class="col-md-7 form-group">
                                                     <Datepicker :typeable="true" inputFormat="yyyy-MM-dd" v-model="invoiceDueDate" class="form-control" :class="{ 'is-invalid': error.invoiceDueDate }" />
                                                 </div>
@@ -106,10 +106,10 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <Line 
+                                                    <Line
                                                         :error="error.lines ? error.lines[index] : {}"
                                                         :products="products"
-                                                        v-for="(line, index) in lines" :key="index" 
+                                                        v-for="(line, index) in lines" :key="index"
                                                         :line-index="index"
                                                         :the-line="line"
                                                         :count="count"
@@ -125,18 +125,20 @@
                                                 </button>
                                             </div>
                                             <table class="table float-end text-end" style="width:30%">
-                                                <tr>
-                                                    <td>Total excluding VAT</td>
-                                                    <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Sale VAT (25%)</td>
-                                                    <td>{{ $filters.toCurrency(vatAmount) }}</td>
-                                                </tr>
-                                                <tr class="fw-bold border-bottom border-top">
-                                                    <td>Total including VAT</td>
-                                                    <td>{{ $filters.toCurrency(total_inc_vat) }}</td>
-                                                </tr>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Total excluding VAT</td>
+                                                        <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Sale VAT (25%)</td>
+                                                        <td>{{ $filters.toCurrency(vatAmount) }}</td>
+                                                    </tr>
+                                                    <tr class="fw-bold border-bottom border-top">
+                                                        <td>Total including VAT</td>
+                                                        <td>{{ $filters.toCurrency(total_inc_vat) }}</td>
+                                                    </tr>
+                                                </tbody>
                                             </table>
                                         </div>
                                         <div class="col-12 d-flex justify-content-start">
@@ -256,7 +258,7 @@ export default {
             get: () => store.getters.invoice.client_id || -1,
             set: val => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'client_id', value: val })
         })
-        const invoiceNo = computed({ 
+        const invoiceNo = computed({
             get: () => invoiceNumber.value,
             set: val => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'invoice_no', value: val })
         })
@@ -313,7 +315,7 @@ export default {
                 template_id: '1',
                 vat_amount: 0.00,
                 state: 'draft',
-                lines: [{    
+                lines: [{
                     product_id: -1,
                     description: '',
                     quantity: 1,
@@ -397,20 +399,20 @@ export default {
 
             let linesError = lines.value.map(line => {
                 let lineErrs = {}
-                
+
                 err = isNum(line.product_id)
                 if ( err !== true ) lineErrs.product_id = err
                 if ( line.product_id == -1 ) lineErrs.product_id = 'This field is required'
-                
+
                 err = required(line.description)
                 if ( err !== true) lineErrs.description = err
-                
+
                 err = isNum(line.unit_price)
                 if ( err !== true ) lineErrs.unit_price = err
 
                 return lineErrs
             })
-            
+
             if (linesError.filter(lineErrs => JSON.stringify(lineErrs) !== '{}').length) {
                 errs['lines'] = linesError
             }
@@ -422,7 +424,7 @@ export default {
             return false
         }
 
-        const saveInvoice = (e) => {    
+        const saveInvoice = (e) => {
 
             if (validate()) {
                 const actionName = props.invoiceId ? 'updateInvoice' : 'createInvoice'
@@ -466,9 +468,9 @@ export default {
 
             const confirmation = await refDialog.value.showModal()
             if (confirmation === true) {
-                
+
                 store.dispatch('deleteInvoice', {
-                    organizationId: store.getters.user.organizationId, 
+                    organizationId: store.getters.user.organizationId,
                     invoiceId: parseInt(props.invoiceId)
                 })
                     .then(() => {
