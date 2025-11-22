@@ -7,9 +7,8 @@
 @import "./root";
 
 html[data-bs-theme="dark"] {
-    @import '@sweetalert2/theme-dark/dark.scss';
-    
-    // Bootstrap 
+
+    // Bootstrap
     @import "~bootstrap/scss/maps";
     @import "~bootstrap/scss/utilities";
     @import "~bootstrap/scss/reboot";
@@ -43,13 +42,13 @@ html[data-bs-theme="dark"] {
     @import "~bootstrap/scss/offcanvas";
     @import "~bootstrap/scss/placeholders";
 
-    
+
     // Import fonts
     @import "./../../fonts";
-    
+
     // Mazer CSS
     @import "./../../mazer";
-    
+
     // Additional dark-mode CSS
     @import "./mazer-dark";
     @import "~bootstrap/scss/utilities";
