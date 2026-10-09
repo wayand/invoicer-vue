@@ -61,12 +61,13 @@
 
                                 <div class="row">
                                     <div class="col-8">
-                                        <h6>Backup codes</h6>
-                                        <p>Generate backup codes to use if you get locked out of your account.</p>
+                                        <h6>Backup codes <span v-if="remaining !== null" :class="`badge bg-light-${remaining > 3 ? 'success' : remaining > 0 ? 'warning' : 'danger'}`">{{ remaining }} left</span></h6>
+                                        <p v-if="remaining === 0">You have no backup codes. Generate some to use if you lose your phone or can't get the email.</p>
+                                        <p v-else>Single-use codes to sign in if you lose your phone or can't get the email.</p>
                                     </div>
                                     <div class="col-4">
                                         <div class="buttons">
-                                            <a @click="regenerateBackupCodes" href="#" class="btn btn-primary">Regenerate</a>
+                                            <a @click.prevent="startBackupCodes" href="#" class="btn btn-primary">{{ remaining ? 'Regenerate' : 'Generate' }}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -80,22 +81,59 @@
 
     <teleport to="body">
         <EnterPasswordModal :error="deleteError" @accept="response" @cancel="cancel" ref="refDialog" />
+        <EnterPasswordModal
+            :error="backupError"
+            title="Generate backup codes"
+            content="This replaces any backup codes you already have, so the old ones stop working."
+            accept-label="Generate codes"
+            @accept="generateBackupCodes"
+            ref="backupPasswordDialog" />
+        <BackupCodesModal ref="backupCodesDialog" @closed="loadRemaining" />
     </teleport>
 </template>
 <script>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import EnterPasswordModal from '@/components/authentication/EnterPasswordModal'
+import BackupCodesModal from '@/components/authentication/BackupCodesModal'
 import { toast } from '@/utilities/toast'
+import { fieldErrors } from '@/utilities/apiErrors'
 
 export default {
     components: {
-        EnterPasswordModal
+        EnterPasswordModal,
+        BackupCodesModal
     },
     setup() {
         const deleteError = ref({})
+        const backupError = ref({})
         const refDialog = ref()
+        const backupPasswordDialog = ref()
+        const backupCodesDialog = ref()
+        const remaining = ref(null)
         const store = useStore()
+
+        const loadRemaining = () => {
+            store.dispatch('backupCodesStatus')
+                .then(response => { remaining.value = response.data.remaining })
+                .catch(() => { remaining.value = null })
+        }
+        onMounted(loadRemaining)
+
+        const startBackupCodes = () => {
+            backupError.value = {}
+            backupPasswordDialog.value.showModal()
+        }
+
+        const generateBackupCodes = password => {
+            backupError.value = {}
+            store.dispatch('regenerateBackupCodes', password)
+                .then(response => {
+                    backupPasswordDialog.value.close()
+                    backupCodesDialog.value.showModal(response.data.codes)
+                })
+                .catch(e => { backupError.value = fieldErrors(e) })
+        }
         const deleteMethod = async () => {
             refDialog.value.showModal()
         }
@@ -117,16 +155,20 @@ export default {
                         refDialog.value.close()
                     })
                     .catch(e => {
-                        deleteError.value = e.response.data.errors
+                        deleteError.value = fieldErrors(e)
                     })
-                
-                console.log('you entered password: ', password)
             }
         }
         const cancel = () => console.log('you canceled')
 
         return {
-            regenerateBackupCodes: () => console.log('...regenerateBackupCodes.....'),
+            remaining,
+            backupError,
+            backupPasswordDialog,
+            backupCodesDialog,
+            startBackupCodes,
+            generateBackupCodes,
+            loadRemaining,
             deleteMethod,
             reconfigure: () => console.log('reconfigure clicked...'),
             user: computed(() => store.getters.user),

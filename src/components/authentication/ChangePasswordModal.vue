@@ -63,6 +63,7 @@ import { watch, ref } from 'vue'
 import { useStore } from 'vuex'
 import { toast } from '@/utilities/toast'
 import { isPassword } from '@/utilities/validators'
+import { apiErrorMessage } from '@/utilities/apiErrors'
 
 export default {
     setup() {
@@ -108,12 +109,7 @@ export default {
                         close()
                     })
                     .catch(e => {
-                        console.log('server error', e)
-                        if (e.response) {
-                            error.value = e.response.data.error
-                        } else {
-                            error.value = [e.message]
-                        }
+                        error.value = [apiErrorMessage(e)]
                     })
             }
         }

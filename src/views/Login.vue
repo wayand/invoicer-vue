@@ -10,8 +10,9 @@
                     <h1 class="auth-title">{{ otpLogin ? 'Two-Factor Authentication' : 'Log in' }}</h1>
                     <p v-if="!otpLogin" class="auth-subtitle mb-5">Log in with your data that you entered during registration.</p>
                     <p v-if="otpLogin" class="auth-subtitle mb-5">
-                        <span v-if="otpAuthType=='2fa_otp_email'">Enter the OTP sent to your registered email address.</span>
-                        <span v-else>Enter an authenticator app code or a recovery code:</span>
+                        <span v-if="useBackupCode">Enter one of your backup codes. Each code works only once.</span>
+                        <span v-else-if="otpAuthType=='2fa_otp_email'">Enter the OTP sent to your registered email address.</span>
+                        <span v-else>Enter the code from your authenticator app:</span>
                     </p>
                     
                     <div v-if="error" class="alert alert-danger" role="alert">
@@ -46,18 +47,22 @@
                         </template>
                         <template v-if="otpLogin">
                             <div class="form-group position-relative has-icon-left mb-4">
-                                <input v-model="otp_2fa" type="text" class="form-control form-control-xl" :placeholder="otpAuthType=='2fa_otp_email'?'OTP From Email':'2FA Mobile'">
+                                <input v-model="otp_2fa" type="text" autocomplete="one-time-code" autocapitalize="off" spellcheck="false" maxlength="16" class="form-control form-control-xl" :placeholder="useBackupCode ? 'Backup code (ABCDE-FGHIJ)' : otpAuthType=='2fa_otp_email' ? 'OTP From Email' : '2FA Mobile'">
                                 <div class="form-control-icon">
                                     <i class="bi bi-shield-lock"></i>
                                 </div>
                             </div>
+                            <p v-if="otpAuthType=='2fa_otp_email' && !useBackupCode" class="text-muted">The code is valid for 10 minutes and works once. Use "Resend email" to get a new one.</p>
                         </template>
                         <template v-if="otpLogin && !otpAuthType">
                             <span>Error - 2FA Email is the Default 2fa Authentication!!!</span>
                         </template>
                         <button class="btn btn-primary btn-block btn-lg shadow-lg mt-5">Log in</button>
                     </form>
-                    <div v-if="otpLogin && otpAuthType=='2fa_otp_email'" class="text-center mt-5 text-lg fs-4">
+                    <div v-if="otpLogin" class="text-center mt-4">
+                        <a @click.prevent="toggleBackupCode" href="#">{{ useBackupCode ? 'Use the regular code instead' : 'Use a backup code instead' }}</a>
+                    </div>
+                    <div v-if="otpLogin && otpAuthType=='2fa_otp_email' && !useBackupCode" class="text-center mt-5 text-lg fs-4">
                         <p class="text-gray-600">Didn't get the email or totp expired? <button class="btn btn-outline btn-lg" @click="resend">Resend email</button>.</p>
                         <p v-if="emailResent">The TOTP email is resent!</p>
                     </div>
@@ -81,6 +86,8 @@ import { onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { UseInitTheme } from '@/composables/useDarkTheme'
+import { apiErrorMessage } from '@/utilities/apiErrors'
+import { isSecondFactorCode } from '@/utilities/secondFactor'
 
 export default {
     setup() {
@@ -89,6 +96,7 @@ export default {
         const store = useStore()
 
         const otpLogin = ref(false)
+        const useBackupCode = ref(false)
 
         const otpAuthType = ref('')
         
@@ -104,10 +112,21 @@ export default {
         }
 
         async function resend() {
-            console.log('totp email resending..')
-            const result = await store.dispatch('resendTOTPEmail')
-            console.log('result: ', result.data)
-            emailResent.value = true
+            error.value = ''
+            try {
+                await store.dispatch('resendTOTPEmail')
+                emailResent.value = true
+                otp_2fa.value = ''
+            } catch (e) {
+                emailResent.value = false
+                error.value = [apiErrorMessage(e)]
+            }
+        }
+
+        function toggleBackupCode() {
+            useBackupCode.value = !useBackupCode.value
+            otp_2fa.value = ''
+            error.value = ''
         }
 
         function login() {
@@ -122,18 +141,14 @@ export default {
                             }
                         })
                         .catch( e => {
-                            if (e.response) {
-                                error.value = e.response.data.error
-                            } else {
-                                error.value = [e.message]
-                            }
+                            error.value = [apiErrorMessage(e)]
                         })
                 } else {
                     error.value = ['email or pass are invalid']
                 }
             } else if (otpLogin.value) {
-                if (email.value.length > 1 && password.value.length > 1 && otp_2fa.value.length === 6) {
-                    store.dispatch('login', { email: email.value, password: password.value, otp_2fa: otp_2fa.value })
+                if (email.value.length > 1 && password.value.length > 1 && isSecondFactorCode(otp_2fa.value)) {
+                    store.dispatch('login', { email: email.value, password: password.value, otp_2fa: otp_2fa.value.trim() })
                         .then( () => {
                             if (route.query.redirect) {
                                 router.push(route.query.redirect)
@@ -142,14 +157,10 @@ export default {
                             }
                         })
                         .catch( e => {
-                            if (e.response) {
-                                error.value = e.response.data.error
-                            } else {
-                                error.value = [e.message]
-                            }
+                            error.value = [apiErrorMessage(e)]
                         })
                 } else {
-                    error.value = '2FA is needed'
+                    error.value = [useBackupCode.value ? 'Enter one of your backup codes (like ABCDE-FGHIJ).' : 'Enter the 6-digit code.']
                 }
             }
         }
@@ -157,6 +168,8 @@ export default {
 
         return {
             otpLogin,
+            useBackupCode,
+            toggleBackupCode,
             otpAuthType,
             email,
             password,

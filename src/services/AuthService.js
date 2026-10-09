@@ -45,6 +45,12 @@ export default {
     },
     confirmEmail(token) {
         return HTTP.post('/auth/confirm-email/'+token)
+    },
+    backupCodesStatus() {
+        return HTTP.get('/auth/backup-codes')
+    },
+    regenerateBackupCodes(payload) {
+        return HTTP.post('/auth/backup-codes', payload)
     }
 
 }
