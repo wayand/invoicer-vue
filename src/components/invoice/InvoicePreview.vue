@@ -64,18 +64,20 @@
                         </table>
 
                         <table class="table float-end text-end" style="width:50%">
-                            <tr>
-                                <td>I alt ekskl. moms</td>
-                                <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
-                            </tr>
-                            <tr>
-                                <td>Moms (25%)</td>
-                                <td>{{ $filters.toCurrency(vatAmount) }}</td>
-                            </tr>
-                            <tr class="fw-bold border-bottom border-top">
-                                <td>I alt inkl. moms</td>
-                                <td>{{ $filters.toCurrency(total_inc_vat) }}</td>
-                            </tr>
+                            <tbody>
+                                <tr>
+                                    <td>I alt ekskl. moms</td>
+                                    <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
+                                </tr>
+                                <tr>
+                                    <td>Moms (25%)</td>
+                                    <td>{{ $filters.toCurrency(vatAmount) }}</td>
+                                </tr>
+                                <tr class="fw-bold border-bottom border-top">
+                                    <td>I alt inkl. moms</td>
+                                    <td>{{ $filters.toCurrency(total_inc_vat) }}</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                     <div class="col-12 d-flex justify-content-start mt-5">
