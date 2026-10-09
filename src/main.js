@@ -9,6 +9,7 @@ import "toastify-js/src/toastify.css"
 
 import { tokenAlive } from "@/services/jwtHelper"
 import PromiseDialog from '@/components/common/promiseDialog'
+import VueApexCharts from 'vue3-apexcharts'
 
 const app = createApp(App)
 
@@ -49,4 +50,5 @@ app.config.globalProperties.$filters = {
 app.config.devtools = true
 app.use(Store)
 app.use(router)
+app.use(VueApexCharts)
 app.mount('#app')

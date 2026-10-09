@@ -6,7 +6,7 @@ import ResetPassword from '../views/ResetPassword'
 import AnnualReport from '../views/reports/AnnualReport'
 import Organization from '../views/settings/Organization'
 import InvoiceSetting from '../views/settings/InvoiceSetting'
-import Clients from '../views/settings/Clients'
+import Contacts from '../views/settings/Contacts'
 import Accounts from '../views/settings/Accounts'
 import Authentication from '../views/settings/Authentication'
 import AuthTwoFactorSetup from '../views/settings/AuthTwoFactorSetup'
@@ -89,10 +89,10 @@ const routes = [
         meta: { requiresAuth: true, title: 'Invoicer - Authentication Management' }
     },
     {
-        path: '/settings/clients',
-        name: 'Clients',
-        component: Clients,
-        meta: { requiresAuth: true, title: 'Invoicer - Clients' }
+        path: '/settings/contacts',
+        name: 'Contacts',
+        component: Contacts,
+        meta: { requiresAuth: true, title: 'Invoicer - Contacts' }
     },
     {
         path: '/settings/accounts',
@@ -187,13 +187,13 @@ router.beforeEach((to,from, next) => {
     }
 
     if (!loggedIn && to.matched.some(record => record.meta.requiresAuth) && to.path != '/login') {
-        
+
         next({
             name: 'Login',
             query: { redirect: to.path }
         })
         return
-        
+
     } else {
         if (loggedIn && to.matched.some(record => record.meta.hideForAuth)) {
             console.log('He is logged in, se: ', loggedIn)

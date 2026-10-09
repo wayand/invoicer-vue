@@ -3,12 +3,12 @@
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel33">{{ clientId ? 'Edit' : 'Create' }} Client </h4>
+                    <h4 class="modal-title" id="myModalLabel33">{{ contactId ? 'Edit' : 'Create' }} Contact </h4>
                     <button type="button" class="close" @click="$emit('close')" aria-label="Close">
                         <i class="bi bi-x bi-middle"></i>
                     </button>
                 </div>
-                <form @submit.prevent="saveClient">
+                <form @submit.prevent="saveContact">
                     <input type="hidden" v-model="logo" name="logo">
                     <div class="modal-body">
 
@@ -16,7 +16,7 @@
                             <div class="col-md-7 col-7">
                                 <div class="row">
                                     <div class="form-group">
-                                        <label for="name-vertical">{{ type === 'company' ? 'Company name' : 'Name' }}</label>
+                                        <label for="name-vertical">{{ isCompany ? 'Company name' : 'Name' }}</label>
                                         <input v-model="name" :class="{ 'is-invalid': errors.name }" type="text" class="form-control" name="name" id="name-vertical">
                                         <div v-if="errors.name" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
@@ -68,32 +68,32 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="type-id-vertical">Type</label>
-                                        <div class="row" :class="{ 'is-invalid': errors.type }">
+                                        <div class="row" :class="{ 'is-invalid': errors.isCompany }">
                                             <div class="col-6">
                                                 <div class="form-check">
                                                     <div class="checkbox mt-2">
-                                                        <input v-model="type" :class="{ 'is-invalid': errors.type }" type="radio" class="form-check-input" name="type" id="type-company" value="company">
-                                                        <label for="type-company">Company</label>
+                                                        <input v-model="isCompany" :class="{ 'is-invalid': errors.isCompany }" type="radio" class="form-check-input" name="is_company" id="is-company-yes" :value="true">
+                                                        <label for="is-company-yes">Company</label>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-6">
                                                 <div class="form-check">
                                                     <div class="checkbox mt-2">
-                                                        <input v-model="type" :class="{ 'is-invalid': errors.type }" type="radio" class="form-check-input" name="type" id="type-person" value="person">
-                                                        <label for="type-person">Person</label>
+                                                        <input v-model="isCompany" :class="{ 'is-invalid': errors.isCompany }" type="radio" class="form-check-input" name="is_company" id="is-company-no" :value="false">
+                                                        <label for="is-company-no">Private</label>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div v-if="errors.type" class="invalid-feedback">
+                                        <div v-if="errors.isCompany" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
-                                            {{ errors.type }}
+                                            {{ errors.isCompany }}
                                         </div>
                                     </div>
-                                    <div class="form-group" v-if="type == 'company'">
+                                    <div class="form-group" v-if="isCompany === true">
                                         <label for="email-id-vertical">Contact person</label>
-                                        <input v-model="contactperson_name" type="text" class="form-control mb-3" name="contactperson_name" placeholder="Name">                                    
+                                        <input v-model="contactperson_name" type="text" class="form-control mb-3" name="contactperson_name" placeholder="Name">
                                         <input v-model="contactperson_email" :class="{ 'is-invalid': errors.contactperson_email }" type="email" class="form-control" name="contactperson_email" placeholder="Email">
                                         <div v-if="errors.contactperson_email" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
@@ -127,9 +127,9 @@ import { toast } from '@/utilities/toast'
 //import validators from '@/utilities/validators'
 
 export default {
-    name: 'clientFormModal',
+    name: 'contactFormModal',
     props: {
-        clientId: {
+        contactId: {
             type: [Number, String, Boolean],
             required: false,
             default: false
@@ -141,65 +141,65 @@ export default {
         const store = useStore()
         const errors = ref('')
 
-        const type = computed({
-            get: () => store.getters.client.type,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'type', value: val})
+        const isCompany = computed({
+            get: () => store.getters.contact.is_company,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'is_company', value: val})
         })
         const name = computed({
-            get: () => store.getters.client.name,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'name', value: val})
+            get: () => store.getters.contact.name,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'name', value: val})
         })
         const logo = computed({
-            get: () => store.getters.client.logo || '',
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'logo', value: val})
+            get: () => store.getters.contact.logo || '',
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'logo', value: val})
         })
         const email = computed({
-            get: () => store.getters.client.email,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'email', value: val})
+            get: () => store.getters.contact.email,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'email', value: val})
         })
         const phone = computed({
-            get: () => store.getters.client.phone,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'phone', value: val})
-        })        
+            get: () => store.getters.contact.phone,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'phone', value: val})
+        })
         const registration_no = computed({
-            get: () => store.getters.client.registration_no,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'registration_no', value: val})
+            get: () => store.getters.contact.registration_no,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'registration_no', value: val})
         })
         const street = computed({
-            get: () => store.getters.client.street,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'street', value: val})
+            get: () => store.getters.contact.street,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'street', value: val})
         })
         const zipcode = computed({
-            get: () => store.getters.client.zipcode,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'zipcode', value: val})
+            get: () => store.getters.contact.zipcode,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'zipcode', value: val})
         })
         const city = computed({
-            get: () => store.getters.client.city,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'city', value: val})
+            get: () => store.getters.contact.city,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'city', value: val})
         })
         const countryId = computed({
-            get: () => store.getters.client.country_id,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'country_id', value: val})
+            get: () => store.getters.contact.country_id,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'country_id', value: val})
         })
         const contactperson_email = computed({
-            get: () => store.getters.client.contactperson_email,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'contactperson_email', value: val})
+            get: () => store.getters.contact.contactperson_email,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'contactperson_email', value: val})
         })
         const contactperson_name = computed({
-            get: () => store.getters.client.contactperson_name,
-            set: val => store.commit('UPDATE_CLIENT_PROPERTY', {key: 'contactperson_name', value: val})
+            get: () => store.getters.contact.contactperson_name,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'contactperson_name', value: val})
         })
 
         onMounted(async () => {
-            if (props.clientId) {
-                await store.dispatch('fetchClient', {
+            if (props.contactId) {
+                await store.dispatch('fetchContact', {
                     organizationId: store.getters.user.organizationId,
-                    clientId: props.clientId
+                    contactId: props.contactId
                 })
             } else {
-                store.commit('SET_CLIENT', {
+                store.commit('SET_CONTACT', {
                     organization_id: store.getters.user.organizationId,
-                    type: 'company',
+                    is_company: true,
                     logo: '',
                     name: '',
                     email: '',
@@ -225,8 +225,8 @@ export default {
             if (!String(value).length) return requiredMessage
             return true
         }
-        const typeValidate = val => {
-            if (!['person', 'company'].includes(val))  return "Either 'person' or 'company'"
+        const isCompanyValidate = val => {
+            if (typeof val !== 'boolean') return 'Choose company or private'
             return true
         }
         const nameValidate = val => {
@@ -248,8 +248,8 @@ export default {
             let errs = {}
             let res
 
-            res = typeValidate(type.value)
-            if (res !== true) errs.type = res
+            res = isCompanyValidate(isCompany.value)
+            if (res !== true) errs.isCompany = res
 
             res = nameValidate(name.value)
             if (res !== true) errs.name = res
@@ -257,7 +257,7 @@ export default {
             res = emailValidate(email.value)
             if (res !== true) errs.email = res
 
-            if (['company'].includes(type.value)) {
+            if (isCompany.value === true) {
                 res = contactEmailValidate(contactperson_email.value)
                 if (res !== true) errs.contactperson_email = res
             }
@@ -269,18 +269,18 @@ export default {
             () => name.value,
             () => email.value,
             () => phone.value,
-            () => type.value,
+            () => isCompany.value,
             () => contactperson_email.value
         ], () => {
             validate()
         })
-        const saveClient = () => {
+        const saveContact = () => {
             validate()
             if (!Object.keys(errors.value).length > 0) {
-                const actionName = props.clientId ? 'updateClient' : 'createClient'
+                const actionName = props.contactId ? 'updateContact' : 'createContact'
                 store.dispatch(actionName, {
                     organizationId: store.getters.user.organizationId,
-                    client: store.getters.client
+                    contact: store.getters.contact
                 }).then(() => {
                     toast('Successfully saved !', 'success')
                     emit('close')
@@ -300,7 +300,7 @@ export default {
         }
 
         return {
-            type,
+            isCompany,
             name,
             logo,
             email,
@@ -313,7 +313,7 @@ export default {
             contactperson_email,
             contactperson_name,
             errors,
-            saveClient
+            saveContact
         }
     },
 }

@@ -4,7 +4,7 @@ import organizationModule from './modules/organization'
 import countryModule from './modules/country'
 import invoiceModule from './modules/invoice'
 import productModule from './modules/product'
-import clientModule from './modules/client'
+import contactModule from './modules/contact'
 import accountModule from './modules/account'
 import taxrateModule from './modules/taxrate'
 
@@ -20,7 +20,7 @@ const Store = createStore({
         country: countryModule,
         invoice: invoiceModule,
         product: productModule,
-        client: clientModule,
+        contact: contactModule,
         account: accountModule,
         taxrate: taxrateModule,
     }

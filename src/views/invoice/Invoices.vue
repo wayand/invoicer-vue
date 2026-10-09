@@ -31,7 +31,7 @@
                                 <th>Number</th>
                                 <th>Date</th>
                                 <th>Due</th>
-                                <th>Client</th>
+                                <th>Contact</th>
                                 <th>Total Exc.Vat</th>
                                 <th>Total inc.Vat</th>
                                 <th></th>
@@ -54,7 +54,7 @@
                                     <td>#inv{{ invoice.invoice_no }}</td>
                                     <td>{{ invoice.invoice_date }}</td>
                                     <td>{{ invoice.duedate }}</td>
-                                    <td>{{ invoice.client.name }}</td>
+                                    <td>{{ invoice.contact.name }}</td>
                                     <td>{{ $filters.toCurrency(invoice.amount) }}</td>
                                     <td>{{ $filters.toCurrency(invoice.gross_amount) }}</td>
                                     <td>
@@ -88,7 +88,7 @@ export default {
         const error = ref('')
         const router = useRouter()
         const store = useStore()
-        
+
         const invoices = computed(() => store.getters.invoices)
         const preview = invoiceId => router.push({ name: "ShowInvoice", params: { invoiceId: invoiceId } })
         const edit = invoiceId => router.push({ name: "EditInvoice", params: { invoiceId: invoiceId } })
@@ -101,7 +101,7 @@ export default {
 
         onMounted( async () => {
             await store.dispatch('fetchInvoices', store.getters.user.organizationId)
-                .catch(e => toast('Invoices ' + e, 'error'))    
+                .catch(e => toast('Invoices ' + e, 'error'))
         })
 
         return {
