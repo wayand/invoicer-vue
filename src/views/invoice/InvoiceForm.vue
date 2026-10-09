@@ -41,26 +41,26 @@
                                     <div class="row mb-4 justify-content-between">
                                         <div class="col-md-3 col-3">
                                             <fieldset class="form-group">
-                                                <select v-model="clientID" class="form-select" :class="{ 'is-invalid': error.clientID }" @change="clientHandler">
-                                                    <optgroup label="Select Client">
-                                                        <option value="-1">Select client</option>
-                                                        <option v-for="client in clients" :key="client.id" :value="client.id">{{ client.name }}</option>
+                                                <select v-model="contactID" class="form-select" :class="{ 'is-invalid': error.contactID }" @change="contactHandler">
+                                                    <optgroup label="Select Contact">
+                                                        <option value="-1">Select contact</option>
+                                                        <option v-for="contact in contacts" :key="contact.id" :value="contact.id">{{ contact.name }}</option>
                                                     </optgroup>
                                                     <optgroup label="">
                                                         <option value="new">+ Create new</option>
                                                     </optgroup>
                                                 </select>
                                             </fieldset>
-                                            <fieldset class="form-group" v-if="selectedClient">
+                                            <fieldset class="form-group" v-if="selectedContact">
                                                 <div>
-                                                    {{ selectedClient.name }}<br>
-                                                    {{ selectedClient.street }}<br>
-                                                    {{ selectedClient.zipcode }} {{ selectedClient.city }}
+                                                    {{ selectedContact.name }}<br>
+                                                    {{ selectedContact.street }}<br>
+                                                        {{ selectedContact.zipcode }} {{ selectedContact.city }}
                                                 </div>
                                             </fieldset>
-                                            <div v-if="error.clientID" class="invalid-feedback">
+                                            <div v-if="error.contactID" class="invalid-feedback">
                                                 <i class="bx bx-radio-circle"></i>
-                                                {{ error.clientID }}
+                                                {{ error.contactID }}
                                             </div>
                                         </div>
                                         <div class="col-md-5 col-5">
@@ -168,14 +168,14 @@
         </section>
     </div>
     <teleport to="body">
-        <ClientFormModal v-if="showClientFormModal" @close="closeClientFormModal" />
+        <ContactFormModal v-if="showContactFormModal" @close="closeContactFormModal" />
         <PromiseDialog ref="refDialog" />
     </teleport>
 </template>
 <script>
 import Datepicker from 'vue3-datepicker'
 import Line from '@/components/invoice/Line'
-import ClientFormModal from '@/components/client/ClientFormModal'
+import ContactFormModal from '@/components/contact/ContactFormModal'
 import { watch, ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
@@ -194,7 +194,7 @@ export default {
     components: {
         Datepicker,
         Line,
-        ClientFormModal,
+        ContactFormModal,
     },
     setup(props) {
         onBeforeRouteLeave(async (to, from, next) => {
@@ -216,7 +216,7 @@ export default {
 
         onMounted(async () => {
             await store.dispatch('fetchOrganization', store.getters.user.organizationId)
-            await store.dispatch('fetchClients', store.getters.user.organizationId)
+            await store.dispatch('fetchContacts', store.getters.user.organizationId)
             await store.dispatch('fetchProducts', store.getters.user.organizationId)
             await store.dispatch('fetchAccounts')
 
@@ -234,9 +234,9 @@ export default {
         const router = useRouter()
         const store = useStore()
         const isInvoiceFormSaved = ref(true)
-        const showClientFormModal = ref(false)
-        const oldClientID = ref(-1)
-        const selectedClient = ref(null)
+        const showContactFormModal = ref(false)
+        const oldContactID = ref(-1)
+        const selectedContact = ref(null)
 
         const organization = computed(() => store.getters.organization)
         const settingDefaultAccount = computed(() => store.getters.getAccountById(organization.value.invoice_setting?.default_account_id))
@@ -254,9 +254,9 @@ export default {
             get: () => store.getters.invoice.vat_amount,
             set: val => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'vat_amount', value: val })
         })
-        const clientID = computed({
-            get: () => store.getters.invoice.client_id || -1,
-            set: val => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'client_id', value: val })
+        const contactID = computed({
+            get: () => store.getters.invoice.contact_id || -1,
+            set: val => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'contact_id', value: val })
         })
         const invoiceNo = computed({
             get: () => invoiceNumber.value,
@@ -283,7 +283,7 @@ export default {
             set: val => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'state', value: val })
         })
 
-        const clients = computed( () => store.getters.clients )
+        const contacts = computed( () => store.getters.contacts )
         const products = computed( () => store.getters.products )
 
         const lines = computed(() => store.getters.invoice.lines)
@@ -294,7 +294,7 @@ export default {
                     organizationId: store.getters.user.organizationId,
                     invoiceId: props.invoiceId
                 }).catch(e => console.log('fetchInvoice ' + e))
-                selectedClient.value = clients.value.filter( c => c.id === clientID.value)[0]
+                selectedContact.value = contacts.value.filter( c => c.id === contactID.value)[0]
                 updateInvoice()
             }
         }
@@ -302,7 +302,7 @@ export default {
         function initNewInvoice() {
             store.commit('SET_INVOICE', {
                 organization_id: store.getters.user.organizationId,
-                client_id: null,
+                contact_id: null,
                 currency_id: 'DKK',
                 excluding_vat: true,
                 invoice_no: invoiceNumber.value,
@@ -358,28 +358,28 @@ export default {
             console.log('updateInvoice ...')
         }
 
-        const openClientFormModal = () => {
+        const openContactFormModal = () => {
             document.body.classList.add("modal-open")
-            showClientFormModal.value = true
+            showContactFormModal.value = true
         }
 
-        const closeClientFormModal = () => {
+        const closeContactFormModal = () => {
             document.body.classList.remove("modal-open")
-            showClientFormModal.value = false
+            showContactFormModal.value = false
         }
 
-        const clientHandler = e => {
+        const contactHandler = e => {
             if (e.target.value === 'new') {
-                clientID.value = oldClientID.value
-                openClientFormModal()
+                contactID.value = oldContactID.value
+                openContactFormModal()
                 return
             } else {
-                selectedClient.value = clients.value.filter( c => c.id === clientID.value)[0]
-                oldClientID.value = e.target.value
+                selectedContact.value = contacts.value.filter( c => c.id === contactID.value)[0]
+                oldContactID.value = e.target.value
             }
         }
 
-        watch([()=>clientID.value, ()=>invoiceDate.value, ()=>invoiceDueDate.value], () => {
+        watch([()=>contactID.value, ()=>invoiceDate.value, ()=>invoiceDueDate.value], () => {
             validate()
         })
 
@@ -389,9 +389,9 @@ export default {
             let errs = {}
             let err = ''
             console.log('validate starts')
-            err = isNum(clientID.value)
-            if ( err !== true ) errs.clientID = err
-            if ( clientID.value == -1 ) errs.clientID = 'This field is required'
+            err = isNum(contactID.value)
+            if ( err !== true ) errs.contactID = err
+            if ( contactID.value == -1 ) errs.contactID = 'This field is required'
 
             err = isNum(invoiceNo.value)
             if ( err !== true) errs.invoiceNo = err
@@ -492,17 +492,17 @@ export default {
             lines,
             addNewLine,
             deleteLine,
-            showClientFormModal,
-            openClientFormModal,
-            closeClientFormModal,
-            clients,
-            clientHandler,
+            showContactFormModal,
+            openContactFormModal,
+            closeContactFormModal,
+            contacts,
+            contactHandler,
             updateInvoice,
             validate,
-            selectedClient,
-            clientID,
+            selectedContact,
+            contactID,
             invoiceNo,
-            oldClientID,
+            oldContactID,
             invoiceDate,
             invoiceDueDate,
             saveInvoice,

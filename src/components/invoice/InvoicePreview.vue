@@ -10,9 +10,9 @@
 
                 <div class="row mb-4 justify-content-between">
                     <div class="col-md-3 col-3">
-                        <span class="fw-bold">{{ invoice.client?.name }}</span><br>
-                        {{ invoice.client?.street }}<br>
-                        {{ invoice.client?.zipcode }} {{ invoice.client?.city }}<br> 
+                        <span class="fw-bold">{{ invoice.contact?.name }}</span><br>
+                        {{ invoice.contact?.street }}<br>
+                        {{ invoice.contact?.zipcode }} {{ invoice.contact?.city }}<br> 
                     </div>
                     <div class="col-md-5 col-5 text-end">
                         <table class="table">

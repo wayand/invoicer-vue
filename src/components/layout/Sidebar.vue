@@ -1,4 +1,4 @@
-<template>    
+<template>
     <div ref="sidebar" id="sidebar" class="">
         <div class="sidebar-wrapper active">
             <div class="sidebar-header">
@@ -42,7 +42,7 @@
                             <span>Dashboard</span>
                         </router-link>
                     </li>
-                    
+
                     <li :class="{ active: isActive('/invoices') }" class="sidebar-item has-sub">
                         <a href="#" class='sidebar-link'>
                             <i class="bi bi-stack"></i>
@@ -79,8 +79,8 @@
                             <li class="submenu-item" :class="{ active: route.name === 'Organization' }">
                                 <router-link class="submenu-link" :to="{ name: 'Organization', params: { id: user?.organizationId } }">Organization</router-link>
                             </li>
-                            <li class="submenu-item" :class="{ active: route.name === 'Clients' }">
-                                <router-link class="submenu-link" :to="{ name: 'Clients' }">Clients</router-link>
+                            <li class="submenu-item" :class="{ active: route.name === 'Contacts' }">
+                                <router-link class="submenu-link" :to="{ name: 'Contacts' }">Contacts</router-link>
                             </li>
                             <li class="submenu-item" :class="{ active: route.name === 'Products' }">
                                 <router-link class="submenu-link" :to="{ name: 'Products' }">Products</router-link>

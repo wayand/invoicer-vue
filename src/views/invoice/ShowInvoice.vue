@@ -1,9 +1,9 @@
 <template>
-    <div class="page-heading">        
+    <div class="page-heading">
         <div class="page-title">
             <div class="row justify-content-between">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Invoice #{{ invoiceNo }} for {{ clientName }}</h3>
+                    <h3>Invoice #{{ invoiceNo }} for {{ contactName }}</h3>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first" style="text-align: right;">
                     <div class="btn-group mb-1">
@@ -64,7 +64,7 @@ export default {
                 jsPDF: {
                     unit: 'mm',
                     format: 'a4',
-                    orientation: 'portrait' 
+                    orientation: 'portrait'
                 },
                 pagebreak: { mode: ['avoid-all'] }
             }
@@ -77,7 +77,7 @@ export default {
         const organization = computed(() => store.getters.organization)
         const invoice = computed(() => store.getters.invoice)
         const invoiceNo = computed(() => store.getters.invoice.invoice_no)
-        const clientName = computed(() => store.getters.invoice.client?.name)
+        const contactName = computed(() => store.getters.invoice.contact?.name)
         const isApproved = computed(() => store.getters.invoice.state === 'approved')
         const refDialog = ref()
 
@@ -118,7 +118,7 @@ export default {
             invoice,
             isApproved,
             invoiceNo,
-            clientName,
+            contactName,
             markInvoiceAsSent
         }
     }

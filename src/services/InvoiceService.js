@@ -9,8 +9,8 @@ export default {
     },
     update(organizationId, invoice) {
         // eslint-disable-next-line no-unused-vars
-        const { id: invoiceId, client, lines, created_at, updated_at, ...invoiceRequiredFields } = invoice
-        
+        const { id: invoiceId, contact, lines, created_at, updated_at, ...invoiceRequiredFields } = invoice
+
         const requiredLines = lines.map(({
             // eslint-disable-next-line no-unused-vars
             created_at, updated_at, ...requiredFields
