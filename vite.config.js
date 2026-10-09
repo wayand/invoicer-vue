@@ -16,7 +16,15 @@ export default defineConfig({
     server: {
         port: 8080,
         host: 'localhost',
-        hot: true
+        hot: true,
+        proxy: {
+            // Matcher ruten /confirm-email/ og alt hvad der følger efter (inkl. prikker)
+            '^/confirm-email/.*': {
+                target: 'http://localhost:8080',
+                // Tvinger Vite til internt at servere index.html, så Vue Router kan overtage stien
+                rewrite: () => '/index.html',
+            }
+        }
     },
     // build: {
     //     outDir: 'dist'
