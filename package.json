@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@popperjs/core": "^2.11.7",
+    "apexcharts": "^5.3.6",
     "axios": "^0.21.4",
     "bootstrap": "^5.2.3",
     "bootstrap-icons": "^1.10.5",
@@ -22,6 +23,7 @@
     "vue": "^3.3.2",
     "vue-html2pdf": "^1.8.0",
     "vue-router": "^4.6.3",
+    "vue3-apexcharts": "^1.10.0",
     "vue3-datepicker": "^0.2.5",
     "vuex": "^4.1.0"
   },
