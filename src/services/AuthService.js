@@ -10,8 +10,8 @@ export default {
     getToken(credentials) {
         return HTTP.post('/auth/token', credentials)
     },
-    revokeToken() {
-        return HTTP.post('/auth/revoke-access-token')
+    logout(refreshToken) {
+        return HTTP.post('/auth/logout', { refresh_token: refreshToken })
     },
     revokeRefreshToken() {
         return HTTP.post('/auth/revoke-refresh-token')
