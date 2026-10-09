@@ -131,6 +131,12 @@ export default {
         totpDelete(_, password) {
             return AuthService.totpDelete(password)
         },
+        backupCodesStatus() {
+            return AuthService.backupCodesStatus()
+        },
+        regenerateBackupCodes(_, password) {
+            return AuthService.regenerateBackupCodes({ password })
+        },
         sendResetMail(_, payload) {
             return AuthService.sendResetMail(payload)
         },

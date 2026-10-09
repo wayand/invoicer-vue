@@ -81,6 +81,7 @@ import { onMounted, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { toast } from '@/utilities/toast'
+import { fieldErrors } from '@/utilities/apiErrors'
 
 export default {
     setup() {
@@ -106,15 +107,11 @@ export default {
                         } else {
                             router.push({ name: "AuthManagement" })
                         }
-                        toast('Two Factor Auth successfully enabled!', 'success')
+                        toast('Two Factor Auth successfully enabled! Generate backup codes so a lost phone can\'t lock you out.', 'success', 10000)
                         getAuthUser()
                     })
                     .catch(e => {
-                        if (e.response) {
-                            error.value = e.response.data.errors
-                        } else {
-                            error.value = [e.message]
-                        }
+                        error.value = fieldErrors(e)
                     })
             } else {
                 error.value['totp_code'] = otpCode.value.length ? null : 'Enter the 6 digits from the authentication app.'

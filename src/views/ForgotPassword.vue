@@ -46,6 +46,7 @@ import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import { validateEmail } from '@/utilities/validators'
 import { toast } from '@/utilities/toast'
+import { apiErrorMessage } from '@/utilities/apiErrors'
 
 export default {
     setup() {
@@ -76,15 +77,15 @@ export default {
                 console.log('Validated email address.....')
                 store.dispatch('sendResetMail', {email: email.value})
                     .then(response => {
-                        console.log('reset email sent: ', response.data)
+                        toast(response.data.message, 'success', 10000)
                         router.push({ name: "ResetPassword" })
                     })
                     .catch(e => {
-                        if (e.response) {
-                            error.value = e.response.data.errors
+                        const errors = e.response && e.response.data && e.response.data.errors
+                        if (errors) {
+                            error.value = errors
                         } else {
-                            error.value = [e.message]
-                            toast(e.message, 'error')
+                            toast(apiErrorMessage(e), 'error')
                         }
                     })
             }

@@ -22,13 +22,26 @@
     </div>
 </template>
 <script>
-import { ref, toRefs } from 'vue'
+import { computed, ref, toRefs } from 'vue'
 
 export default {
     props: {
         error: {
             type: Object,
             required: false,
+            default: () => ({}),
+        },
+        title: {
+            type: String,
+            default: 'Enter your password',
+        },
+        content: {
+            type: String,
+            default: 'Are you sure you want to delete this two-factor authentication method?',
+        },
+        acceptLabel: {
+            type: String,
+            default: 'Accept',
         },
     },
     setup(props, {emit}) {
@@ -36,15 +49,16 @@ export default {
         const password = ref('')
 
         const show = ref(false)
-        const data = ref({
+        const data = computed(() => ({
             type: 'primary',
-            title: 'Enter your password',
-            content: 'Are you sure you want to delete this two-factor authentication method?',
-            accept: 'Accept',
+            title: props.title,
+            content: props.content,
+            accept: props.acceptLabel,
             reject: 'Cancel'
-        })
+        }))
         
         const showModal = async () => {
+            password.value = ''
             document.documentElement.classList.add('swal2-shown','swal2-height-auto')
             document.body.classList.add('swal2-shown','swal2-height-auto')
             show.value = true
@@ -65,6 +79,7 @@ export default {
             document.body.classList.remove('swal2-shown','swal2-height-auto')
             document.body.classList.remove("modal-open")
             show.value = false
+            password.value = ''
             emit('cancel')
         }
 

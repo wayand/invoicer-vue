@@ -54,6 +54,7 @@ import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { required, isPassword } from '@/utilities/validators'
 import { toast } from '@/utilities/toast'
+import { apiErrorMessage } from '@/utilities/apiErrors'
 
 export default {
     setup() {
@@ -98,11 +99,11 @@ export default {
                         router.push({ name: "Login" })
                     })
                     .catch(e => {
-                        if (e.response) {
-                            errors.value = e.response.data.errors
+                        const fieldErrors = e.response && e.response.data && e.response.data.errors
+                        if (fieldErrors) {
+                            errors.value = fieldErrors
                         } else {
-                            //errors.value = [e.message]
-                            toast(e.message, 'error')
+                            toast(apiErrorMessage(e), 'error')
                         }
                     })
             }
