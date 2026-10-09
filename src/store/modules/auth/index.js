@@ -85,8 +85,8 @@ export default {
                     }
                 })
         },
-        logout({ commit }) {
-            return AuthService.revokeToken()
+        logout({ state, commit }) {
+            return AuthService.logout(state.refreshToken)
                 .then(response => {
                     console.log('Successfully Logout')
                     return response
@@ -97,8 +97,15 @@ export default {
                     location.reload()
                 })
         },
-        changePassword(_, credentials) {
+        changePassword({ commit }, credentials) {
             return AuthService.changePassword(credentials)
+                .then(response => {
+                    // Changing the password ends every session, this one
+                    // included; the response carries a new one.
+                    commit('SET_ACCESS_TOKEN', response.data.accessToken)
+                    commit('SET_REFRESH_TOKEN', response.data.refreshToken)
+                    return response
+                })
         },
         getAuthUser({ commit, dispatch }) {
             return AuthService.getAuthUser()
