@@ -8,7 +8,7 @@ export default {
         return HTTP.get(`/organizations/${organizationId}/contacts/${contactId}`)
     },
     update(organizationId, contact) {
-        if (contact.type !== 'company') {
+        if (!contact.is_company) {
             // eslint-disable-next-line no-unused-vars
             const {contactperson_email, contactperson_name, ...requiredFields} = contact
             contact = requiredFields
@@ -18,7 +18,7 @@ export default {
         return HTTP.put(`/organizations/${organizationId}/contacts/${contactId}`, requiredFields)
     },
     create(organizationId, contact) {
-        if (contact.type !== 'company') {
+        if (!contact.is_company) {
             // eslint-disable-next-line no-unused-vars
             const {contactperson_email, contactperson_name, ...requiredFields} = contact
             contact = requiredFields

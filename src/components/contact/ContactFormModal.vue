@@ -16,7 +16,7 @@
                             <div class="col-md-7 col-7">
                                 <div class="row">
                                     <div class="form-group">
-                                        <label for="name-vertical">{{ type === 'company' ? 'Company name' : 'Name' }}</label>
+                                        <label for="name-vertical">{{ isCompany ? 'Company name' : 'Name' }}</label>
                                         <input v-model="name" :class="{ 'is-invalid': errors.name }" type="text" class="form-control" name="name" id="name-vertical">
                                         <div v-if="errors.name" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
@@ -68,30 +68,30 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="type-id-vertical">Type</label>
-                                        <div class="row" :class="{ 'is-invalid': errors.type }">
+                                        <div class="row" :class="{ 'is-invalid': errors.isCompany }">
                                             <div class="col-6">
                                                 <div class="form-check">
                                                     <div class="checkbox mt-2">
-                                                        <input v-model="type" :class="{ 'is-invalid': errors.type }" type="radio" class="form-check-input" name="type" id="type-company" value="company">
-                                                        <label for="type-company">Company</label>
+                                                        <input v-model="isCompany" :class="{ 'is-invalid': errors.isCompany }" type="radio" class="form-check-input" name="is_company" id="is-company-yes" :value="true">
+                                                        <label for="is-company-yes">Company</label>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="col-6">
                                                 <div class="form-check">
                                                     <div class="checkbox mt-2">
-                                                        <input v-model="type" :class="{ 'is-invalid': errors.type }" type="radio" class="form-check-input" name="type" id="type-private" value="private">
-                                                        <label for="type-private">Private</label>
+                                                        <input v-model="isCompany" :class="{ 'is-invalid': errors.isCompany }" type="radio" class="form-check-input" name="is_company" id="is-company-no" :value="false">
+                                                        <label for="is-company-no">Private</label>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div v-if="errors.type" class="invalid-feedback">
+                                        <div v-if="errors.isCompany" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
-                                            {{ errors.type }}
+                                            {{ errors.isCompany }}
                                         </div>
                                     </div>
-                                    <div class="form-group" v-if="type == 'company'">
+                                    <div class="form-group" v-if="isCompany === true">
                                         <label for="email-id-vertical">Contact person</label>
                                         <input v-model="contactperson_name" type="text" class="form-control mb-3" name="contactperson_name" placeholder="Name">
                                         <input v-model="contactperson_email" :class="{ 'is-invalid': errors.contactperson_email }" type="email" class="form-control" name="contactperson_email" placeholder="Email">
@@ -141,9 +141,9 @@ export default {
         const store = useStore()
         const errors = ref('')
 
-        const type = computed({
-            get: () => store.getters.contact.type,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'type', value: val})
+        const isCompany = computed({
+            get: () => store.getters.contact.is_company,
+            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'is_company', value: val})
         })
         const name = computed({
             get: () => store.getters.contact.name,
@@ -199,7 +199,7 @@ export default {
             } else {
                 store.commit('SET_CONTACT', {
                     organization_id: store.getters.user.organizationId,
-                    type: 'company',
+                    is_company: true,
                     logo: '',
                     name: '',
                     email: '',
@@ -225,8 +225,8 @@ export default {
             if (!String(value).length) return requiredMessage
             return true
         }
-        const typeValidate = val => {
-            if (!['person', 'company'].includes(val))  return "Either 'person' or 'company'"
+        const isCompanyValidate = val => {
+            if (typeof val !== 'boolean') return 'Choose company or private'
             return true
         }
         const nameValidate = val => {
@@ -248,8 +248,8 @@ export default {
             let errs = {}
             let res
 
-            res = typeValidate(type.value)
-            if (res !== true) errs.type = res
+            res = isCompanyValidate(isCompany.value)
+            if (res !== true) errs.isCompany = res
 
             res = nameValidate(name.value)
             if (res !== true) errs.name = res
@@ -257,7 +257,7 @@ export default {
             res = emailValidate(email.value)
             if (res !== true) errs.email = res
 
-            if (['company'].includes(type.value)) {
+            if (isCompany.value === true) {
                 res = contactEmailValidate(contactperson_email.value)
                 if (res !== true) errs.contactperson_email = res
             }
@@ -269,7 +269,7 @@ export default {
             () => name.value,
             () => email.value,
             () => phone.value,
-            () => type.value,
+            () => isCompany.value,
             () => contactperson_email.value
         ], () => {
             validate()
@@ -300,7 +300,7 @@ export default {
         }
 
         return {
-            type,
+            isCompany,
             name,
             logo,
             email,
