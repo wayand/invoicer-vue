@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "invoicer-ui-test",
+      "runtimeExecutable": "env",
+      "runtimeArgs": [
+        "VITE_API_URL=http://localhost:5001",
+        "npm",
+        "run",
+        "dev",
+        "--",
+        "--strictPort"
+      ],
+      "port": 8080
+    }
+  ]
+}

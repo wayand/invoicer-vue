@@ -33,6 +33,10 @@ There is no test suite or test runner yet. Lint currently reports existing error
 - Pushing to `master` deploys to production through GitHub Actions. Work on a branch and ask before committing or pushing; see `.claude/rules/git-and-security.md`.
 - The working tree may contain the user's uncommitted work. Never reset, restore, stash or clean it.
 
+## UI testing (isolated)
+
+`.claude/launch.json` → `invoicer-ui-test` runs Vite on `localhost:8080` with `VITE_API_URL=http://localhost:5001`, overriding `.env.local`. Start the `invoicer-api-ui-test` server from the `invoicer-api` repo first. Always browse via `localhost`, never `127.0.0.1`: `src/services/http.js` falls back to the production API for other hostnames.
+
 ## Personal overrides
 
 `CLAUDE.local.md` and `.claude/settings.local.json` are git-ignored.
