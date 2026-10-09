@@ -104,6 +104,7 @@
 import { computed, toRefs, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import LineShow from '@/components/invoice/LineShow'
+import { HTTP } from '@/services/http'
 export default {
     props: {
         organization: {
@@ -129,11 +130,7 @@ export default {
         const settingDefaultDepositAccount = computed(() => store.getters.getAccountById(organization.value.invoice_setting?.default_deposit_account_id))
 
         const organizationLogo = computed(() => {
-            let URL = 'https://invoicer-api.wayand.dk'
-            if (location.hostname === 'localhost' || location.hostname === '192.168.0.173') {
-                URL = 'http://localhost:5000'
-            }
-            return URL + '/organizations/' + organization.value.slug + '/logo/' + organization.value.logo
+            return HTTP.defaults.baseURL + '/organizations/' + organization.value.slug + '/logo/' + organization.value.logo
         })
         const total_ex_vat = computed(() => {
             return invoice.value.lines?.reduce(
