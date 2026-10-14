@@ -29,7 +29,7 @@ There is no test suite or test runner yet. Lint currently reports existing error
 - Keep changes focused. No drive-by refactors, reformatting or unrelated dependency upgrades.
 - API calls go through `src/services/`, not directly from components.
 - Config via `import.meta.env.VITE_*`. Never hardcode API URLs or secrets. Anything in `VITE_*` ships to the browser.
-- Don't touch shared config (`package.json` deps, `vite.config.js`, `.github/`, `dockerfile`, `deploy.sh`, `.claude/`) unless asked.
+- Don't touch shared config (`package.json` deps, `vite.config.js`, `.github/`, `Dockerfile`, `nginx.conf`, `.claude/`) unless asked.
 - Pushing to `master` deploys to production through GitHub Actions. Work on a branch and ask before committing or pushing; see `.claude/rules/git-and-security.md`.
 - The working tree may contain the user's uncommitted work. Never reset, restore, stash or clean it.
 
