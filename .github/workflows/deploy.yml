@@ -37,3 +37,34 @@ jobs:
 
         - name: Run deploy script
           run: ssh www-data@${{ secrets.HETZNER_IP_ADDRESS }} "bash /srv/docker/invoicer/deploy.sh"
+
+    build-image:
+        name: Build and push Docker image
+        runs-on: ubuntu-24.04-arm   # native arm64 runner: the Hetzner server is aarch64
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Set short SHA
+          id: short_sha
+          run: echo "value=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+        - name: Log in to GitHub Container Registry
+          uses: docker/login-action@v3
+          with:
+              registry: ghcr.io
+              username: ${{ github.actor }}
+              password: ${{ secrets.GITHUB_TOKEN }}
+
+        - name: Build and push
+          uses: docker/build-push-action@v6
+          with:
+              context: .
+              push: true
+              tags: |
+                ghcr.io/wayand/invoicer-vue:latest
+                ghcr.io/wayand/invoicer-vue:${{ steps.short_sha.outputs.value }}
