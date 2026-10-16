@@ -106,7 +106,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <Line
+                                                    <InvoiceLine
                                                         :error="error.lines ? error.lines[index] : {}"
                                                         :products="products"
                                                         v-for="(line, index) in lines" :key="index"
@@ -174,7 +174,7 @@
 </template>
 <script>
 import Datepicker from 'vue3-datepicker'
-import Line from '@/components/invoice/Line'
+import InvoiceLine from '@/components/invoice/Line'
 import ContactFormModal from '@/components/contact/ContactFormModal'
 import { watch, ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
@@ -193,7 +193,7 @@ export default {
     },
     components: {
         Datepicker,
-        Line,
+        InvoiceLine,
         ContactFormModal,
     },
     setup(props) {

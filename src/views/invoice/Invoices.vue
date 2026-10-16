@@ -84,6 +84,7 @@ import { toast } from '@/utilities/toast'
 import { useRouter } from 'vue-router'
 
 export default {
+    name: 'InvoiceList',
     setup() {
         const error = ref('')
         const router = useRouter()

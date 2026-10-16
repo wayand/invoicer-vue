@@ -43,6 +43,7 @@ import BaseSelectWithAddNew from '@/components/formBaseElements/BaseSelectWithAd
 import ProductFormModal from '@/components/product/ProductFormModal'
 
 export default {
+    name: 'InvoiceLine',
     components: {
         BaseSelectWithAddNew,
         ProductFormModal

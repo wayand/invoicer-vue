@@ -12,6 +12,7 @@ import { ref } from 'vue'
 import ResultsBarChart from '@/components/dashboard/ResultsBarChart'
 
 export default {
+    name: 'DashboardPage',
     components: {
         ResultsBarChart
     },

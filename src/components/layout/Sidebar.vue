@@ -104,6 +104,7 @@ import * as SideBarNav from '@/utilities/sidebar'
 import { UseSetTheme, UseInitTheme } from '@/composables/useDarkTheme'
 
 export default {
+    name: 'AppSidebar',
     setup() {
         const sidebar = ref()
         const isDarkMode = ref(false)

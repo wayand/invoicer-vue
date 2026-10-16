@@ -67,6 +67,7 @@ import ProductFormModal from '@/components/product/ProductFormModal'
 import MyDatetimeObject from '@/utilities/mydate'
 
 export default {
+    name: 'ProductList',
     components: {
         ProductFormModal
     },

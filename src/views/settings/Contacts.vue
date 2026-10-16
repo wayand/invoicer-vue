@@ -69,6 +69,7 @@ import ContactFormModal from '@/components/contact/ContactFormModal'
 import SettingsNavigation from '@/components/common/SettingsNavigation'
 
 export default {
+    name: 'ContactList',
     components: {
         ContactFormModal,
         SettingsNavigation

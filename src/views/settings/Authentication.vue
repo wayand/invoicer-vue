@@ -63,6 +63,7 @@ import { useStore } from 'vuex'
 import ChangePasswordModal from '@/components/authentication/ChangePasswordModal'
 
 export default {
+    name: 'AuthenticationSettings',
     components: {
         ChangePasswordModal
     },
