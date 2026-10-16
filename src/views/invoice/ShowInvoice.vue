@@ -15,8 +15,8 @@
                                 <router-link :to="{ name: 'EditInvoice' }" class='dropdown-item'>Edit</router-link>
                                 <a v-if="!invoice.is_sent&&isApproved" class="dropdown-item" href="#" @click="markInvoiceAsSent">Mark as sent</a>
                                 <a class="dropdown-item" href="#" @click="generatePdf()">Save as PDF</a>
-                                <a class="dropdown-item" href="#" v-if="invoiceId" @click="duplicateInvoice()">Duplicate</a>
-                                <a class="dropdown-item" href="#" v-if="invoiceId" @click="deleteInvoice()">Delete</a>
+                                <a class="dropdown-item" href="#" @click.prevent="duplicateInvoice">Duplicate</a>
+                                <a v-if="isDraft" class="dropdown-item" href="#" @click.prevent="deleteInvoice">Delete</a>
                             </div>
                         </div>
                     </div>
@@ -41,6 +41,7 @@
 import html2pdf from "html2pdf.js";
 import { ref, toRefs, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 import InvoicePreview from '@/components/invoice/InvoicePreview'
 import { toast } from '@/utilities/toast'
 export default {
@@ -74,11 +75,17 @@ export default {
     setup(props) {
         const { invoiceId } = toRefs(props)
         const store = useStore()
+        const router = useRouter()
         const organization = computed(() => store.getters.organization)
         const invoice = computed(() => store.getters.invoice)
         const invoiceNo = computed(() => store.getters.invoice.invoice_no)
         const contactName = computed(() => store.getters.invoice.contact?.name)
         const isApproved = computed(() => store.getters.invoice.state === 'approved')
+        // Only a plain draft can be deleted (the API refuses anything else)
+        const isDraft = computed(() => {
+            const { state, is_sent, is_paid } = store.getters.invoice
+            return state === 'draft' && !is_sent && !is_paid
+        })
         const refDialog = ref()
 
         const markInvoiceAsSent = async () => {
@@ -104,6 +111,35 @@ export default {
             }
         }
 
+        const duplicateInvoice = () => {
+            router.push({ name: 'NewInvoice', query: { copyFrom: invoiceId.value } })
+        }
+
+        const deleteInvoice = async () => {
+            refDialog.value.data = {
+                type: 'warning',
+                title: 'Confirm delete invoice',
+                content: 'Are you sure, you want to delete this draft invoice?',
+                accept: 'Yes, delete invoice',
+                reject: 'No, Cancel'
+            }
+
+            const confirmation = await refDialog.value.showModal()
+            if (confirmation === true) {
+                store.dispatch('deleteInvoice', {
+                    organizationId: store.getters.user.organizationId,
+                    invoiceId: parseInt(invoiceId.value)
+                })
+                    .then(() => {
+                        toast('Draft invoice deleted', 'success')
+                        router.push({ name: 'Invoices' })
+                    })
+                    .catch(e => {
+                        toast(e.response?.data?.error || e.message, 'error')
+                    })
+            }
+        }
+
         onMounted( async () => {
             await store.dispatch('fetchOrganization', store.getters.user.organizationId)
             await store.dispatch('fetchInvoice', {
@@ -117,9 +153,12 @@ export default {
             organization,
             invoice,
             isApproved,
+            isDraft,
             invoiceNo,
             contactName,
-            markInvoiceAsSent
+            markInvoiceAsSent,
+            duplicateInvoice,
+            deleteInvoice
         }
     }
 }

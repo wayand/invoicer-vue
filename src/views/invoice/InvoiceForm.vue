@@ -22,7 +22,7 @@
                                 <router-link v-if="invoiceId" :to="{ name: 'ShowInvoice', params: { invoiceId: invoiceId } }" class='dropdown-item'>Preview</router-link>
                                 <a class="dropdown-item" href="#" v-if="invoiceId" @click="createInvoicePDF()">Save as PDF</a>
                                 <a class="dropdown-item" href="#" v-if="invoiceId" @click="duplicateInvoice()">Duplicate</a>
-                                <a class="dropdown-item" href="#" v-if="invoiceId" @click="deleteInvoice()">Delete</a>
+                                <a class="dropdown-item" href="#" v-if="invoiceId && isDraft" @click="deleteInvoice()">Delete</a>
                             </div>
                         </div>
                     </div>
@@ -178,7 +178,7 @@ import Line from '@/components/invoice/Line'
 import ContactFormModal from '@/components/contact/ContactFormModal'
 import { watch, ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
-import { onBeforeRouteLeave, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import MyDatetimeObject from '@/utilities/mydate'
 import { isNum, required } from '@/utilities/validators'
 import { toast } from '@/utilities/toast'
@@ -223,7 +223,7 @@ export default {
             if (props.invoiceId) {
                 await loadEditingInvoice()
             } else {
-                initNewInvoice()
+                await prepareNewInvoice()
             }
             isInvoiceFormSaved.value = true
         })
@@ -232,6 +232,7 @@ export default {
 
         const refDialog = ref()
         const router = useRouter()
+        const route = useRoute()
         const store = useStore()
         const isInvoiceFormSaved = ref(true)
         const showContactFormModal = ref(false)
@@ -287,6 +288,11 @@ export default {
         const products = computed( () => store.getters.products )
 
         const lines = computed(() => store.getters.invoice.lines)
+        // Only a plain draft can be deleted (the API refuses anything else)
+        const isDraft = computed(() => {
+            const { state, is_sent, is_paid } = store.getters.invoice
+            return state === 'draft' && !is_sent && !is_paid
+        })
 
         async function loadEditingInvoice() {
             if (props.invoiceId !== false) {
@@ -299,7 +305,7 @@ export default {
             }
         }
 
-        function initNewInvoice() {
+        function initNewInvoice(overrides = {}) {
             store.commit('SET_INVOICE', {
                 organization_id: store.getters.user.organizationId,
                 contact_id: null,
@@ -321,15 +327,50 @@ export default {
                     quantity: 1,
                     unit_price: 0,
                     amount: 0.00
-                }]
+                }],
+                ...overrides
             })
+        }
+
+        // A new draft with the contact and lines of an existing invoice, and
+        // the next invoice number and today's dates as for any new invoice.
+        async function copyFromInvoice(sourceId) {
+            try {
+                await store.dispatch('fetchInvoice', {
+                    organizationId: store.getters.user.organizationId,
+                    invoiceId: sourceId
+                })
+            } catch (e) {
+                initNewInvoice()
+                toast(e.response?.data?.error || e.message, 'error')
+                return
+            }
+            const source = store.getters.invoice
+            initNewInvoice({
+                contact_id: source.contact_id,
+                currency_id: source.currency_id,
+                excluding_vat: source.excluding_vat,
+                template_id: source.template_id,
+                // eslint-disable-next-line no-unused-vars
+                lines: source.lines.map(({ id, invoice_id, created_at, updated_at, ...line }) => line)
+            })
+            selectedContact.value = contacts.value.filter(c => c.id === contactID.value)[0]
+            oldContactID.value = contactID.value
+            updateInvoice()
+        }
+
+        async function prepareNewInvoice() {
+            initNewInvoice()
+            if (route.query.copyFrom) {
+                await copyFromInvoice(route.query.copyFrom)
+            }
         }
 
         watch(() => props.invoiceId, async () => {
             if (props.invoiceId) {
                 await loadEditingInvoice()
             } else {
-                initNewInvoice()
+                await prepareNewInvoice()
             }
         })
 
@@ -456,7 +497,9 @@ export default {
         }
 
         function createInvoicePDF() {console.log('craete PDF')}
-        function duplicateInvoice() {console.log('Duplicating invoice')}
+        function duplicateInvoice() {
+            router.push({ name: 'NewInvoice', query: { copyFrom: props.invoiceId } })
+        }
         async function deleteInvoice() {
             refDialog.value.data = {
                 type: 'warning',
@@ -515,6 +558,7 @@ export default {
             createInvoicePDF,
             duplicateInvoice,
             deleteInvoice,
+            isDraft,
             isInvoiceFormSaved,
             refDialog,
             settingDefaultAccount,
