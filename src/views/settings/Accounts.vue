@@ -72,6 +72,7 @@ import SettingsNavigation from '@/components/common/SettingsNavigation'
 import AccountFormModal from '@/components/account/AccountFormModal'
 
 export default {
+    name: 'AccountList',
     components: {
         SettingsNavigation,
         AccountFormModal

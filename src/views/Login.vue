@@ -90,6 +90,7 @@ import { apiErrorMessage } from '@/utilities/apiErrors'
 import { isSecondFactorCode } from '@/utilities/secondFactor'
 
 export default {
+    name: 'LoginPage',
     setup() {
         const router = useRouter()
         const route = useRoute()

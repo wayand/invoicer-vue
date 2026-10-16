@@ -1,24 +1,24 @@
 <template>
-    <Sidebar />
+    <AppSidebar />
 
     <div id="main" class="layout-navbar">
-        <Header />
+        <AppHeader />
         <div id="main-content">
             <router-view />
-            <Footer />
+            <AppFooter />
         </div>
     </div>
 </template>
 <script>
-import Sidebar from './Sidebar'
-import Header from './Header'
-import Footer from './Footer'
+import AppSidebar from './Sidebar'
+import AppHeader from './Header'
+import AppFooter from './Footer'
 
 export default {
     components: {
-        Sidebar,
-        Header,
-        Footer
+        AppSidebar,
+        AppHeader,
+        AppFooter
     },
 }
 </script>

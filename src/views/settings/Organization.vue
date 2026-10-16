@@ -116,6 +116,7 @@ import SettingsNavigation from '@/components/common/SettingsNavigation'
 import BaseSelect from '@/components/formBaseElements/BaseSelect'
 
 export default {
+    name: 'OrganizationSettings',
     components: {
         SettingsNavigation,
         BaseSelect

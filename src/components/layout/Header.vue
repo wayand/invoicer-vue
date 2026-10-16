@@ -76,6 +76,7 @@ import { useRouter } from 'vue-router'
 import { computed } from 'vue'
 
 export default {
+    name: 'AppHeader',
     setup() {
         const store = useStore()
         const router = useRouter()
