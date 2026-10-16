@@ -95,11 +95,10 @@ export default {
             state.invoice[property.key] = property.value === null ? '' : property.value
         },
         REMOVE_INVOICE(state, invoiceId) {
+            // The list is only loaded on the invoices page, so the invoice may not be in it
             const index = state.invoices.findIndex(item => item.id === invoiceId)
             if ( index !==  -1 ) {
                 state.invoices.splice(index, 1)
-            } else {
-                console.error('mutation -> REMOVE_INVOICE:', invoiceId, index)
             }
         },
     }
