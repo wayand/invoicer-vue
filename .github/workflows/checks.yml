@@ -1,0 +1,52 @@
+name: Checks
+
+on:
+    pull_request:
+        branches:
+            - master
+
+
+jobs:
+    lint:
+        name: Lint
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Set up Node.js
+          uses: actions/setup-node@v4
+          with:
+              node-version: '22'   # the same major as the Dockerfile
+              cache: npm
+
+        - name: Install dependencies
+          run: npm ci
+
+        # Fails on any error; the codebase is at zero
+        - name: Lint
+          run: npx eslint --ext .js,.vue --ignore-path .gitignore src
+
+    build:
+        name: Build image
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        # The same image that is deployed (npm ci and npm run build run inside
+        # it), built here without pushing it
+        - name: Build the image
+          uses: docker/build-push-action@v6
+          with:
+              context: .
+              push: false
+              load: true
+              tags: invoicer-vue:check
+
+        # A broken nginx.conf would otherwise only show when the container fails
+        # to start after the deploy
+        - name: Check the nginx config
+          run: docker run --rm invoicer-vue:check nginx -t
