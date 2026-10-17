@@ -13,7 +13,11 @@ export default {
         return HTTP.put('/organizations/' + id, requiredOrgFields)
     },
     uploadLogo(organizationId, logo) {
-        return HTTP.post('/organizations/' + organizationId + '/upload-logo', logo, {})
+        // The client defaults to JSON, and axios 1.x then turns a FormData into JSON
+        // (the file is lost). multipart/form-data sends the file as it is.
+        return HTTP.post('/organizations/' + organizationId + '/upload-logo', logo, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
     },
 
     // Invoice settings
