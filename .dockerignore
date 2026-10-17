@@ -1,5 +1,7 @@
 node_modules
 dist
+tests
+vitest.config.js
 .git
 .github
 .claude

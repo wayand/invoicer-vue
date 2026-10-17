@@ -7,12 +7,15 @@ Vue 3 + Vite single-page frontend for invoicer.wayand.dk (Vuex, vue-router, axio
 ```bash
 npm ci                                                     # install exactly from package-lock.json (CI)
 npm run dev                                                # dev server
-npm run build                                              # production build, the only CI gate
+npm test                                                   # unit tests (Vitest, tests/)
+npm run build                                              # production build
 npx eslint --ext .js,.vue --ignore-path .gitignore src     # lint without rewriting files
 npm run lint                                               # lint with --fix (modifies files; use deliberately)
 ```
 
-There is no test suite or test runner yet. Lint currently reports existing errors (mostly `vue/multi-word-component-names`). Don't add new ones.
+CI (`.github/workflows/deploy.yml`) runs `Lint` (eslint, zero errors: keep it that way), `Test` and `Build image` on every pull request; deploys only after all three pass on `master`.
+
+Tests live in `tests/` (Vitest + @vue/test-utils, jsdom), outside `src/`, so eslint does not cover them. Mock the services (`vi.mock('@/services/...')`): importing `@/services/http` pulls in the real router and store. Fix a bug with a test that fails without the fix.
 
 ## Layout
 
@@ -21,6 +24,7 @@ There is no test suite or test runner yet. Lint currently reports existing error
 - `src/router/`, `src/store/` (Vuex, one module per domain in `store/modules/`)
 - `src/services/` one axios service per API area, shared client in `http.js`; `src/composables/`, `src/utilities/`
 - `src/assets/scss/` theme styles; `public/` static files
+- `tests/` unit tests (`utilities/`, `services/`, `store/`, `components/`), `vitest.config.js`
 - `.env.local` holds `VITE_API_URL` (git-ignored); `dist/` is build output (git-ignored)
 
 ## Working rules
