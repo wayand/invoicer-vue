@@ -19,7 +19,7 @@ Tests live in `tests/` (Vitest + @vue/test-utils, jsdom), outside `src/`, so esl
 
 ## Layout
 
-- `src/main.js`, `src/App.vue`, `index.html`, `vite.config.js`
+- `src/main.js`, `src/App.vue`, `index.html`, `vite.config.mjs`
 - `src/views/` pages, `src/components/` reusable UI (by domain: `invoice/`, `contact/`, `layout/`, ...)
 - `src/router/`, `src/store/` (Vuex, one module per domain in `store/modules/`)
 - `src/services/` one axios service per API area, shared client in `http.js`; `src/composables/`, `src/utilities/`
@@ -33,7 +33,7 @@ Tests live in `tests/` (Vitest + @vue/test-utils, jsdom), outside `src/`, so esl
 - Keep changes focused. No drive-by refactors, reformatting or unrelated dependency upgrades.
 - API calls go through `src/services/`, not directly from components.
 - Config via `import.meta.env.VITE_*`. Never hardcode API URLs or secrets. Anything in `VITE_*` ships to the browser.
-- Don't touch shared config (`package.json` deps, `vite.config.js`, `.github/`, `Dockerfile`, `nginx.conf`, `.claude/`) unless asked.
+- Don't touch shared config (`package.json` deps, `vite.config.mjs`, `.github/`, `Dockerfile`, `nginx.conf`, `.claude/`) unless asked.
 - Pushing to `master` deploys to production through GitHub Actions. Work on a branch and ask before committing or pushing; see `.claude/rules/git-and-security.md`.
 - The working tree may contain the user's uncommitted work. Never reset, restore, stash or clean it.
 
