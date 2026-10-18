@@ -1,7 +1,7 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
-import viteConfig from './vite.config'
+import viteConfig from './vite.config.mjs'
 
-// Reuses vite.config.js (the "@" alias and the Vue plugin), so tests import
+// Reuses vite.config.mjs (the "@" alias and the Vue plugin), so tests import
 // code the way the app does.
 export default mergeConfig(viteConfig, defineConfig({
     test: {
