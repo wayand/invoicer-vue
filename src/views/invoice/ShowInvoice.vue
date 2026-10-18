@@ -44,6 +44,7 @@ import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import InvoicePreview from '@/components/invoice/InvoicePreview'
 import { toast } from '@/utilities/toast'
+import { renderInLightTheme } from '@/utilities/pdf'
 export default {
     props: {
         invoiceId: {
@@ -61,7 +62,7 @@ export default {
                 margin: 0,
                 filename: 'invoiceAsPdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { useCORS: true, scale: 2, imageTimeout: 1500, logging: true },
+                html2canvas: { useCORS: true, scale: 2, imageTimeout: 1500, logging: true, onclone: renderInLightTheme },
                 jsPDF: {
                     unit: 'mm',
                     format: 'a4',
