@@ -14,17 +14,17 @@ export default {
     props: {
         label: {
             type: String,
-            default: ''
+            default: '',
         },
         modelValue: {
             type: Boolean,
-            default: false
-        }
+            default: false,
+        },
     },
     setup() {
         const uuid = UniqueID().getID()
         return {
-            uuid
+            uuid,
         }
     },
 }

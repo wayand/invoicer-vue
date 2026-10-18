@@ -3,11 +3,11 @@ import router from './router'
 import App from './App.vue'
 import Store from './store'
 
-import "bootstrap/dist/js/bootstrap.bundle"
+import 'bootstrap/dist/js/bootstrap.bundle'
 
-import "toastify-js/src/toastify.css"
+import 'toastify-js/src/toastify.css'
 
-import { tokenAlive } from "@/services/jwtHelper"
+import { tokenAlive } from '@/services/jwtHelper'
 import PromiseDialog from '@/components/common/promiseDialog'
 import VueApexCharts from 'vue3-apexcharts'
 
@@ -41,10 +41,10 @@ app.config.globalProperties.$filters = {
         var formatter = new Intl.NumberFormat('da-DK', {
             style: 'currency',
             currency: 'DKK',
-            minimumFractionDigits: 2
+            minimumFractionDigits: 2,
         })
         return formatter.format(value)
-    }
+    },
 }
 
 app.config.devtools = true

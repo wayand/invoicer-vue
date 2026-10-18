@@ -9,27 +9,29 @@ vi.mock('@/services/http', () => ({ HTTP: { defaults: { baseURL: 'https://api.ex
 
 const store = createStore({
     getters: { getAccountById: () => () => ({ name: 'Bank', number: 5710 }) },
-    actions: { fetchAccounts: () => {} }
+    actions: { fetchAccounts: () => {} },
 })
 
 const mountPreview = (organization, invoice = {}) =>
     mount(InvoicePreview, {
         props: {
             organization: { name: 'Demo ApS', ...organization },
-            invoice: { lines: [], amount: 0, ...invoice }
+            invoice: { lines: [], amount: 0, ...invoice },
         },
         global: {
             plugins: [store],
             stubs: { LineShow: true },
-            mocks: { $filters: { toCurrency: value => `kr ${Number(value).toFixed(2)}`, toFloat: value => value } }
-        }
+            mocks: { $filters: { toCurrency: (value) => `kr ${Number(value).toFixed(2)}`, toFloat: (value) => value } },
+        },
     })
 
 describe('InvoicePreview', () => {
     it("loads the organization's logo from the API's address, not from a hard-coded one", () => {
         const wrapper = mountPreview({ slug: 'demo-aps', logo: 'logo.png' })
 
-        expect(wrapper.find('img').attributes('src')).toBe('https://api.example.test/organizations/demo-aps/logo/logo.png')
+        expect(wrapper.find('img').attributes('src')).toBe(
+            'https://api.example.test/organizations/demo-aps/logo/logo.png',
+        )
     })
 
     it('shows no logo when the organization has no slug yet (still loading)', () => {
@@ -39,7 +41,13 @@ describe('InvoicePreview', () => {
     it('shows the totals: lines, 25% VAT and the total including VAT', () => {
         const wrapper = mountPreview(
             { slug: 'demo-aps', logo: 'logo.png' },
-            { amount: 300, lines: [{ quantity: 1, unit_price: 100 }, { quantity: 2, unit_price: 100 }] }
+            {
+                amount: 300,
+                lines: [
+                    { quantity: 1, unit_price: 100 },
+                    { quantity: 2, unit_price: 100 },
+                ],
+            },
         )
 
         const text = wrapper.text()
@@ -55,8 +63,8 @@ describe('InvoicePreview', () => {
                 invoice_no: '1001',
                 invoice_date: '2026-01-01',
                 duedate: '2026-01-15',
-                contact: { name: 'Acme ApS', street: 'Main St 1', zipcode: '8000', city: 'Aarhus' }
-            }
+                contact: { name: 'Acme ApS', street: 'Main St 1', zipcode: '8000', city: 'Aarhus' },
+            },
         )
 
         const text = wrapper.text()

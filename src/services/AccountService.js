@@ -14,8 +14,17 @@ export default {
         return HTTP.get(`/accounts/${accountId}`)
     },
     update(account) {
-        // eslint-disable-next-line no-unused-vars
-        const { id: accountId, account_type, account_group, tax_rate, created_at, updated_at, ...requiredFields } = account
+        /* eslint-disable no-unused-vars */
+        const {
+            id: accountId,
+            account_type,
+            account_group,
+            tax_rate,
+            created_at,
+            updated_at,
+            ...requiredFields
+        } = account
+        /* eslint-enable no-unused-vars */
         return HTTP.put(`/accounts/${accountId}`, requiredFields)
     },
     create(account) {
@@ -23,5 +32,5 @@ export default {
     },
     delete(accountId) {
         return HTTP.delete(`/accounts/${accountId}`)
-    }
+    },
 }

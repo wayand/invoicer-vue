@@ -8,17 +8,17 @@ import {
     maxLength,
     minLength,
     required,
-    validateEmail
+    validateEmail,
 } from '@/utilities/validators'
 
 const REQUIRED = 'This field is required'
 
 describe('required', () => {
-    it.each([undefined, null, 0, ''])('rejects %j', value => {
+    it.each([undefined, null, 0, ''])('rejects %j', (value) => {
         expect(required(value)).toBe(REQUIRED)
     })
 
-    it.each(['a', ' ', 7, false])('accepts %j', value => {
+    it.each(['a', ' ', 7, false])('accepts %j', (value) => {
         expect(required(value)).toBe(true)
     })
 })
@@ -36,12 +36,12 @@ describe('minLength and maxLength', () => {
 })
 
 describe('email', () => {
-    it.each(['a@b.dk', 'first.last@sub.example.com', 'x+tag@example.org'])('accepts %j', email => {
+    it.each(['a@b.dk', 'first.last@sub.example.com', 'x+tag@example.org'])('accepts %j', (email) => {
         expect(isEmail(email)).toBe(true)
         expect(validateEmail(email)).toBe(true)
     })
 
-    it.each(['', 'plain', '@example.com', 'a@', 'a@b', 'a b@example.com'])('rejects %j', email => {
+    it.each(['', 'plain', '@example.com', 'a@', 'a@b', 'a b@example.com'])('rejects %j', (email) => {
         expect(isEmail(email)).toBe(false)
         expect(validateEmail(email)).toBe('Enter Valid Email address')
     })
@@ -71,18 +71,18 @@ describe('isPhone', () => {
 })
 
 describe('isName and isPassword', () => {
-    it.each([isName, isPassword])('require a value', check => {
+    it.each([isName, isPassword])('require a value', (check) => {
         expect(check('')).toBe(REQUIRED)
         expect(check(undefined)).toBe(REQUIRED)
     })
 
-    it.each([isName, isPassword])('apply the minimum and the maximum when given', check => {
+    it.each([isName, isPassword])('apply the minimum and the maximum when given', (check) => {
         expect(check('ab', 3)).toBe('The field must be atleast 3 characters long')
         expect(check('abcd', 1, 3)).toBe('The field must be max 3 characters long')
         expect(check('abc', 3, 3)).toBe(true)
     })
 
-    it.each([isName, isPassword])('accept a value when no limits are given', check => {
+    it.each([isName, isPassword])('accept a value when no limits are given', (check) => {
         expect(check('a')).toBe(true)
     })
 })

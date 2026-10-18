@@ -9,15 +9,15 @@ import { computed } from 'vue'
 import { useStore } from 'vuex'
 
 export default {
-    setup () {
+    setup() {
         const store = useStore()
         return {
-            layout: computed(() => store.getters.layout)
+            layout: computed(() => store.getters.layout),
         }
     },
     components: {
         AppLayout,
-        LoginLayout
-    }
+        LoginLayout,
+    },
 }
 </script>

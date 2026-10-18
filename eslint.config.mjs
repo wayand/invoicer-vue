@@ -8,10 +8,10 @@ export default [
     js.configs.recommended,
     {
         languageOptions: {
-            globals: globals.browser
+            globals: globals.browser,
         },
         rules: {
-            'vue/no-deprecated-slot-attribute': 'off'
-        }
-    }
+            'vue/no-deprecated-slot-attribute': 'off',
+        },
+    },
 ]

@@ -21,16 +21,16 @@ const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
         fetchOrganization: vi.fn(),
         fetchInvoice: vi.fn(),
         deleteInvoice: vi.fn(),
-        markInvoiceAsSent: vi.fn()
+        markInvoiceAsSent: vi.fn(),
     }
     const store = createStore({
         state: () => ({ invoice }),
         getters: {
             organization: () => ({ id: 1, slug: 'demo-aps' }),
-            invoice: state => state.invoice,
-            user: () => ({ organizationId: 1 })
+            invoice: (state) => state.invoice,
+            user: () => ({ organizationId: 1 }),
         },
-        actions
+        actions,
     })
     const router = createRouter({
         history: createMemoryHistory(),
@@ -38,8 +38,8 @@ const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
             { path: '/invoices', name: 'Invoices', component: page() },
             { path: '/invoices/new', name: 'NewInvoice', component: page() },
             { path: '/invoices/:invoiceId', name: 'ShowInvoice', component: ShowInvoice, props: true },
-            { path: '/invoices/:invoiceId/edit', name: 'EditInvoice', component: page() }
-        ]
+            { path: '/invoices/:invoiceId/edit', name: 'EditInvoice', component: page() },
+        ],
     })
     router.push('/invoices/2')
     await router.isReady()
@@ -53,24 +53,26 @@ const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
             showModal() {
                 asked.push({ ...this.data })
                 return Promise.resolve(confirm)
-            }
+            },
         },
-        render: () => null
+        render: () => null,
     })
 
     // Mounted inside a router view like in the app, so the page goes away when
     // the route changes
-    const wrapper = mount(
-        defineComponent({ render: () => h(RouterView) }),
-        { global: { plugins: [store, router], components: { PromiseDialog }, stubs: { teleport: true } } }
-    )
+    const wrapper = mount(defineComponent({ render: () => h(RouterView) }), {
+        global: { plugins: [store, router], components: { PromiseDialog }, stubs: { teleport: true } },
+    })
     await flushPromises()
     return { wrapper, router, asked }
 }
 
-const menu = wrapper => wrapper.findAll('.dropdown-item').map(item => item.text())
+const menu = (wrapper) => wrapper.findAll('.dropdown-item').map((item) => item.text())
 const click = async (wrapper, label) => {
-    await wrapper.findAll('.dropdown-item').find(item => item.text() === label).trigger('click')
+    await wrapper
+        .findAll('.dropdown-item')
+        .find((item) => item.text() === label)
+        .trigger('click')
     await flushPromises()
 }
 
@@ -87,7 +89,7 @@ describe('ShowInvoice menu', () => {
         ['approved', { state: 'approved' }],
         ['a draft that was sent', { is_sent: true }],
         ['a draft that was paid', { is_paid: true }],
-        ['a sent and paid invoice', { state: 'approved', is_sent: true, is_paid: true }]
+        ['a sent and paid invoice', { state: 'approved', is_sent: true, is_paid: true }],
     ])('does not offer Delete for %s, but still Duplicate', async (_, fields) => {
         const { wrapper } = await mountPage({ invoice: { ...draft, ...fields } })
 

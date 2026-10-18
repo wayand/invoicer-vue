@@ -13,8 +13,8 @@ vi.mock('@/services/InvoiceService', () => ({
         update: vi.fn(),
         delete: vi.fn(),
         markInvoiceAsSent: vi.fn(),
-        deleteInvoiceLine: vi.fn()
-    }
+        deleteInvoiceLine: vi.fn(),
+    },
 }))
 vi.mock('@/utilities/toast', () => ({ toast: vi.fn() }))
 
@@ -37,7 +37,7 @@ describe('invoice store: mutations', () => {
         store.commit('ADD_INVOICE', { id: 1 })
         store.commit('ADD_INVOICE', { id: 2 })
 
-        expect(store.getters.invoices.map(i => i.id)).toEqual([1, 2])
+        expect(store.getters.invoices.map((i) => i.id)).toEqual([1, 2])
     })
 
     it('replaces an invoice in the list, or adds it when it is not there', () => {
@@ -48,7 +48,7 @@ describe('invoice store: mutations', () => {
 
         expect(store.getters.invoices).toEqual([
             { id: 1, state: 'approved' },
-            { id: 2, state: 'draft' }
+            { id: 2, state: 'draft' },
         ])
     })
 
@@ -87,13 +87,13 @@ describe('invoice store: mutations', () => {
 
         store.commit('ADD_INVOICE_NEW_LINE', { description: 'Second', quantity: 1 })
         store.commit('UPDATE_INVOICE_LINES_PROPERTY', { index: 1, key: 'quantity', value: 3 })
-        expect(store.getters.invoice.lines.map(l => [l.description, l.quantity])).toEqual([
+        expect(store.getters.invoice.lines.map((l) => [l.description, l.quantity])).toEqual([
             ['First', 1],
-            ['Second', 3]
+            ['Second', 3],
         ])
 
         store.commit('REMOVE_INVOICE_LINE', 0)
-        expect(store.getters.invoice.lines.map(l => l.description)).toEqual(['Second'])
+        expect(store.getters.invoice.lines.map((l) => l.description)).toEqual(['Second'])
     })
 })
 

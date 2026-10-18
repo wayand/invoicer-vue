@@ -7,9 +7,23 @@
                     <p class="text-subtitle text-muted">For user to check they list</p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
-                    <button @click.prevent="openProductFormModal()" type="button" class="btn btn-primary me-1 mb-1 float-end">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                    <button
+                        @click.prevent="openProductFormModal()"
+                        type="button"
+                        class="btn btn-primary me-1 mb-1 float-end"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            class="bi bi-plus-lg"
+                            viewBox="0 0 16 16"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"
+                            />
                         </svg>
                         Create
                     </button>
@@ -23,7 +37,12 @@
                 <div class="card-header">
                     All Products <span class="badge bg-secondary">{{ products.length }}</span>
                     <div class="form-check form-switch d-inline-block ms-2">
-                        <input v-model="showArchived" class="form-check-input" type="checkbox" id="flexSwitchCheckArchived">
+                        <input
+                            v-model="showArchived"
+                            class="form-check-input"
+                            type="checkbox"
+                            id="flexSwitchCheckArchived"
+                        />
                         <label class="form-check-label" for="flexSwitchCheckArchived">Show archived</label>
                     </div>
                 </div>
@@ -39,11 +58,20 @@
                         </thead>
                         <tbody>
                             <template v-if="products.length">
-                                <tr v-for="product in products" :key="product.id" @click.prevent="openProductFormModal(product.id)">
-                                    <td>{{ product.name }} <span v-if="product.archived" class="badge bg-light-secondary">Archived</span></td>
+                                <tr
+                                    v-for="product in products"
+                                    :key="product.id"
+                                    @click.prevent="openProductFormModal(product.id)"
+                                >
+                                    <td>
+                                        {{ product.name }}
+                                        <span v-if="product.archived" class="badge bg-light-secondary">Archived</span>
+                                    </td>
                                     <td>{{ $filters.toCurrency(product.unit_price) }}</td>
                                     <td>{{ product.account?.name }}</td>
-                                    <td :title="product.created_at">{{ lastUpdated(product.updated_at) || 'Never' }}</td>
+                                    <td :title="product.created_at">
+                                        {{ lastUpdated(product.updated_at) || 'Never' }}
+                                    </td>
                                 </tr>
                             </template>
                             <tr v-else>
@@ -69,39 +97,42 @@ import MyDatetimeObject from '@/utilities/mydate'
 export default {
     name: 'ProductList',
     components: {
-        ProductFormModal
+        ProductFormModal,
     },
     setup() {
         const store = useStore()
         const showProductFormModal = ref(false)
         const selectedProductId = ref(null)
         const showArchived = ref(false)
-        const products = computed(() => store.getters.products.filter(p => {    
-            return showArchived.value ? true : p.archived === false
-        }))
+        const products = computed(() =>
+            store.getters.products.filter((p) => {
+                return showArchived.value ? true : p.archived === false
+            }),
+        )
 
         const { luxon } = MyDatetimeObject()
 
-        const lastUpdated = date => luxon(date).toFormat('yyyy-MM-dd')
-        
-        onMounted( async () => {
-            await store.dispatch('fetchProducts', store.getters.user.organizationId)
-                .catch(e => toast('products error ' + e, 'error'))    
+        const lastUpdated = (date) => luxon(date).toFormat('yyyy-MM-dd')
+
+        onMounted(async () => {
+            await store
+                .dispatch('fetchProducts', store.getters.user.organizationId)
+                .catch((e) => toast('products error ' + e, 'error'))
         })
 
         const openProductFormModal = (productId = null) => {
             if (productId) {
                 console.log('why am i here', productId)
-                selectedProductId.value = products.value.filter(p => p.id === productId)[0].id
+                selectedProductId.value = products.value.filter((p) => p.id === productId)[0].id
             } else {
                 selectedProductId.value = null
             }
-            document.body.classList.add("modal-open")
+            document.body.classList.add('modal-open')
             showProductFormModal.value = true
         }
 
         const closeProductFormModal = () => {
-            document.body.classList.remove("modal-open")
+            document.body.classList.remove('modal-open')
             showProductFormModal.value = false
         }
 
@@ -112,7 +143,7 @@ export default {
             closeProductFormModal,
             products,
             showArchived,
-            lastUpdated
+            lastUpdated,
         }
     },
 }

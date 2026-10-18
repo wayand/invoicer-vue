@@ -8,12 +8,12 @@ vi.mock('@/services/AuthService', () => ({
         getToken: vi.fn(),
         logout: vi.fn(),
         changePassword: vi.fn(),
-        refreshToken: vi.fn()
-    }
+        refreshToken: vi.fn(),
+    },
 }))
 
 // header.payload.signature, with the payload base64url encoded like the API's tokens
-const tokenWith = payload =>
+const tokenWith = (payload) =>
     `e30.${Buffer.from(JSON.stringify(payload)).toString('base64').replace(/=+$/, '')}.signature`
 
 const claims = {
@@ -25,7 +25,7 @@ const claims = {
     twoFactorAuthType: '2fa_otp_email',
     organizationId: 1,
     organizationSlug: 'demo-aps',
-    aud: 'wayand.dk'
+    aud: 'wayand.dk',
 }
 
 const newStore = () =>
@@ -33,9 +33,9 @@ const newStore = () =>
         modules: {
             auth: {
                 ...auth,
-                state: () => ({ accessToken: null, refreshToken: null, user: null, layout: 'login-layout' })
-            }
-        }
+                state: () => ({ accessToken: null, refreshToken: null, user: null, layout: 'login-layout' }),
+            },
+        },
     })
 
 describe('auth store', () => {
@@ -62,7 +62,7 @@ describe('auth store', () => {
         it('keeps both tokens, reads the user from the access token and switches layout', async () => {
             AuthService.getToken.mockResolvedValue({
                 status: 200,
-                data: { accessToken: tokenWith(claims), refreshToken: 'refresh-1' }
+                data: { accessToken: tokenWith(claims), refreshToken: 'refresh-1' },
             })
 
             await store.dispatch('login', { email: 'a@b.dk', password: 'x', otp_2fa: '123456' })
@@ -77,7 +77,7 @@ describe('auth store', () => {
                 organizationId: 1,
                 organizationSlug: 'demo-aps',
                 isEmailConfirmed: true,
-                twoFactorAuthType: '2fa_otp_email'
+                twoFactorAuthType: '2fa_otp_email',
             })
             expect(store.getters.isTokenValid).toBe(true)
             expect(store.getters.layout).toBe('app-layout')
@@ -86,7 +86,7 @@ describe('auth store', () => {
         it('reports an expired token as no longer valid', async () => {
             AuthService.getToken.mockResolvedValue({
                 status: 200,
-                data: { accessToken: tokenWith({ ...claims, exp: 1000 }), refreshToken: 'r' }
+                data: { accessToken: tokenWith({ ...claims, exp: 1000 }), refreshToken: 'r' },
             })
 
             await store.dispatch('login', {})
@@ -100,7 +100,7 @@ describe('auth store', () => {
             store.commit('SET_ACCESS_TOKEN', 'old-access')
             store.commit('SET_REFRESH_TOKEN', 'old-refresh')
             AuthService.changePassword.mockResolvedValue({
-                data: { message: 'ok', accessToken: 'new-access', refreshToken: 'new-refresh' }
+                data: { message: 'ok', accessToken: 'new-access', refreshToken: 'new-refresh' },
             })
 
             await store.dispatch('changePassword', { password: 'old', new_password: 'new-password-1' })

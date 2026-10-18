@@ -8,7 +8,9 @@
             </p>
 
             <ul class="backup-codes-list" aria-label="Backup codes">
-                <li v-for="code in codes" :key="code"><code>{{ code }}</code></li>
+                <li v-for="code in codes" :key="code">
+                    <code>{{ code }}</code>
+                </li>
             </ul>
 
             <div class="d-flex gap-2 mb-3">
@@ -17,7 +19,7 @@
             </div>
 
             <div class="form-check mb-3">
-                <input v-model="saved" class="form-check-input" type="checkbox" id="backup-codes-saved">
+                <input v-model="saved" class="form-check-input" type="checkbox" id="backup-codes-saved" />
                 <label class="form-check-label" for="backup-codes-saved">I have saved these codes</label>
             </div>
             <button @click="close" :disabled="!saved" type="button" class="btn btn-primary">Done</button>
@@ -35,7 +37,7 @@ export default {
         const codes = ref([])
         const saved = ref(false)
 
-        const showModal = list => {
+        const showModal = (list) => {
             codes.value = list
             saved.value = false
             show.value = true
@@ -57,7 +59,7 @@ export default {
                 'Each code can be used once.',
                 '',
                 ...codes.value,
-                ''
+                '',
             ].join('\n')
             const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }))
             const link = document.createElement('a')
@@ -89,26 +91,26 @@ export default {
     justify-content: center;
     padding: 1rem;
     overflow-y: auto;
-    background: rgba(0, 0, 0, .5);
+    background: rgba(0, 0, 0, 0.5);
 }
 .backup-codes-dialog {
     width: 32rem;
     max-width: 100%;
     padding: 1.5rem;
     border: 1px solid var(--bs-border-color);
-    border-radius: .5rem;
+    border-radius: 0.5rem;
     background: var(--bs-body-bg);
     color: var(--bs-body-color);
 }
 .backup-codes-list {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: .5rem 1rem;
+    gap: 0.5rem 1rem;
     margin: 0 0 1rem;
     padding: 1rem;
     list-style: none;
     border: 1px dashed var(--bs-border-color);
-    border-radius: .375rem;
+    border-radius: 0.375rem;
     font-size: 1.1rem;
 }
 </style>

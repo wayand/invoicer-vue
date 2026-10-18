@@ -1,17 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { apiErrorMessage, fieldErrors } from '@/utilities/apiErrors'
 
-const failure = data => ({ response: { data } })
+const failure = (data) => ({ response: { data } })
 
 describe('apiErrorMessage', () => {
     it('shows the API error string (the rate limiter answers like this)', () => {
-        expect(apiErrorMessage(failure({ error: 'Too many attempts. Please try again later.' })))
-            .toBe('Too many attempts. Please try again later.')
+        expect(apiErrorMessage(failure({ error: 'Too many attempts. Please try again later.' }))).toBe(
+            'Too many attempts. Please try again later.',
+        )
     })
 
     it('joins an error list', () => {
-        expect(apiErrorMessage(failure({ error: ['No password provided', 'Try again'] })))
-            .toBe('No password provided Try again')
+        expect(apiErrorMessage(failure({ error: ['No password provided', 'Try again'] }))).toBe(
+            'No password provided Try again',
+        )
     })
 
     it('flattens field errors into one sentence', () => {

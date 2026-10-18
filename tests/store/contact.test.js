@@ -4,7 +4,7 @@ import contact from '@/store/modules/contact'
 import ContactService from '@/services/ContactService'
 
 vi.mock('@/services/ContactService', () => ({
-    default: { getAll: vi.fn(), getOne: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }
+    default: { getAll: vi.fn(), getOne: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
 }))
 
 const newStore = () =>
@@ -34,7 +34,7 @@ describe('contact store', () => {
 
         expect(store.getters.contacts).toEqual([
             { id: 1, name: 'New' },
-            { id: 2, name: 'Other' }
+            { id: 2, name: 'Other' },
         ])
     })
 

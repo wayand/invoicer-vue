@@ -4,14 +4,14 @@
 const memoryStorage = () => {
     const data = new Map()
     return {
-        getItem: key => (data.has(String(key)) ? data.get(String(key)) : null),
+        getItem: (key) => (data.has(String(key)) ? data.get(String(key)) : null),
         setItem: (key, value) => void data.set(String(key), String(value)),
-        removeItem: key => void data.delete(String(key)),
+        removeItem: (key) => void data.delete(String(key)),
         clear: () => data.clear(),
-        key: index => [...data.keys()][index] ?? null,
+        key: (index) => [...data.keys()][index] ?? null,
         get length() {
             return data.size
-        }
+        },
     }
 }
 

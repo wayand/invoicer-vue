@@ -6,5 +6,5 @@ export default {
     },
     getOne(countryId) {
         return HTTP.get('/countries/' + countryId)
-    }
+    },
 }

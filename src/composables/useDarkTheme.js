@@ -1,7 +1,7 @@
-export const UseSetTheme = (theme, isDarkMode, persist=false) => {
+export const UseSetTheme = (theme, isDarkMode, persist = false) => {
     document.body.classList.add(theme)
     document.documentElement.setAttribute('data-bs-theme', theme)
-    if (typeof isDarkMode !== 'undefined') isDarkMode.value = theme==='dark' ? true : false
+    if (typeof isDarkMode !== 'undefined') isDarkMode.value = theme === 'dark' ? true : false
     if (persist) {
         localStorage.setItem('theme', theme)
     }
@@ -18,13 +18,13 @@ export const UseInitTheme = (isDarkMode) => {
         return
     }
     //Media query to detect dark preference
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
     if (!storedTheme && mediaQuery) {
-        UseSetTheme(mediaQuery.matches ? "dark" : "light", isDarkMode, true)
+        UseSetTheme(mediaQuery.matches ? 'dark' : 'light', isDarkMode, true)
     }
 
     //Register change listener
-    mediaQuery.addEventListener("change", (e) => {
-        UseSetTheme(e.matches ? "dark" : "light", isDarkMode, true)
+    mediaQuery.addEventListener('change', (e) => {
+        UseSetTheme(e.matches ? 'dark' : 'light', isDarkMode, true)
     })
 }

@@ -1,22 +1,22 @@
 //import { HTTP } from '@/services/http'
 import AuthService from '@/services/AuthService'
-import { jwtDecrypt, tokenAlive } from "@/services/jwtHelper"
+import { jwtDecrypt, tokenAlive } from '@/services/jwtHelper'
 
 export default {
     state: {
         accessToken: localStorage.getItem('accessToken') || null,
         refreshToken: localStorage.getItem('refreshToken') || null,
         user: null,
-        layout: localStorage.getItem('layout') || 'login-layout'
+        layout: localStorage.getItem('layout') || 'login-layout',
     },
     getters: {
-        accessToken: state => state.accessToken,
-        refreshToken: state => state.refreshToken,
-        user: state => state.user,
-        layout: state => state.layout,
-        loggedIn: state => !!state.user,
-        isTokenValid: state => !state.user.tokenExp ? false : tokenAlive(state.user.tokenExp),
-        isEmailConfirmed: state => state.user ? state.user.isEmailConfirmed : false
+        accessToken: (state) => state.accessToken,
+        refreshToken: (state) => state.refreshToken,
+        user: (state) => state.user,
+        layout: (state) => state.layout,
+        loggedIn: (state) => !!state.user,
+        isTokenValid: (state) => (!state.user.tokenExp ? false : tokenAlive(state.user.tokenExp)),
+        isEmailConfirmed: (state) => (state.user ? state.user.isEmailConfirmed : false),
     },
     mutations: {
         UPDATE_IS_EMAIL_CONFIRMED(state, bool) {
@@ -44,10 +44,10 @@ export default {
                 name: decodedJwt.name,
                 isEmailConfirmed: decodedJwt.isEmailConfirmed,
                 isTwoFactorAuth: decodedJwt.isTwoFactorAuth,
-                twoFactorAuthType:decodedJwt.twoFactorAuthType,
+                twoFactorAuthType: decodedJwt.twoFactorAuthType,
                 organizationId: decodedJwt.organizationId,
                 organizationSlug: decodedJwt.organizationSlug,
-                aud: decodedJwt.aud
+                aud: decodedJwt.aud,
             }
         },
         SET_LAYOUT(state, layout) {
@@ -61,33 +61,31 @@ export default {
             state.isLoggedIn = false
             localStorage.removeItem('accessToken')
             localStorage.removeItem('refreshToken')
-        }
+        },
     },
     actions: {
-        refresh({state, commit}) {
-            return AuthService.refreshToken(state.refreshToken)
-                .then(response => {
-                    commit('SET_ACCESS_TOKEN', response.data.accessToken)
-                    return response
-                })
+        refresh({ state, commit }) {
+            return AuthService.refreshToken(state.refreshToken).then((response) => {
+                commit('SET_ACCESS_TOKEN', response.data.accessToken)
+                return response
+            })
         },
-        login({commit}, credentials) {
-            return AuthService.getToken(credentials)
-                .then(response => {
-                    if (response.status === 206 && response.data.message === '2fa_otp') {
-                        return response
-                    } else {
-                        commit('SET_USER_DATA', response.data.accessToken)
-                        commit('SET_ACCESS_TOKEN', response.data.accessToken)
-                        commit('SET_REFRESH_TOKEN', response.data.refreshToken)
-                        commit('SET_LAYOUT', 'app-layout')
-                        return response
-                    }
-                })
+        login({ commit }, credentials) {
+            return AuthService.getToken(credentials).then((response) => {
+                if (response.status === 206 && response.data.message === '2fa_otp') {
+                    return response
+                } else {
+                    commit('SET_USER_DATA', response.data.accessToken)
+                    commit('SET_ACCESS_TOKEN', response.data.accessToken)
+                    commit('SET_REFRESH_TOKEN', response.data.refreshToken)
+                    commit('SET_LAYOUT', 'app-layout')
+                    return response
+                }
+            })
         },
         logout({ state, commit }) {
             return AuthService.logout(state.refreshToken)
-                .then(response => {
+                .then((response) => {
                     console.log('Successfully Logout')
                     return response
                 })
@@ -98,22 +96,20 @@ export default {
                 })
         },
         changePassword({ commit }, credentials) {
-            return AuthService.changePassword(credentials)
-                .then(response => {
-                    // Changing the password ends every session, this one
-                    // included; the response carries a new one.
-                    commit('SET_ACCESS_TOKEN', response.data.accessToken)
-                    commit('SET_REFRESH_TOKEN', response.data.refreshToken)
-                    return response
-                })
+            return AuthService.changePassword(credentials).then((response) => {
+                // Changing the password ends every session, this one
+                // included; the response carries a new one.
+                commit('SET_ACCESS_TOKEN', response.data.accessToken)
+                commit('SET_REFRESH_TOKEN', response.data.refreshToken)
+                return response
+            })
         },
         getAuthUser({ commit, dispatch }) {
-            return AuthService.getAuthUser()
-                .then(response => {
-                    commit('UPDATE_USER_DATA', response.data)
-                    dispatch('refresh')
-                    return response
-                })
+            return AuthService.getAuthUser().then((response) => {
+                commit('UPDATE_USER_DATA', response.data)
+                dispatch('refresh')
+                return response
+            })
         },
         resendTOTPEmail() {
             return AuthService.resendTOTPEmail()
@@ -122,12 +118,11 @@ export default {
             return AuthService.resendConfirmationEmail()
         },
         confirmEmail({ commit, dispatch }, token) {
-            return AuthService.confirmEmail(token)
-                .then(response => {
-                    commit('UPDATE_IS_EMAIL_CONFIRMED', true)
-                    dispatch('refresh')
-                    return response
-                })
+            return AuthService.confirmEmail(token).then((response) => {
+                commit('UPDATE_IS_EMAIL_CONFIRMED', true)
+                dispatch('refresh')
+                return response
+            })
         },
         qrCode() {
             return AuthService.qrCode()
@@ -149,6 +144,6 @@ export default {
         },
         resetPassword(_, payload) {
             return AuthService.resetPassword(payload)
-        }
-    }
+        },
+    },
 }

@@ -1,16 +1,22 @@
 <template>
-    <div class="modal fade text-left show" tabindex="-1" aria-labelledby="myModalLabel33" style="display: block;" aria-modal="true"  role="dialog">
+    <div
+        class="modal fade text-left show"
+        tabindex="-1"
+        aria-labelledby="myModalLabel33"
+        style="display: block"
+        aria-modal="true"
+        role="dialog"
+    >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel33">{{ accountId ? 'Edit' : 'Create' }} Account </h4>
+                    <h4 class="modal-title" id="myModalLabel33">{{ accountId ? 'Edit' : 'Create' }} Account</h4>
                     <button type="button" class="close" @click="$emit('close')" aria-label="Close">
                         <i class="bi bi-x bi-middle"></i>
                     </button>
                 </div>
                 <form @submit.prevent="saveAccount">
                     <div class="modal-body">
-
                         <div class="row mb-4">
                             <div :class="isBankAccount && isAccountGroupBankAndCashBalance ? 'col-6' : 'col-12'">
                                 <div class="row">
@@ -33,7 +39,9 @@
                                             :class="{ 'is-invalid': errors.number }"
                                             :error="errors.number"
                                         />
-                                        <small class="text-muted">Used by accountants, and for organizing your accounts</small>
+                                        <small class="text-muted"
+                                            >Used by accountants, and for organizing your accounts</small
+                                        >
                                     </div>
 
                                     <div class="form-group">
@@ -49,10 +57,7 @@
                                     <template v-if="isAccountGroupBankAndCashBalance">
                                         <div class="form-group">
                                             <div class="form-check">
-                                                <BaseCheckbox
-                                                    label="Bank account"
-                                                    v-model="isBankAccount"
-                                                />
+                                                <BaseCheckbox label="Bank account" v-model="isBankAccount" />
                                             </div>
                                         </div>
 
@@ -91,7 +96,7 @@
                             </div>
                             <div v-if="isBankAccount && isAccountGroupBankAndCashBalance" class="col-6">
                                 <div class="row">
-                                    <h6> Bank Information</h6>
+                                    <h6>Bank Information</h6>
                                     <div class="form-group">
                                         <BaseInput
                                             v-model="currencyId"
@@ -150,7 +155,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light-secondary">
@@ -181,95 +185,99 @@ export default {
     components: {
         BaseSelect,
         BaseInput,
-        BaseCheckbox
+        BaseCheckbox,
     },
     props: {
         accountId: {
             type: [Number, String, Boolean],
             required: false,
-            default: false
-        }
+            default: false,
+        },
     },
     emits: ['close'],
-    setup(props, {emit}) {
-
+    setup(props, { emit }) {
         const store = useStore()
         const errors = ref('')
 
-        const accountTypeId = computed( () => store.getters.account.account_type_id || 0 )
+        const accountTypeId = computed(() => store.getters.account.account_type_id || 0)
 
         const accountGroupId = computed({
             get: () => store.getters.account.account_group_id || 0,
-            set: val => {
-                store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'account_group_id', value: val})
-                store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'account_type_id', value: getAccountTypeId.value || 0})
-            }
+            set: (val) => {
+                store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'account_group_id', value: val })
+                store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'account_type_id', value: getAccountTypeId.value || 0 })
+            },
         })
         const taxRateId = computed({
             get: () => store.getters.account.tax_rate_id || 0,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'tax_rate_id', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'tax_rate_id', value: val }),
         })
         const name = computed({
             get: () => store.getters.account.name,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'name', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'name', value: val }),
         })
         const description = computed({
             get: () => store.getters.account.description,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'description', value: val})
-        })        
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'description', value: val }),
+        })
         const number = computed({
             get: () => store.getters.account.number,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'number', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'number', value: val }),
         })
         const currencyId = computed({
             get: () => store.getters.account.currency_id,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'currency_id', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'currency_id', value: val }),
         })
         const bankId = computed({
             get: () => store.getters.account.bank_id || 0,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'bank_id', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'bank_id', value: val }),
         })
         const bankRegistrationNumber = computed({
             get: () => store.getters.account.bank_registration_number,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'bank_registration_number', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'bank_registration_number', value: val }),
         })
         const bankAccountNumber = computed({
             get: () => store.getters.account.bank_account_number,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'bank_account_number', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'bank_account_number', value: val }),
         })
         const bankSwiftNumber = computed({
             get: () => store.getters.account.bank_swift_number,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'bank_swift_number', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'bank_swift_number', value: val }),
         })
         const bankIbanNumber = computed({
             get: () => store.getters.account.bank_iban_number,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'bank_iban_number', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'bank_iban_number', value: val }),
         })
         const isBankAccount = computed({
             get: () => store.getters.account.is_bank_account,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'is_bank_account', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'is_bank_account', value: val }),
         })
         const isPaymentEnabled = computed({
             get: () => store.getters.account.is_payment_enabled,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'is_payment_enabled', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'is_payment_enabled', value: val }),
         })
         const isArchived = computed({
             get: () => store.getters.account.is_archived,
-            set: val => store.commit('UPDATE_ACCOUNT_PROPERTY', {key: 'is_archived', value: val})
+            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'is_archived', value: val }),
         })
         const accountGroups = computed(() => store.getters.accountGroups)
         const taxRates = computed(() => store.getters.taxRates)
 
         const isAccountGroupBankAndCashBalance = computed(() => {
-            if (accountGroupId.value && 
-                accountGroups.value.filter(accGr => accGr.id ===  accountGroupId.value)[0]?.name === 'Bank- og kontantbeholdninger') { // accountGroup is "Bank og kontantbeholdninger" with id 9
+            if (
+                accountGroupId.value &&
+                accountGroups.value.filter((accGr) => accGr.id === accountGroupId.value)[0]?.name ===
+                    'Bank- og kontantbeholdninger'
+            ) {
+                // accountGroup is "Bank og kontantbeholdninger" with id 9
                 return true
             }
             return false
         })
 
-        const getAccountTypeId = computed( () => {
-            if (accountGroupId.value) return accountGroups.value.filter(accGr => accGr.id ===  accountGroupId.value)[0]?.account_type_id
+        const getAccountTypeId = computed(() => {
+            if (accountGroupId.value)
+                return accountGroups.value.filter((accGr) => accGr.id === accountGroupId.value)[0]?.account_type_id
             return null
         })
 
@@ -282,7 +290,7 @@ export default {
             if (!newIsBank) {
                 console.log(`newIsBank: ${newIsBank}`)
                 bankId.value = 0
-                console.log('bankId.value: ',bankId.value)
+                console.log('bankId.value: ', bankId.value)
             }
         })
 
@@ -302,7 +310,7 @@ export default {
                 id: 1,
                 logo_url: '',
                 name: 'Nordea',
-            }
+            },
         ]
 
         onMounted(async () => {
@@ -327,7 +335,7 @@ export default {
                     bank_iban_number: '',
                     is_bank_account: false,
                     is_payment_enabled: false,
-                    is_archived: false
+                    is_archived: false,
                 })
             }
         })
@@ -341,7 +349,7 @@ export default {
             req = required(accountGroupId.value)
             res = isNum(accountGroupId.value)
             if (req !== true) errs.account_group_id = req
-            if (res !== true ) errs.account_group_id = res
+            if (res !== true) errs.account_group_id = res
 
             if (isBankAccount.value) {
                 res = isNum(bankId.value)
@@ -376,23 +384,26 @@ export default {
         const saveAccount = () => {
             if (validate()) {
                 const actionName = props.accountId ? 'updateAccount' : 'createAccount'
-                store.dispatch(actionName, {
-                    account: store.getters.account
-                }).then(() => {
-                    toast('Successfully saved !', 'success')
-                    emit('close')
-                }).catch(e => {
-                    if (e.response) {
-                        if (e.response.data.errors) {
-                            errors.value = e.response.data.errors
-                            toast(JSON.stringify( errors.value ), 'error')
+                store
+                    .dispatch(actionName, {
+                        account: store.getters.account,
+                    })
+                    .then(() => {
+                        toast('Successfully saved !', 'success')
+                        emit('close')
+                    })
+                    .catch((e) => {
+                        if (e.response) {
+                            if (e.response.data.errors) {
+                                errors.value = e.response.data.errors
+                                toast(JSON.stringify(errors.value), 'error')
+                            } else {
+                                toast(e.response.data.error || e.response.data.msg, 'error')
+                            }
                         } else {
-                            toast(e.response.data.error || e.response.data.msg, 'error')
+                            toast(e.message, 'error')
                         }
-                    } else {
-                        toast(e.message, 'error')
-                    }
-                })
+                    })
             }
         }
 
@@ -418,7 +429,7 @@ export default {
             errors,
             saveAccount,
             isAccountGroupBankAndCashBalance,
-            isTaxRateDisabled
+            isTaxRateDisabled,
         }
     },
 }

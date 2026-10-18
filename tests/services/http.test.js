@@ -3,7 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 // The client talks to the store (tokens) and the router (back to login)
 const { store, router } = vi.hoisted(() => ({
     store: { getters: {}, commit: vi.fn(), dispatch: vi.fn() },
-    router: { push: vi.fn() }
+    router: { push: vi.fn() },
 }))
 vi.mock('@/store', () => ({ default: store }))
 vi.mock('@/router', () => ({ default: router }))
@@ -27,14 +27,14 @@ const fail = (status, config) => {
 let seen
 const serverReplies = (...statuses) => {
     seen = []
-    HTTP.defaults.adapter = async config => {
+    HTTP.defaults.adapter = async (config) => {
         seen.push(config)
         const status = statuses[Math.min(seen.length, statuses.length) - 1]
         if (status >= 400) throw fail(status, config)
         return { data: { ok: true, call: seen.length }, status, statusText: 'OK', headers: {}, config, request: {} }
     }
 }
-const authorizationOf = config => config.headers.Authorization
+const authorizationOf = (config) => config.headers.Authorization
 
 describe('requests', () => {
     beforeEach(() => {
@@ -92,7 +92,7 @@ describe('an expired access token (401)', () => {
         vi.clearAllMocks()
         store.getters = { accessToken: 'access-1', refreshToken: 'refresh-1' }
         // refreshing swaps in a new access token
-        store.dispatch.mockImplementation(async action => {
+        store.dispatch.mockImplementation(async (action) => {
             if (action === 'refresh') store.getters = { ...store.getters, accessToken: 'access-2' }
         })
     })
@@ -154,7 +154,7 @@ describe('other failures', () => {
         store.getters = { accessToken: 'access-1', refreshToken: 'refresh-1' }
     })
 
-    it.each([403, 404, 409, 422, 429, 500])('pass through untouched (%i)', async status => {
+    it.each([403, 404, 409, 422, 429, 500])('pass through untouched (%i)', async (status) => {
         serverReplies(status)
 
         await expect(HTTP.get('/invoices')).rejects.toMatchObject({ response: { status } })

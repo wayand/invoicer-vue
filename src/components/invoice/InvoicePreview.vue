@@ -1,34 +1,47 @@
-<template>    
+<template>
     <div class="card invoice-preview" id="invoice-preview">
         <div class="card-content">
             <div class="card-body">
                 <div class="row">
                     <div class="text-center">
-                        <img v-if="organization.slug" width="200" height="auto" class="rounded float-end" style="max-height: 120px; max-width: 200px; height: auto;" :src="organizationLogo">
+                        <img
+                            v-if="organization.slug"
+                            width="200"
+                            height="auto"
+                            class="rounded float-end"
+                            style="max-height: 120px; max-width: 200px; height: auto"
+                            :src="organizationLogo"
+                        />
                     </div>
                 </div>
 
                 <div class="row mb-4 justify-content-between">
                     <div class="col-md-3 col-3">
-                        <span class="fw-bold">{{ invoice.contact?.name }}</span><br>
-                        {{ invoice.contact?.street }}<br>
-                        {{ invoice.contact?.zipcode }} {{ invoice.contact?.city }}<br> 
+                        <span class="fw-bold">{{ invoice.contact?.name }}</span
+                        ><br />
+                        {{ invoice.contact?.street }}<br />
+                        {{ invoice.contact?.zipcode }} {{ invoice.contact?.city }}<br />
                     </div>
                     <div class="col-md-5 col-5 text-end">
                         <table class="table">
                             <tbody>
-                            <tr><td>
-                            <span class="fw-bold">{{ organization.name }}</span><br>
-                            {{ organization.street }}<br>
-                            {{ organization.zipcode }} {{ organization.city }}<br>
-                            {{ organization.country?.name }}
-                            
-                            <p></p>
-                            
-                            CVR-nr.: {{ organization.registration_no }}<br>
-                            Tlf.: {{ organization.phone }}<br>
-                            {{ organization.email }}
-                        </td></tr></tbody></table>
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold">{{ organization.name }}</span
+                                        ><br />
+                                        {{ organization.street }}<br />
+                                        {{ organization.zipcode }} {{ organization.city }}<br />
+                                        {{ organization.country?.name }}
+
+                                        <p></p>
+
+                                        CVR-nr.: {{ organization.registration_no }}<br />
+                                        Tlf.: {{ organization.phone }}<br />
+                                        {{ organization.email }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -38,9 +51,15 @@
                             <tbody>
                                 <tr>
                                     <td class="title">Faktura</td>
-                                    <td class="text-end">Fakturanr.: <span class="fw-bold">{{ invoice.invoice_no }}</span></td>
-                                    <td class="text-end">Fakturadato: <span class="fw-bold">{{ invoice.invoice_date }}</span></td>
-                                    <td class="text-end">Forfaldsdato: <span class="fw-bold">{{ invoice.duedate }}</span></td>
+                                    <td class="text-end">
+                                        Fakturanr.: <span class="fw-bold">{{ invoice.invoice_no }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        Fakturadato: <span class="fw-bold">{{ invoice.invoice_date }}</span>
+                                    </td>
+                                    <td class="text-end">
+                                        Forfaldsdato: <span class="fw-bold">{{ invoice.duedate }}</span>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -63,7 +82,7 @@
                             </tbody>
                         </table>
 
-                        <table class="table float-end text-end" style="width:50%">
+                        <table class="table float-end text-end" style="width: 50%">
                             <tbody>
                                 <tr>
                                     <td>I alt ekskl. moms</td>
@@ -85,18 +104,24 @@
                             <div>
                                 Betalingsbetingelser: Netto 8 dage - Forfaldsdato: {{ invoice.duedate }}
                                 <p>
-                                    Beløbet indbetales på bankkonto:<br>
-                                    Bank / Reg.nr. <strong>{{ settingDefaultDepositAccount?.bank_registration_number }}</strong> / Kontonr. <strong>{{ settingDefaultDepositAccount?.bank_account_number }}</strong><br>
-                                    Fakturanr. <strong>{{ invoice.invoice_no }}</strong> bedes angivet ved bankoverførsel
+                                    Beløbet indbetales på bankkonto:<br />
+                                    Bank / Reg.nr.
+                                    <strong>{{ settingDefaultDepositAccount?.bank_registration_number }}</strong> /
+                                    Kontonr. <strong>{{ settingDefaultDepositAccount?.bank_account_number }}</strong
+                                    ><br />
+                                    Fakturanr. <strong>{{ invoice.invoice_no }}</strong> bedes angivet ved
+                                    bankoverførsel
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
-                <hr>
+                <hr />
                 <div class="text-center">
-                    <strong>{{ organization.name }}</strong> / {{ organization.street }} / {{ organization.zipcode+' '+organization.city }}<br>
-                    CVR-nr. {{ organization.registration_no }} / Tlf. {{ organization.phone }} / Mail: {{ organization.email }}
+                    <strong>{{ organization.name }}</strong> / {{ organization.street }} /
+                    {{ organization.zipcode + ' ' + organization.city }}<br />
+                    CVR-nr. {{ organization.registration_no }} / Tlf. {{ organization.phone }} / Mail:
+                    {{ organization.email }}
                 </div>
             </div>
         </div>
@@ -111,44 +136,47 @@ export default {
     props: {
         organization: {
             type: Object,
-            required: true
+            required: true,
         },
         invoice: {
             type: Object,
-            required: true
-        }
+            required: true,
+        },
     },
     components: {
-        LineShow
+        LineShow,
     },
     setup(props) {
-
         const store = useStore()
         const { invoice, organization } = toRefs(props)
 
         onMounted(async () => await store.dispatch('fetchAccounts'))
 
-        const settingDefaultAccount = computed(() => store.getters.getAccountById(organization.value.invoice_setting?.default_account_id))
-        const settingDefaultDepositAccount = computed(() => store.getters.getAccountById(organization.value.invoice_setting?.default_deposit_account_id))
+        const settingDefaultAccount = computed(() =>
+            store.getters.getAccountById(organization.value.invoice_setting?.default_account_id),
+        )
+        const settingDefaultDepositAccount = computed(() =>
+            store.getters.getAccountById(organization.value.invoice_setting?.default_deposit_account_id),
+        )
 
         const organizationLogo = computed(() => {
-            return HTTP.defaults.baseURL + '/organizations/' + organization.value.slug + '/logo/' + organization.value.logo
+            return (
+                HTTP.defaults.baseURL + '/organizations/' + organization.value.slug + '/logo/' + organization.value.logo
+            )
         })
         const total_ex_vat = computed(() => {
-            return invoice.value.lines?.reduce(
-                (total, val) => total + val.quantity * val.unit_price
-            , 0)
+            return invoice.value.lines?.reduce((total, val) => total + val.quantity * val.unit_price, 0)
         })
-        const vatAmount = computed(() => (invoice.value.amount) * .25)
-        const total_inc_vat = computed(() => (invoice.value.amount) + vatAmount.value)
-        
+        const vatAmount = computed(() => invoice.value.amount * 0.25)
+        const total_inc_vat = computed(() => invoice.value.amount + vatAmount.value)
+
         return {
             organizationLogo,
             total_ex_vat,
             vatAmount,
             total_inc_vat,
             settingDefaultAccount,
-            settingDefaultDepositAccount
+            settingDefaultDepositAccount,
         }
     },
 }
@@ -159,7 +187,8 @@ export default {
     width: 800px;
     /* color: #000; */
     font-size: 12px;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-family:
+        'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
 }
 .invoice-preview .title {
     font-size: 35px;

@@ -12,7 +12,7 @@ paths:
 - Call the backend through `src/services/` and keep shared state in `src/store/modules/`.
 - Read config from `import.meta.env.VITE_*`.
 - Handle request errors (user-visible message, no silent `catch {}`).
-- Keep ESLint clean for the files you touch.
+- Keep ESLint and Prettier (`npm run format:check`) clean for the files you touch.
 
 ## Don't
 - Don't hardcode API URLs, tokens, passwords or absolute paths.

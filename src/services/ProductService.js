@@ -17,5 +17,5 @@ export default {
     },
     delete(productId) {
         return HTTP.delete(`/products/${productId}`)
-    }
+    },
 }

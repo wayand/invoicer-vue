@@ -4,65 +4,60 @@ import { toast } from '@/utilities/toast'
 export default {
     state: {
         invoices: [],
-        invoice: {}
+        invoice: {},
     },
     getters: {
-        invoices: state => state.invoices,
-        invoice: state => state.invoice
+        invoices: (state) => state.invoices,
+        invoice: (state) => state.invoice,
     },
     actions: {
-        fetchInvoices({commit}, organizationId) {
-            return InvoiceService.getAll(organizationId)
-                .then(response => {
-                    commit('SET_INVOICES', response.data)
-                    return response
-                })
+        fetchInvoices({ commit }, organizationId) {
+            return InvoiceService.getAll(organizationId).then((response) => {
+                commit('SET_INVOICES', response.data)
+                return response
+            })
         },
-        fetchInvoice({commit}, {invoiceId}) {
-            return InvoiceService.getOne(invoiceId)
-                .then(response => {
-                    commit('SET_INVOICE', response.data)
-                    return response
-                })
+        fetchInvoice({ commit }, { invoiceId }) {
+            return InvoiceService.getOne(invoiceId).then((response) => {
+                commit('SET_INVOICE', response.data)
+                return response
+            })
         },
-        createInvoice({commit}, {organizationId, invoice}) {
-            return InvoiceService.create(organizationId, invoice)
-                .then(response => {
-                    commit('ADD_INVOICE', response.data)
-                    return response
-                })
+        createInvoice({ commit }, { organizationId, invoice }) {
+            return InvoiceService.create(organizationId, invoice).then((response) => {
+                commit('ADD_INVOICE', response.data)
+                return response
+            })
         },
-        updateInvoice({commit}, {organizationId, invoice}) {
-            return InvoiceService.update(organizationId, invoice)
-                .then(response => {
-                    commit('UPDATE_INVOICES', response.data)
-                    return response
-                })
+        updateInvoice({ commit }, { organizationId, invoice }) {
+            return InvoiceService.update(organizationId, invoice).then((response) => {
+                commit('UPDATE_INVOICES', response.data)
+                return response
+            })
         },
-        deleteInvoiceLine({state}, {organizationId, invoiceId, lineIndex}) {
+        deleteInvoiceLine({ state }, { organizationId, invoiceId, lineIndex }) {
             const lineId = state.invoice.lines[lineIndex]?.id
             console.log(`for organization ${organizationId} and invoice ${invoiceId}`)
-            
+
             if (lineId) {
-                return InvoiceService.deleteInvoiceLine(organizationId, invoiceId, lineId)
-                    .then(() => toast('Successfully removed !', 'success'))
+                return InvoiceService.deleteInvoiceLine(organizationId, invoiceId, lineId).then(() =>
+                    toast('Successfully removed !', 'success'),
+                )
             } else {
                 console.log(`No LineId for lineIndex: ${lineIndex}`)
             }
         },
-        deleteInvoice({commit}, {organizationId, invoiceId}) {
-            return InvoiceService.delete(organizationId, invoiceId)
-                .then(() => {
-                    commit('REMOVE_INVOICE', invoiceId)
-                })
+        deleteInvoice({ commit }, { organizationId, invoiceId }) {
+            return InvoiceService.delete(organizationId, invoiceId).then(() => {
+                commit('REMOVE_INVOICE', invoiceId)
+            })
         },
-        markInvoiceAsSent({commit}, payload) {
-            return InvoiceService.markInvoiceAsSent(payload)
-                .then(response => {
-                    commit('UPDATE_INVOICES', response.data)
-                    return response
-                })
-        }
+        markInvoiceAsSent({ commit }, payload) {
+            return InvoiceService.markInvoiceAsSent(payload).then((response) => {
+                commit('UPDATE_INVOICES', response.data)
+                return response
+            })
+        },
     },
     mutations: {
         SET_INVOICES(state, invoices) {
@@ -84,22 +79,22 @@ export default {
             state.invoices.push(invoice)
         },
         UPDATE_INVOICES(state, invoice) {
-            const index = state.invoices.findIndex(item => item.id === invoice.id)
-            if ( index !==  -1 ) {
+            const index = state.invoices.findIndex((item) => item.id === invoice.id)
+            if (index !== -1) {
                 state.invoices[index] = invoice
             } else {
                 state.invoices.push(invoice)
             }
         },
-        UPDATE_INVOICE_PROPERTY (state, property) {
+        UPDATE_INVOICE_PROPERTY(state, property) {
             state.invoice[property.key] = property.value === null ? '' : property.value
         },
         REMOVE_INVOICE(state, invoiceId) {
             // The list is only loaded on the invoices page, so the invoice may not be in it
-            const index = state.invoices.findIndex(item => item.id === invoiceId)
-            if ( index !==  -1 ) {
+            const index = state.invoices.findIndex((item) => item.id === invoiceId)
+            if (index !== -1) {
                 state.invoices.splice(index, 1)
             }
         },
-    }
+    },
 }

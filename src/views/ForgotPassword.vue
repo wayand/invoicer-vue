@@ -1,18 +1,26 @@
 <template>
     <div id="auth">
-        
         <div class="row h-100">
             <div class="col-lg-5 col-12">
                 <div id="auth-left">
                     <div class="auth-logo">
-                        <a href="/"><img src="/assets/static/images/logo/logo.png" alt="Logo"></a>
+                        <a href="/"><img src="/assets/static/images/logo/logo.png" alt="Logo" /></a>
                     </div>
                     <h1 class="auth-title">Forgot Password</h1>
                     <p class="auth-subtitle mb-5">Input your email and we will send you reset password link.</p>
 
                     <form @submit.prevent="sendResetMail">
-                        <div class="form-group position-relative has-icon-left mb-4" :class="{ 'is-invalid': error.email }">
-                            <input v-model="email" type="email" :class="{ 'is-invalid': error.email }" class="form-control form-control-xl" placeholder="Email">
+                        <div
+                            class="form-group position-relative has-icon-left mb-4"
+                            :class="{ 'is-invalid': error.email }"
+                        >
+                            <input
+                                v-model="email"
+                                type="email"
+                                :class="{ 'is-invalid': error.email }"
+                                class="form-control form-control-xl"
+                                placeholder="Email"
+                            />
                             <div class="form-control-icon">
                                 <i class="bi bi-envelope"></i>
                             </div>
@@ -32,12 +40,9 @@
                 </div>
             </div>
             <div class="col-lg-7 d-none d-lg-block">
-                <div id="auth-right">
-
-                </div>
+                <div id="auth-right"></div>
             </div>
         </div>
-
     </div>
 </template>
 <script>
@@ -54,7 +59,7 @@ export default {
         const store = useStore()
 
         const error = ref('')
-        const email = ref('')    
+        const email = ref('')
 
         const validate = () => {
             error.value = ''
@@ -75,12 +80,13 @@ export default {
         const sendResetMail = () => {
             if (validate()) {
                 console.log('Validated email address.....')
-                store.dispatch('sendResetMail', {email: email.value})
-                    .then(response => {
+                store
+                    .dispatch('sendResetMail', { email: email.value })
+                    .then((response) => {
                         toast(response.data.message, 'success', 10000)
-                        router.push({ name: "ResetPassword" })
+                        router.push({ name: 'ResetPassword' })
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         const errors = e.response && e.response.data && e.response.data.errors
                         if (errors) {
                             error.value = errors
@@ -94,7 +100,7 @@ export default {
         return {
             error,
             email,
-            sendResetMail
+            sendResetMail,
         }
     },
 }

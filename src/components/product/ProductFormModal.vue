@@ -1,9 +1,16 @@
 <template>
-    <div class="modal fade text-left show" tabindex="-1" aria-labelledby="createProductModalID" style="display: block;" aria-modal="true"  role="dialog">
+    <div
+        class="modal fade text-left show"
+        tabindex="-1"
+        aria-labelledby="createProductModalID"
+        style="display: block"
+        aria-modal="true"
+        role="dialog"
+    >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="createProductModalID">{{ productId ? 'Edit' : 'Create' }} Product </h4>
+                    <h4 class="modal-title" id="createProductModalID">{{ productId ? 'Edit' : 'Create' }} Product</h4>
                     <button type="button" class="close" @click="$emit('close')" aria-label="Close">
                         <i class="bi bi-x bi-middle"></i>
                     </button>
@@ -14,7 +21,14 @@
                             <div class="row">
                                 <div class="form-group">
                                     <label for="name-vertical">Name</label>
-                                    <input v-model="name"  :class="{ 'is-invalid': errors.name }" type="text" class="form-control" name="name" id="name-vertical">
+                                    <input
+                                        v-model="name"
+                                        :class="{ 'is-invalid': errors.name }"
+                                        type="text"
+                                        class="form-control"
+                                        name="name"
+                                        id="name-vertical"
+                                    />
                                     <div v-if="errors.name" class="invalid-feedback">
                                         <i class="bx bx-radio-circle"></i>
                                         {{ errors.name }}
@@ -22,13 +36,14 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="description-id-vertical">Description</label>
-                                    <textarea 
-                                        v-model="description" 
-                                        :class="{ 'is-invalid': errors.description }" 
-                                        class="form-control" 
+                                    <textarea
+                                        v-model="description"
+                                        :class="{ 'is-invalid': errors.description }"
+                                        class="form-control"
                                         id="description-id-vertical"
                                         rows="3"
-                                        placeholder="Description">
+                                        placeholder="Description"
+                                    >
                                     </textarea>
                                     <div v-if="errors.description" class="invalid-feedback">
                                         <i class="bx bx-radio-circle"></i>
@@ -37,7 +52,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="unitPrice-id">Unit price</label>
-                                    <input v-model.number="unitPrice" :class="{ 'is-invalid': errors.unit_price }" type="text" class="form-control" id="unitPrice-id" name="unitPrice" placeholder="Unit price">
+                                    <input
+                                        v-model.number="unitPrice"
+                                        :class="{ 'is-invalid': errors.unit_price }"
+                                        type="text"
+                                        class="form-control"
+                                        id="unitPrice-id"
+                                        name="unitPrice"
+                                        placeholder="Unit price"
+                                    />
                                     <div v-if="errors.unit_price" class="invalid-feedback">
                                         <i class="bx bx-radio-circle"></i>
                                         {{ errors.unit_price }}
@@ -55,7 +78,12 @@
                                 </div>
                                 <div class="form-group">
                                     <div class="form-check">
-                                        <input v-model="archived" id="product-archived" type="checkbox" class="form-check-input">
+                                        <input
+                                            v-model="archived"
+                                            id="product-archived"
+                                            type="checkbox"
+                                            class="form-check-input"
+                                        />
                                         <label for="product-archived">Archived (hide from list)</label>
                                     </div>
                                 </div>
@@ -89,37 +117,36 @@ export default {
         productId: {
             type: [Number, String, Boolean],
             required: false,
-            default: false
-        }
+            default: false,
+        },
     },
     components: {
         BaseSelect,
     },
     emits: ['close'],
-    setup(props, {emit}) {
-
+    setup(props, { emit }) {
         const store = useStore()
         const errors = ref('')
 
         const name = computed({
             get: () => store.getters.product.name,
-            set: val => store.commit('UPDATE_PRODUCT_PROPERTY', {key: 'name', value: val})
+            set: (val) => store.commit('UPDATE_PRODUCT_PROPERTY', { key: 'name', value: val }),
         })
         const accountId = computed({
             get: () => store.getters.product.account_id || 0,
-            set: val => store.commit('UPDATE_PRODUCT_PROPERTY', {key: 'account_id', value: val})
+            set: (val) => store.commit('UPDATE_PRODUCT_PROPERTY', { key: 'account_id', value: val }),
         })
         const description = computed({
             get: () => store.getters.product.description,
-            set: val => store.commit('UPDATE_PRODUCT_PROPERTY', {key: 'description', value: val})
+            set: (val) => store.commit('UPDATE_PRODUCT_PROPERTY', { key: 'description', value: val }),
         })
         const unitPrice = computed({
             get: () => store.getters.product.unit_price,
-            set: val => store.commit('UPDATE_PRODUCT_PROPERTY', {key: 'unit_price', value: val})
+            set: (val) => store.commit('UPDATE_PRODUCT_PROPERTY', { key: 'unit_price', value: val }),
         })
         const archived = computed({
             get: () => store.getters.product.archived,
-            set: val => store.commit('UPDATE_PRODUCT_PROPERTY', {key: 'archived', value: val})
+            set: (val) => store.commit('UPDATE_PRODUCT_PROPERTY', { key: 'archived', value: val }),
         })
         const incomeAccounts = computed(() => store.getters.getIncomeAccounts)
 
@@ -133,8 +160,8 @@ export default {
                     name: '',
                     account_id: null,
                     description: '',
-                    unit_price: 0.00,
-                    archived: false 
+                    unit_price: 0.0,
+                    archived: false,
                 })
             }
         })
@@ -144,7 +171,7 @@ export default {
             let errs = {}
             let res
 
-            res = incomeAccounts.value.some(a => a.id === accountId.value)
+            res = incomeAccounts.value.some((a) => a.id === accountId.value)
             if (res !== true) errs.account_id = 'This field is required!'
 
             res = isName(name.value, 1, 50)
@@ -162,34 +189,32 @@ export default {
             }
             return false
         }
-        watch([
-            () => name.value,
-            () => description.value,
-            () => unitPrice.value
-        ], () => {    
+        watch([() => name.value, () => description.value, () => unitPrice.value], () => {
             validate()
         })
 
         const saveProduct = () => {
             if (validate()) {
                 const actionName = props.productId ? 'updateProduct' : 'createProduct'
-                store.dispatch(actionName, store.getters.product)
-                .then(() => {
-                    toast('Successfully saved !', 'success')
-                    emit('close')
-                }).catch(e => {
-                    if (e.response) {
-                        if (e.response.data.errors) {
-                            errors.value = e.response.data.errors
-                            toast('Please check error messages!!', 'error')
-                            toast(JSON.stringify( errors.value ), 'error')
+                store
+                    .dispatch(actionName, store.getters.product)
+                    .then(() => {
+                        toast('Successfully saved !', 'success')
+                        emit('close')
+                    })
+                    .catch((e) => {
+                        if (e.response) {
+                            if (e.response.data.errors) {
+                                errors.value = e.response.data.errors
+                                toast('Please check error messages!!', 'error')
+                                toast(JSON.stringify(errors.value), 'error')
+                            } else {
+                                toast(e.response.data.error || e.response.data.msg, 'error')
+                            }
                         } else {
-                            toast(e.response.data.error || e.response.data.msg, 'error')
+                            toast(e.message, 'error')
                         }
-                    } else {
-                        toast(e.message, 'error')
-                    }
-                })
+                    })
             }
         }
 
@@ -201,8 +226,8 @@ export default {
             archived,
             accountId,
             incomeAccounts,
-            saveProduct
-        }    
+            saveProduct,
+        }
     },
 }
 </script>

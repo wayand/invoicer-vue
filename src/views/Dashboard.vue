@@ -14,16 +14,15 @@ import ResultsBarChart from '@/components/dashboard/ResultsBarChart'
 export default {
     name: 'DashboardPage',
     components: {
-        ResultsBarChart
+        ResultsBarChart,
     },
     setup() {
-        const Dashboard =  ref('')
+        const Dashboard = ref('')
 
         return {
-            Dashboard: Dashboard.value = 'Hejsa DashBoard'
+            Dashboard: (Dashboard.value = 'Hejsa DashBoard'),
         }
     },
 }
 </script>
-<style>
-</style>
+<style></style>

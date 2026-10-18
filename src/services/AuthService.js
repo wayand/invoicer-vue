@@ -17,7 +17,7 @@ export default {
         return HTTP.post('/auth/revoke-refresh-token')
     },
     refreshToken(token) {
-        return HTTP.post('/auth/refresh-token', {}, { headers: { 'Authorization': `Bearer ${token}` } })
+        return HTTP.post('/auth/refresh-token', {}, { headers: { Authorization: `Bearer ${token}` } })
     },
     isAuthorized() {
         return HTTP.get('/is-authorized')
@@ -29,7 +29,7 @@ export default {
         return HTTP.post('/auth/totp-setup', payload)
     },
     totpDelete(payload) {
-        return HTTP.delete('/auth/totp-setup', {data: payload})
+        return HTTP.delete('/auth/totp-setup', { data: payload })
     },
     sendResetMail(payload) {
         return HTTP.post('/auth/send-reset-mail', payload)
@@ -44,13 +44,12 @@ export default {
         return HTTP.post('/auth/resend-totp-email')
     },
     confirmEmail(token) {
-        return HTTP.post('/auth/confirm-email/'+token)
+        return HTTP.post('/auth/confirm-email/' + token)
     },
     backupCodesStatus() {
         return HTTP.get('/auth/backup-codes')
     },
     regenerateBackupCodes(payload) {
         return HTTP.post('/auth/backup-codes', payload)
-    }
-
+    },
 }

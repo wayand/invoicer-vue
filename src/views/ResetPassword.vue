@@ -1,26 +1,40 @@
 <template>
     <div id="auth">
-        
         <div class="row h-100">
             <div class="col-lg-5 col-12">
                 <div id="auth-left">
                     <div class="auth-logo">
-                        <a href="index.html"><img src="/assets/static/images/logo/logo.png" alt="Logo"></a>
+                        <a href="index.html"><img src="/assets/static/images/logo/logo.png" alt="Logo" /></a>
                     </div>
                     <h1 class="auth-title">Reset your password</h1>
                     <p class="auth-subtitle mb-5">Copy the reset code from your email and paste it below..</p>
 
                     <form @submit.prevent="resetPassword">
                         <div class="form-group mb-4" :class="{ 'is-invalid': errors.resetCode }">
-                            <input v-model="resetCode" type="text" :class="{ 'is-invalid': errors.resetCode }" class="form-control form-control-xl" placeholder="Reset code">
+                            <input
+                                v-model="resetCode"
+                                type="text"
+                                :class="{ 'is-invalid': errors.resetCode }"
+                                class="form-control form-control-xl"
+                                placeholder="Reset code"
+                            />
                             <div v-if="errors.resetCode" class="invalid-feedback">
                                 <i class="bx bx-radio-circle"></i>
                                 {{ errors.resetCode }}
                             </div>
                         </div>
 
-                        <div class="form-group position-relative has-icon-right" :class="{ 'is-invalid': errors.newPassword }">
-                            <input v-model="newPassword" :type="PasswordFieldType" :class="{ 'is-invalid': errors.newPassword }" class="form-control form-control-xl" placeholder="New password">
+                        <div
+                            class="form-group position-relative has-icon-right"
+                            :class="{ 'is-invalid': errors.newPassword }"
+                        >
+                            <input
+                                v-model="newPassword"
+                                :type="PasswordFieldType"
+                                :class="{ 'is-invalid': errors.newPassword }"
+                                class="form-control form-control-xl"
+                                placeholder="New password"
+                            />
                             <div @click="togglePasswordFieldType" class="form-control-icon">
                                 <i :class="`bi bi-eye-${PasswordFieldType === 'text' ? 'slash-' : ''}fill`"></i>
                             </div>
@@ -40,12 +54,9 @@
                 </div>
             </div>
             <div class="col-lg-7 d-none d-lg-block">
-                <div id="auth-right">
-
-                </div>
+                <div id="auth-right"></div>
             </div>
         </div>
-
     </div>
 </template>
 <script>
@@ -61,7 +72,7 @@ export default {
         const router = useRouter()
         const route = useRoute()
         const store = useStore()
-        
+
         const errors = ref([])
         const resetCode = ref('')
         const newPassword = ref('')
@@ -86,19 +97,21 @@ export default {
             return false
         }
 
-
         const togglePasswordFieldType = () => {
-            PasswordFieldType.value === 'password' ? PasswordFieldType.value = 'text' : PasswordFieldType.value = 'password'
+            PasswordFieldType.value === 'password'
+                ? (PasswordFieldType.value = 'text')
+                : (PasswordFieldType.value = 'password')
         }
 
         const resetPassword = () => {
             if (validate()) {
-                store.dispatch('resetPassword', { new_password: newPassword.value, reset_code: resetCode.value })
-                    .then(response => {
+                store
+                    .dispatch('resetPassword', { new_password: newPassword.value, reset_code: resetCode.value })
+                    .then((response) => {
                         toast(response.data.message, 'success')
-                        router.push({ name: "Login" })
+                        router.push({ name: 'Login' })
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         const fieldErrors = e.response && e.response.data && e.response.data.errors
                         if (fieldErrors) {
                             errors.value = fieldErrors
@@ -120,7 +133,7 @@ export default {
             newPassword,
             resetPassword,
             PasswordFieldType,
-            togglePasswordFieldType
+            togglePasswordFieldType,
         }
     },
 }
@@ -164,7 +177,7 @@ body {
 .form-control-icon {
     cursor: pointer;
 }
-.form-group[class*=has-icon-] .form-control.form-control-xl {
+.form-group[class*='has-icon-'] .form-control.form-control-xl {
     padding-left: 1rem;
 }
 </style>

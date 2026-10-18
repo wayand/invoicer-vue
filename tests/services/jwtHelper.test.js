@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { jwtDecrypt, tokenAlive } from '@/services/jwtHelper'
 
 // A token has the form header.payload.signature, each part base64url
-const base64url = value =>
+const base64url = (value) =>
     Buffer.from(value, 'utf8').toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-const tokenWith = payload => `${base64url('{"alg":"HS256"}')}.${base64url(JSON.stringify(payload))}.signature`
+const tokenWith = (payload) => `${base64url('{"alg":"HS256"}')}.${base64url(JSON.stringify(payload))}.signature`
 
 describe('jwtDecrypt', () => {
     it('reads the payload of a token', () => {

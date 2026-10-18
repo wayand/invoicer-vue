@@ -5,13 +5,13 @@
                 <div class="text-center">
                     <template v-if="confirmed">
                         <h1 class="error-title">Welcome!</h1>
-                        <p class='fs-5 text-gray-600'>
-                            Congratulations!. Your Invoicer account is now activated.
-                        </p>
+                        <p class="fs-5 text-gray-600">Congratulations!. Your Invoicer account is now activated.</p>
                     </template>
                     <template v-else>
                         <h1>Woops!</h1>
-                        <p>Either the provided activation token is invalid or this account has already been activated.</p>
+                        <p>
+                            Either the provided activation token is invalid or this account has already been activated.
+                        </p>
                     </template>
                 </div>
             </div>
@@ -26,7 +26,7 @@ export default {
         token: {
             type: String,
             required: true,
-        }
+        },
     },
     setup(props) {
         const { token } = toRefs(props)
@@ -35,16 +35,15 @@ export default {
         const store = useStore()
 
         onMounted(async () => {
-            await store.dispatch('confirmEmail', token.value)
-                .then((result) => {
-                    confirmed.value = true
-                    console.log('result', result.data)
-                    confirmedResponse.value = result.data
-                })
+            await store.dispatch('confirmEmail', token.value).then((result) => {
+                confirmed.value = true
+                console.log('result', result.data)
+                confirmedResponse.value = result.data
+            })
         })
 
         return {
-            confirmed
+            confirmed,
         }
     },
 }

@@ -17,5 +17,5 @@ export default {
     },
     delete(taxRateId) {
         return HTTP.delete(`/tax-rates/${taxRateId}`)
-    }
+    },
 }

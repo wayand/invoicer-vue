@@ -10,7 +10,7 @@
 export default {
     setup() {
         return {
-            AnnualReport: "This is Annual Report"
+            AnnualReport: 'This is Annual Report',
         }
     },
 }

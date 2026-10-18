@@ -5,9 +5,11 @@ import router from '@/router'
 let baseURL = 'https://invoicer-api.wayand.dk'
 const env = import.meta.env.MODE
 
-if (location.hostname === 'localhost' ||
+if (
+    location.hostname === 'localhost' ||
     location.hostname === '192.168.0.127' ||
-    location.hostname.includes('.local')) {
+    location.hostname.includes('.local')
+) {
     baseURL = import.meta.env.VITE_API_URL
     console.log('backend baseURL::', baseURL)
     console.log('env::', env)
@@ -17,40 +19,46 @@ export const HTTP = axios.create({
     baseURL: baseURL,
     withCredentials: true,
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+    },
 })
 
-HTTP.interceptors.request.use(config => {
-    let token = store.getters.accessToken
+HTTP.interceptors.request.use(
+    (config) => {
+        let token = store.getters.accessToken
 
-    if(config.url.includes('auth/refresh-token')) {
-        token = store.getters.refreshToken
-        console.log('Token is refreshed!')
-    }
+        if (config.url.includes('auth/refresh-token')) {
+            token = store.getters.refreshToken
+            console.log('Token is refreshed!')
+        }
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-}, error => {
-    return Promise.reject(error)
-})
-
-HTTP.interceptors.response.use((response) => {
-    return response
-}, async error => {
-    const originalRequest = error.config
-    if (error.response?.status === 401 && originalRequest.url.includes('auth/refresh-token')) {
-        console.log('error.response.data', error.response.data)
-        store.commit('CLEAR_USER_DATA')
-        store.commit('SET_LAYOUT', 'login-layout')
-        router.push('/login')
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+        }
+        return config
+    },
+    (error) => {
         return Promise.reject(error)
-    } else if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
-        await store.dispatch("refresh")
-        return HTTP(originalRequest);
-    }
-    return Promise.reject(error)
-})
+    },
+)
+
+HTTP.interceptors.response.use(
+    (response) => {
+        return response
+    },
+    async (error) => {
+        const originalRequest = error.config
+        if (error.response?.status === 401 && originalRequest.url.includes('auth/refresh-token')) {
+            console.log('error.response.data', error.response.data)
+            store.commit('CLEAR_USER_DATA')
+            store.commit('SET_LAYOUT', 'login-layout')
+            router.push('/login')
+            return Promise.reject(error)
+        } else if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true
+            await store.dispatch('refresh')
+            return HTTP(originalRequest)
+        }
+        return Promise.reject(error)
+    },
+)

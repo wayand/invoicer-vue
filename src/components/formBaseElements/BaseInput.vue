@@ -9,13 +9,8 @@
         :id="uuid"
         :aria-describedby="error ? `${uuid}-error` : null"
         :aria-invalid="error ? true : null"
-    >
-    <p
-        v-if="error"
-        class="invalid-feedback"
-        :id="`${uuid}-error`"
-        aria-live="assertive"
-    >
+    />
+    <p v-if="error" class="invalid-feedback" :id="`${uuid}-error`" aria-live="assertive">
         {{ error }}
     </p>
 </template>
@@ -25,21 +20,21 @@ export default {
     props: {
         label: {
             type: String,
-            default: ''
+            default: '',
         },
         modelValue: {
             type: [String, Number],
-            default: ''
+            default: '',
         },
         error: {
             type: [String, Array],
-            default: ''
-        }
+            default: '',
+        },
     },
     setup() {
         const uuid = UniqueID().getID()
         return {
-            uuid
+            uuid,
         }
     },
 }

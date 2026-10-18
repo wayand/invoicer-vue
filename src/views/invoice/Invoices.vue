@@ -39,15 +39,30 @@
                         </thead>
                         <tbody>
                             <template v-if="invoices.length">
-                                <tr v-for="invoice in invoices" :key="invoice.id" @click.prevent="clickHandler($event, invoice.id)">
+                                <tr
+                                    v-for="invoice in invoices"
+                                    :key="invoice.id"
+                                    @click.prevent="clickHandler($event, invoice.id)"
+                                >
                                     <td>
-                                        <span :class="`badge bg-${invoice.state === 'draft'?'danger':'primary'}`">
-                                            {{ invoice.state }}
-                                        </span>&nbsp;
+                                        <span :class="`badge bg-${invoice.state === 'draft' ? 'danger' : 'primary'}`">
+                                            {{ invoice.state }} </span
+                                        >&nbsp;
                                         <template v-if="invoice.is_sent">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-envelope-check" viewBox="0 0 16 16">
-                                                <path d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l7-4.2V8.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2H2Zm3.708 6.208L1 11.105V5.383l4.708 2.825ZM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2-7-4.2Z"/>
-                                                <path d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm-1.993-1.679a.5.5 0 0 0-.686.172l-1.17 1.95-.547-.547a.5.5 0 0 0-.708.708l.774.773a.75.75 0 0 0 1.174-.144l1.335-2.226a.5.5 0 0 0-.172-.686Z"/>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                fill="currentColor"
+                                                class="bi bi-envelope-check"
+                                                viewBox="0 0 16 16"
+                                            >
+                                                <path
+                                                    d="M2 2a2 2 0 0 0-2 2v8.01A2 2 0 0 0 2 14h5.5a.5.5 0 0 0 0-1H2a1 1 0 0 1-.966-.741l5.64-3.471L8 9.583l7-4.2V8.5a.5.5 0 0 0 1 0V4a2 2 0 0 0-2-2H2Zm3.708 6.208L1 11.105V5.383l4.708 2.825ZM1 4.217V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v.217l-7 4.2-7-4.2Z"
+                                                />
+                                                <path
+                                                    d="M16 12.5a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Zm-1.993-1.679a.5.5 0 0 0-.686.172l-1.17 1.95-.547-.547a.5.5 0 0 0-.708.708l.774.773a.75.75 0 0 0 1.174-.144l1.335-2.226a.5.5 0 0 0-.172-.686Z"
+                                                />
                                             </svg>
                                         </template>
                                     </td>
@@ -59,9 +74,21 @@
                                     <td>{{ $filters.toCurrency(invoice.gross_amount) }}</td>
                                     <td>
                                         <button type="button" class="edit__invoice btn btn-primary me-1 mb-1 float-end">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                                <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                                <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                                            <svg
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="16"
+                                                height="16"
+                                                fill="currentColor"
+                                                class="bi bi-pencil-square"
+                                                viewBox="0 0 16 16"
+                                            >
+                                                <path
+                                                    d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"
+                                                />
+                                                <path
+                                                    fill-rule="evenodd"
+                                                    d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"
+                                                />
                                             </svg>
                                         </button>
                                     </td>
@@ -91,8 +118,8 @@ export default {
         const store = useStore()
 
         const invoices = computed(() => store.getters.invoices)
-        const preview = invoiceId => router.push({ name: "ShowInvoice", params: { invoiceId: invoiceId } })
-        const edit = invoiceId => router.push({ name: "EditInvoice", params: { invoiceId: invoiceId } })
+        const preview = (invoiceId) => router.push({ name: 'ShowInvoice', params: { invoiceId: invoiceId } })
+        const edit = (invoiceId) => router.push({ name: 'EditInvoice', params: { invoiceId: invoiceId } })
 
         const clickHandler = (e, invoiceId) => {
             const editInvoice = e.target.closest('td > button.edit__invoice')
@@ -100,9 +127,10 @@ export default {
             return preview(invoiceId)
         }
 
-        onMounted( async () => {
-            await store.dispatch('fetchInvoices', store.getters.user.organizationId)
-                .catch(e => toast('Invoices ' + e, 'error'))
+        onMounted(async () => {
+            await store
+                .dispatch('fetchInvoices', store.getters.user.organizationId)
+                .catch((e) => toast('Invoices ' + e, 'error'))
         })
 
         return {
@@ -110,9 +138,9 @@ export default {
             invoices,
             clickHandler,
             preview,
-            edit
+            edit,
         }
-    }
+    },
 }
 </script>
 <style scoped>

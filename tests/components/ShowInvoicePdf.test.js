@@ -14,11 +14,18 @@ const { chain, html2pdf } = vi.hoisted(() => {
 })
 vi.mock('html2pdf.js', () => ({ default: html2pdf }))
 vi.mock('@/components/invoice/InvoicePreview', () => ({
-    default: { render: () => h('div', { id: 'invoice-preview' }) }
+    default: { render: () => h('div', { id: 'invoice-preview' }) },
 }))
 vi.mock('@/utilities/toast', () => ({ toast: vi.fn() }))
 
-const invoice = { id: 2, invoice_no: '1001', state: 'approved', is_sent: false, is_paid: false, contact: { name: 'Acme' } }
+const invoice = {
+    id: 2,
+    invoice_no: '1001',
+    state: 'approved',
+    is_sent: false,
+    is_paid: false,
+    contact: { name: 'Acme' },
+}
 
 const other = defineComponent({ render: () => h('div') })
 const mounted = []
@@ -28,10 +35,10 @@ const mountPage = async () => {
         state: () => ({ invoice }),
         getters: {
             organization: () => ({ id: 1, slug: 'demo-aps' }),
-            invoice: state => state.invoice,
-            user: () => ({ organizationId: 1 })
+            invoice: (state) => state.invoice,
+            user: () => ({ organizationId: 1 }),
         },
-        actions: { fetchOrganization: () => {}, fetchInvoice: () => {} }
+        actions: { fetchOrganization: () => {}, fetchInvoice: () => {} },
     })
     const router = createRouter({
         history: createMemoryHistory(),
@@ -39,8 +46,8 @@ const mountPage = async () => {
             { path: '/invoices', name: 'Invoices', component: other },
             { path: '/invoices/new', name: 'NewInvoice', component: other },
             { path: '/invoices/:invoiceId', name: 'ShowInvoice', component: ShowInvoice, props: true },
-            { path: '/invoices/:invoiceId/edit', name: 'EditInvoice', component: other, props: true }
-        ]
+            { path: '/invoices/:invoiceId/edit', name: 'EditInvoice', component: other, props: true },
+        ],
     })
     router.push('/invoices/2')
     await router.isReady()
@@ -49,16 +56,19 @@ const mountPage = async () => {
         global: {
             plugins: [store, router],
             components: { PromiseDialog: defineComponent({ render: () => null }) },
-            stubs: { teleport: true }
-        }
+            stubs: { teleport: true },
+        },
     })
     mounted.push(wrapper)
     await flushPromises()
     return wrapper
 }
 
-const savePdf = async wrapper => {
-    await wrapper.findAll('.dropdown-item').find(item => item.text() === 'Save as PDF').trigger('click')
+const savePdf = async (wrapper) => {
+    await wrapper
+        .findAll('.dropdown-item')
+        .find((item) => item.text() === 'Save as PDF')
+        .trigger('click')
     await flushPromises()
 }
 const darkDocument = () => {
@@ -73,7 +83,7 @@ describe('Save as PDF', () => {
         document.documentElement.setAttribute('data-bs-theme', 'dark')
     })
     afterEach(() => {
-        mounted.splice(0).forEach(wrapper => wrapper.unmount())
+        mounted.splice(0).forEach((wrapper) => wrapper.unmount())
         document.documentElement.removeAttribute('data-bs-theme')
     })
 
