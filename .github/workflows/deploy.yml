@@ -29,7 +29,7 @@ jobs:
 
         # Fails on any error; the codebase is at zero
         - name: Lint
-          run: npx eslint --ext .js,.vue --ignore-path .gitignore src
+          run: npx eslint src
 
     test:
         name: Test
