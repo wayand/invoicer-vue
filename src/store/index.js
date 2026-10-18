@@ -8,10 +8,9 @@ import contactModule from './modules/contact'
 import accountModule from './modules/account'
 import taxrateModule from './modules/taxrate'
 
-const debug = false//process.env.NODE_ENV !== 'production'
+const debug = false //process.env.NODE_ENV !== 'production'
 
 const Store = createStore({
-
     strict: debug,
     plugins: debug ? [createLogger()] : [],
     modules: {
@@ -23,7 +22,7 @@ const Store = createStore({
         contact: contactModule,
         account: accountModule,
         taxrate: taxrateModule,
-    }
+    },
 })
 
 export default Store

@@ -1,9 +1,18 @@
 <template>
-    <div v-if="show" class="modal fade text-left show" id="inlineForm" tabindex="-1" aria-labelledby="myChangepasswordModal" style="display: block;" aria-modal="true" role="dialog">
+    <div
+        v-if="show"
+        class="modal fade text-left show"
+        id="inlineForm"
+        tabindex="-1"
+        aria-labelledby="myChangepasswordModal"
+        style="display: block"
+        aria-modal="true"
+        role="dialog"
+    >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myChangepasswordModal">Change Password </h4>
+                    <h4 class="modal-title" id="myChangepasswordModal">Change Password</h4>
                     <button @click="close" type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                         <i data-feather="x"></i>
                     </button>
@@ -25,7 +34,12 @@
                             <i :class="`bi bi-eye-${old_password_show ? 'slash-' : ''}fill`"></i>
                         </div>
                         <div class="form-group position-relative has-icon-right">
-                            <input v-model="old_password" :class="{ 'is-invalid': errors.old_password }" :type="oldPasswordType" class="form-control">                            
+                            <input
+                                v-model="old_password"
+                                :class="{ 'is-invalid': errors.old_password }"
+                                :type="oldPasswordType"
+                                class="form-control"
+                            />
                             <div v-if="errors.old_password" class="invalid-feedback">
                                 <i class="bx bx-radio-circle"></i>
                                 {{ errors.old_password }}
@@ -36,7 +50,12 @@
                             <i :class="`bi bi-eye-${new_password_show ? 'slash-' : ''}fill`"></i>
                         </div>
                         <div class="form-group position-relative has-icon-right">
-                            <input v-model="new_password" :class="{ 'is-invalid': errors.new_password }" :type="newPasswordType" class="form-control">
+                            <input
+                                v-model="new_password"
+                                :class="{ 'is-invalid': errors.new_password }"
+                                :type="newPasswordType"
+                                class="form-control"
+                            />
                             <div v-if="errors.new_password" class="invalid-feedback">
                                 <i class="bx bx-radio-circle"></i>
                                 {{ errors.new_password }}
@@ -94,21 +113,19 @@ export default {
             errors.value = errs
         }
 
-        watch([
-            () => old_password.value,
-            () => new_password.value
-        ], () => validate())
+        watch([() => old_password.value, () => new_password.value], () => validate())
 
         const changePassword = () => {
             validate()
             if (!Object.keys(errors.value).length > 0) {
-                store.dispatch('changePassword', { password: old_password.value, new_password: new_password.value })
-                    .then(response => {
+                store
+                    .dispatch('changePassword', { password: old_password.value, new_password: new_password.value })
+                    .then((response) => {
                         console.log('response: ', response)
                         toast('Successfully saved !', 'success')
                         close()
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         error.value = [apiErrorMessage(e)]
                     })
             }
@@ -133,8 +150,14 @@ export default {
             }
         }
 
-        const showModal = () => {show.value = true; document.body.classList.add("modal-open")}
-        const close = () => {show.value = false; document.body.classList.remove("modal-open")}
+        const showModal = () => {
+            show.value = true
+            document.body.classList.add('modal-open')
+        }
+        const close = () => {
+            show.value = false
+            document.body.classList.remove('modal-open')
+        }
 
         return {
             error,
@@ -150,7 +173,7 @@ export default {
             old_password_show,
             new_password_show,
             toggleOldPassword,
-            toggleNewPassword
+            toggleNewPassword,
         }
     },
 }
@@ -170,7 +193,8 @@ export default {
     width: 100vw;
     z-index: 1040;
 }
-.bi.bi-eye-fill, .bi.bi-eye-slash-fill {
+.bi.bi-eye-fill,
+.bi.bi-eye-slash-fill {
     cursor: pointer;
 }
 </style>

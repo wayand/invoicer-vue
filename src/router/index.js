@@ -23,159 +23,159 @@ const routes = [
         path: '/',
         name: 'Dashboard',
         component: Dashboard,
-        meta: { requiresAuth: true, title: 'Invoicer - Dashboard' }
+        meta: { requiresAuth: true, title: 'Invoicer - Dashboard' },
     },
     {
         path: '/invoices',
         name: 'Invoices',
         component: () => import('@/views/invoice/Invoices'),
-        meta: { requiresAuth: true, title: 'Invoicer - Invoices' }
+        meta: { requiresAuth: true, title: 'Invoicer - Invoices' },
     },
     {
         path: '/invoices/new',
         name: 'NewInvoice',
         component: () => import('@/views/invoice/InvoiceForm'),
-        meta: { requiresAuth: true, title: 'Invoicer - Create new invoice' }
+        meta: { requiresAuth: true, title: 'Invoicer - Create new invoice' },
     },
     {
         path: '/invoices/:invoiceId(\\d+)',
         name: 'ShowInvoice',
         component: () => import('@/views/invoice/ShowInvoice'),
         props: true,
-        meta: { requiresAuth: true, title: 'Invoicer - Show invoice' }
+        meta: { requiresAuth: true, title: 'Invoicer - Show invoice' },
     },
     {
         path: '/invoices/:invoiceId(\\d+)/edit',
         name: 'EditInvoice',
         component: () => import('../views/invoice/InvoiceForm'),
         props: true,
-        meta: { requiresAuth: true, title: 'Invoicer - Edit invoice' }
+        meta: { requiresAuth: true, title: 'Invoicer - Edit invoice' },
     },
     {
         path: '/reports/annual-report',
         name: 'AnnualReport',
         component: AnnualReport,
-        meta: { requiresAuth: true, title: 'Invoicer - Annual Report' }
+        meta: { requiresAuth: true, title: 'Invoicer - Annual Report' },
     },
     {
         path: '/settings/organizations/:id(\\d+)',
         name: 'Organization',
         component: Organization,
         props: true,
-        meta: { requiresAuth: true, title: 'Invoicer - Organization' }
+        meta: { requiresAuth: true, title: 'Invoicer - Organization' },
     },
     {
         path: '/settings/authentication',
         name: 'Authentication',
         component: Authentication,
-        meta: { requiresAuth: true, title: 'Invoicer - Authentication' }
+        meta: { requiresAuth: true, title: 'Invoicer - Authentication' },
     },
     {
         path: '/settings/invoice-setting',
         name: 'InvoiceSetting',
         component: InvoiceSetting,
-        meta: { requiresAuth: true, title: 'Invoicer - Invoice Setting' }
+        meta: { requiresAuth: true, title: 'Invoicer - Invoice Setting' },
     },
     {
         path: '/settings/authentication/setup',
         name: 'AuthTwoFactorSetup',
         component: AuthTwoFactorSetup,
-        meta: { requiresAuth: true, title: 'Invoicer - Authentication Setup' }
+        meta: { requiresAuth: true, title: 'Invoicer - Authentication Setup' },
     },
     {
         path: '/settings/auth-management',
         name: 'AuthManagement',
         component: AuthManagement,
-        meta: { requiresAuth: true, title: 'Invoicer - Authentication Management' }
+        meta: { requiresAuth: true, title: 'Invoicer - Authentication Management' },
     },
     {
         path: '/settings/contacts',
         name: 'Contacts',
         component: Contacts,
-        meta: { requiresAuth: true, title: 'Invoicer - Contacts' }
+        meta: { requiresAuth: true, title: 'Invoicer - Contacts' },
     },
     {
         path: '/settings/accounts',
         name: 'Accounts',
         component: Accounts,
-        meta: { requiresAuth: true, title: 'Invoicer - Accounts' }
+        meta: { requiresAuth: true, title: 'Invoicer - Accounts' },
     },
     {
         path: '/settings/products',
         name: 'Products',
         component: Products,
-        meta: { requiresAuth: true, title: 'Invoicer - Products' }
+        meta: { requiresAuth: true, title: 'Invoicer - Products' },
     },
     {
         path: '/login',
         name: 'Login',
         component: Login,
-        meta: { hideForAuth: true, title: 'Invoicer - Login' }
+        meta: { hideForAuth: true, title: 'Invoicer - Login' },
     },
     {
         path: '/confirm-email/:token',
         name: 'ConfirmEmail',
         component: ConfirmEmail,
         props: true,
-        meta: { requiresAuth: true, title: 'Invoicer - Confirm Email' }
+        meta: { requiresAuth: true, title: 'Invoicer - Confirm Email' },
     },
     {
         path: '/not-confirmed',
         name: 'NotConfirmed',
         component: NotConfirmed,
-        meta: { requiresAuth: true, title: 'Invoicer - Not Confirmed' }
+        meta: { requiresAuth: true, title: 'Invoicer - Not Confirmed' },
     },
     {
         path: '/forgot-password',
         name: 'ForgotPassword',
         component: ForgotPassword,
-        meta: { hideForAuth: true, title: 'Invoicer - Forgot Password' }
+        meta: { hideForAuth: true, title: 'Invoicer - Forgot Password' },
     },
     {
         path: '/reset-password',
         name: 'ResetPassword',
         component: ResetPassword,
-        meta: { hideForAuth: true, title: 'Invoicer - Reset Password' }
+        meta: { hideForAuth: true, title: 'Invoicer - Reset Password' },
     },
     {
         path: '/network-error',
         name: 'NetworkError',
         component: NetworkError,
-        meta: { title: 'Invoicer - Network Error' }
+        meta: { title: 'Invoicer - Network Error' },
     },
     {
         path: '/404/:resource',
         name: '404Resource',
         component: NotFound,
         props: true,
-        meta: { title: 'Invoicer - 404 Not Fount' }
+        meta: { title: 'Invoicer - 404 Not Fount' },
     },
     {
         path: '/:catchAll(.*)',
         name: 'NotFound',
-        component: NotFound
-    }
+        component: NotFound,
+    },
 ]
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     linkActiveClass: 'active',
-    routes
+    routes,
 })
 
 const setPageMetaFields = (to) => {
     window.document.title = to.meta.title
 }
 
-router.beforeEach((to,from, next) => {
+router.beforeEach((to, from, next) => {
     setPageMetaFields(to)
 
     const loggedIn = store.getters.loggedIn
     const isEmailConfirmed = store.getters.isEmailConfirmed
     if (to.path == '/not-confirmed' && loggedIn && isEmailConfirmed) {
-        console.log('to.path:', to.path, 'loggedIn:', loggedIn, 'isEmailConfirmed:',isEmailConfirmed)
+        console.log('to.path:', to.path, 'loggedIn:', loggedIn, 'isEmailConfirmed:', isEmailConfirmed)
         return next({
-            name: 'Dashboard'
+            name: 'Dashboard',
         })
     }
 
@@ -186,19 +186,17 @@ router.beforeEach((to,from, next) => {
         return
     }
 
-    if (!loggedIn && to.matched.some(record => record.meta.requiresAuth) && to.path != '/login') {
-
+    if (!loggedIn && to.matched.some((record) => record.meta.requiresAuth) && to.path != '/login') {
         next({
             name: 'Login',
-            query: { redirect: to.path }
+            query: { redirect: to.path },
         })
         return
-
     } else {
-        if (loggedIn && to.matched.some(record => record.meta.hideForAuth)) {
+        if (loggedIn && to.matched.some((record) => record.meta.hideForAuth)) {
             console.log('He is logged in, se: ', loggedIn)
             next({
-                name: 'Dashboard'
+                name: 'Dashboard',
             })
             return
         }

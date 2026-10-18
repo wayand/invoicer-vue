@@ -11,9 +11,11 @@ npm test                                                   # unit tests (Vitest,
 npm run build                                              # production build
 npx eslint src                                             # lint without rewriting files
 npm run lint                                               # lint with --fix (modifies files; use deliberately)
+npm run format:check                                       # Prettier check (CI)
+npm run format                                             # Prettier write (reformats files)
 ```
 
-CI (`.github/workflows/deploy.yml`) runs `Lint` (eslint, zero errors: keep it that way), `Test` and `Build image` on every pull request; deploys only after all three pass on `master`.
+CI (`.github/workflows/deploy.yml`) runs `Lint` (eslint with zero errors plus the Prettier check: keep both clean), `Test` and `Build image` on every pull request; deploys only after all three pass on `master`.
 
 Tests live in `tests/` (Vitest + @vue/test-utils, jsdom), outside `src/`, so eslint does not cover them. Mock the services (`vi.mock('@/services/...')`): importing `@/services/http` pulls in the real router and store. Fix a bug with a test that fails without the fix.
 
@@ -30,7 +32,7 @@ Tests live in `tests/` (Vitest + @vue/test-utils, jsdom), outside `src/`, so esl
 ## Working rules
 
 - Run `/check` before saying a task is done, and report what failed.
-- Keep changes focused. No drive-by refactors, reformatting or unrelated dependency upgrades.
+- Keep changes focused. No drive-by refactors, reformatting or unrelated dependency upgrades. Format the files you touch with `npm run format` (Prettier, `.prettierrc.json`); CI fails on unformatted code.
 - API calls go through `src/services/`, not directly from components.
 - Config via `import.meta.env.VITE_*`. Never hardcode API URLs or secrets. Anything in `VITE_*` ships to the browser.
 - Don't touch shared config (`package.json` deps, `vite.config.mjs`, `.github/`, `Dockerfile`, `nginx.conf`, `.claude/`) unless asked.

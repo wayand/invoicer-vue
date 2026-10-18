@@ -6,42 +6,38 @@ export default {
         organization: {},
     },
     getters: {
-        organizations: state => state.organizations,
-        organization: state => state.organization,
-        invoiceSetting: state => state.organization?.invoice_setting,
+        organizations: (state) => state.organizations,
+        organization: (state) => state.organization,
+        invoiceSetting: (state) => state.organization?.invoice_setting,
     },
     actions: {
-        fetchOrganizations({commit}) {
-            return OrganizationService.getAll()
-                .then(response => {
-                    commit('SET_ORGANIZATIONS', response.data)
-                    return response
-                })
+        fetchOrganizations({ commit }) {
+            return OrganizationService.getAll().then((response) => {
+                commit('SET_ORGANIZATIONS', response.data)
+                return response
+            })
         },
-        fetchOrganization({commit}, organizationId) {
-            return OrganizationService.getOne(organizationId)
-                .then(response => {
-                    commit('SET_ORGANIZATION', response.data)
-                    return response
-                })
+        fetchOrganization({ commit }, organizationId) {
+            return OrganizationService.getOne(organizationId).then((response) => {
+                commit('SET_ORGANIZATION', response.data)
+                return response
+            })
         },
-        updateOrganization({commit}, organization) {
-            return OrganizationService.update(organization)
-                .then(response => {
-                    commit('UPDATE_ORGANIZATIONS', response.data)
-                    return response
-                })
+        updateOrganization({ commit }, organization) {
+            return OrganizationService.update(organization).then((response) => {
+                commit('UPDATE_ORGANIZATIONS', response.data)
+                return response
+            })
         },
-        uploadLogo(_, {organizationId, logo}) {
+        uploadLogo(_, { organizationId, logo }) {
             return OrganizationService.uploadLogo(organizationId, logo)
         },
-        updateInvoiceSetting({commit}, invoiceSetting) {
-            return OrganizationService.updateInvoiceSetting(invoiceSetting)
-                .then(response => {
-                    commit('UPDATE_INVOICE_SETTING', response.data)
-                    return response
-                })
-        }
+        updateInvoiceSetting({ commit }, invoiceSetting) {
+            return OrganizationService.updateInvoiceSetting(invoiceSetting).then((response) => {
+                commit('UPDATE_INVOICE_SETTING', response.data)
+                return response
+            })
+        },
     },
     mutations: {
         SET_ORGANIZATIONS(state, organizations) {
@@ -59,7 +55,7 @@ export default {
                     invoice_no_mode: 'sequential',
                     next_invoice_no: 1,
                     template_id: '1',
-                    default_reminder_fee: 0
+                    default_reminder_fee: 0,
                 }
             }
         },
@@ -67,8 +63,8 @@ export default {
             state.organizations.push(organization)
         },
         UPDATE_ORGANIZATIONS(state, organization) {
-            const index = state.organizations.findIndex(item => item.id === organization.id)
-            if ( index !==  -1 ) {
+            const index = state.organizations.findIndex((item) => item.id === organization.id)
+            if (index !== -1) {
                 state.organizations[index] = organization
             } else {
                 state.organizations.push(organization)
@@ -84,12 +80,12 @@ export default {
             state.organization.invoice_setting[property.key] = property.value
         },
         REMOVE_ORGANIZATIONS(state, organizationId) {
-            const index = state.organizations.findIndex(item => item.id === organizationId)
-            if ( index !==  -1 ) {
+            const index = state.organizations.findIndex((item) => item.id === organizationId)
+            if (index !== -1) {
                 state.organizations.splice(index, 1)
             } else {
                 console.error('mutation -> REMOVE_ORGANIZATIONS:', organizationId)
             }
         },
-    }
+    },
 }

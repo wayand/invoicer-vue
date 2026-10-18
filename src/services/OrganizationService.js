@@ -9,21 +9,21 @@ export default {
     },
     update(organization) {
         // eslint-disable-next-line no-unused-vars
-        const {id, created_at, updated_at, country, users, invoice_setting, ...requiredOrgFields} = organization
+        const { id, created_at, updated_at, country, users, invoice_setting, ...requiredOrgFields } = organization
         return HTTP.put('/organizations/' + id, requiredOrgFields)
     },
     uploadLogo(organizationId, logo) {
         // The client defaults to JSON, and axios 1.x then turns a FormData into JSON
         // (the file is lost). multipart/form-data sends the file as it is.
         return HTTP.post('/organizations/' + organizationId + '/upload-logo', logo, {
-            headers: { 'Content-Type': 'multipart/form-data' }
+            headers: { 'Content-Type': 'multipart/form-data' },
         })
     },
 
     // Invoice settings
     updateInvoiceSetting(invoiceSetting) {
         // eslint-disable-next-line no-unused-vars
-        const {id, created_at, updated_at, ...requiredFields} = invoiceSetting
+        const { id, created_at, updated_at, ...requiredFields } = invoiceSetting
         return HTTP.put('/invoice-setting', requiredFields)
-    }
+    },
 }

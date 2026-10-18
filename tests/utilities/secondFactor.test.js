@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { isAuthenticatorCode, isBackupCode, isSecondFactorCode } from '@/utilities/secondFactor'
 
 describe('isAuthenticatorCode', () => {
-    it.each(['123456', ' 123456 ', '000000'])('accepts %j', code => {
+    it.each(['123456', ' 123456 ', '000000'])('accepts %j', (code) => {
         expect(isAuthenticatorCode(code)).toBe(true)
     })
 
-    it.each(['12345', '1234567', 'abcdef', '12 3456', '', '12345a'])('rejects %j', code => {
+    it.each(['12345', '1234567', 'abcdef', '12 3456', '', '12345a'])('rejects %j', (code) => {
         expect(isAuthenticatorCode(code)).toBe(false)
     })
 
@@ -18,12 +18,12 @@ describe('isAuthenticatorCode', () => {
 describe('isBackupCode', () => {
     it.each(['ABCDE-FGHIJ', 'abcde-fghij', 'ABCDEFGHIJ', 'ABCDE FGHIJ', ' ABCDE-FGHIJ ', 'AB2DE-FG7IJ'])(
         'accepts %j (the hyphen and spaces are optional)',
-        code => {
+        (code) => {
             expect(isBackupCode(code)).toBe(true)
-        }
+        },
     )
 
-    it.each(['ABCD-EFGHI', 'ABCDE-FGHIJK', 'ABCDE-FGHI!', '', '123456'])('rejects %j', code => {
+    it.each(['ABCD-EFGHI', 'ABCDE-FGHIJK', 'ABCDE-FGHI!', '', '123456'])('rejects %j', (code) => {
         expect(isBackupCode(code)).toBe(false)
     })
 })

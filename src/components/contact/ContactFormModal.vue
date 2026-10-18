@@ -1,23 +1,36 @@
 <template>
-    <div class="modal fade text-left show" tabindex="-1" aria-labelledby="myModalLabel33" style="display: block;" aria-modal="true"  role="dialog">
+    <div
+        class="modal fade text-left show"
+        tabindex="-1"
+        aria-labelledby="myModalLabel33"
+        style="display: block"
+        aria-modal="true"
+        role="dialog"
+    >
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title" id="myModalLabel33">{{ contactId ? 'Edit' : 'Create' }} Contact </h4>
+                    <h4 class="modal-title" id="myModalLabel33">{{ contactId ? 'Edit' : 'Create' }} Contact</h4>
                     <button type="button" class="close" @click="$emit('close')" aria-label="Close">
                         <i class="bi bi-x bi-middle"></i>
                     </button>
                 </div>
                 <form @submit.prevent="saveContact">
-                    <input type="hidden" v-model="logo" name="logo">
+                    <input type="hidden" v-model="logo" name="logo" />
                     <div class="modal-body">
-
                         <div class="row mb-4">
                             <div class="col-md-7 col-7">
                                 <div class="row">
                                     <div class="form-group">
                                         <label for="name-vertical">{{ isCompany ? 'Company name' : 'Name' }}</label>
-                                        <input v-model="name" :class="{ 'is-invalid': errors.name }" type="text" class="form-control" name="name" id="name-vertical">
+                                        <input
+                                            v-model="name"
+                                            :class="{ 'is-invalid': errors.name }"
+                                            type="text"
+                                            class="form-control"
+                                            name="name"
+                                            id="name-vertical"
+                                        />
                                         <div v-if="errors.name" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
                                             {{ errors.name }}
@@ -25,7 +38,14 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="email-id-vertical">Email</label>
-                                        <input v-model="email"  :class="{ 'is-invalid': errors.email }" type="email" class="form-control" id="email-id-vertical" name="email">
+                                        <input
+                                            v-model="email"
+                                            :class="{ 'is-invalid': errors.email }"
+                                            type="email"
+                                            class="form-control"
+                                            id="email-id-vertical"
+                                            name="email"
+                                        />
                                         <div v-if="errors.email" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
                                             {{ errors.email }}
@@ -33,16 +53,34 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Address</label>
-                                        <input v-model="street"  type="text" class="form-control" name="street" placeholder="Street">
+                                        <input
+                                            v-model="street"
+                                            type="text"
+                                            class="form-control"
+                                            name="street"
+                                            placeholder="Street"
+                                        />
                                     </div>
 
                                     <div class="form-group">
                                         <div class="row">
                                             <div class="col-6">
-                                                <input v-model="zipcode" type="text" class="form-control" name="zipcode" placeholder="Zipcode">
+                                                <input
+                                                    v-model="zipcode"
+                                                    type="text"
+                                                    class="form-control"
+                                                    name="zipcode"
+                                                    placeholder="Zipcode"
+                                                />
                                             </div>
                                             <div class="col-6">
-                                                <input v-model="city" type="text" class="form-control" name="city" placeholder="City">
+                                                <input
+                                                    v-model="city"
+                                                    type="text"
+                                                    class="form-control"
+                                                    name="city"
+                                                    placeholder="City"
+                                                />
                                             </div>
                                         </div>
                                     </div>
@@ -52,7 +90,14 @@
                                 <div class="row">
                                     <div class="form-group">
                                         <label for="registrationNo-vertical">Tax ID</label>
-                                        <input v-model="registration_no" :class="{ 'is-invalid': errors.registration_no }" type="text" class="form-control" name="registrationNo" id="registrationNo-vertical">
+                                        <input
+                                            v-model="registration_no"
+                                            :class="{ 'is-invalid': errors.registration_no }"
+                                            type="text"
+                                            class="form-control"
+                                            name="registrationNo"
+                                            id="registrationNo-vertical"
+                                        />
                                         <div v-if="errors.registration_no" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
                                             {{ errors.registration_no }}
@@ -60,7 +105,14 @@
                                     </div>
                                     <div class="form-group">
                                         <label for="phone-vertical">Phone</label>
-                                        <input v-model="phone" :class="{ 'is-invalid': errors.phone }" type="text" class="form-control" name="phone" id="phone-vertical">
+                                        <input
+                                            v-model="phone"
+                                            :class="{ 'is-invalid': errors.phone }"
+                                            type="text"
+                                            class="form-control"
+                                            name="phone"
+                                            id="phone-vertical"
+                                        />
                                         <div v-if="errors.phone" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
                                             {{ errors.phone }}
@@ -72,7 +124,15 @@
                                             <div class="col-6">
                                                 <div class="form-check">
                                                     <div class="checkbox mt-2">
-                                                        <input v-model="isCompany" :class="{ 'is-invalid': errors.isCompany }" type="radio" class="form-check-input" name="is_company" id="is-company-yes" :value="true">
+                                                        <input
+                                                            v-model="isCompany"
+                                                            :class="{ 'is-invalid': errors.isCompany }"
+                                                            type="radio"
+                                                            class="form-check-input"
+                                                            name="is_company"
+                                                            id="is-company-yes"
+                                                            :value="true"
+                                                        />
                                                         <label for="is-company-yes">Company</label>
                                                     </div>
                                                 </div>
@@ -80,7 +140,15 @@
                                             <div class="col-6">
                                                 <div class="form-check">
                                                     <div class="checkbox mt-2">
-                                                        <input v-model="isCompany" :class="{ 'is-invalid': errors.isCompany }" type="radio" class="form-check-input" name="is_company" id="is-company-no" :value="false">
+                                                        <input
+                                                            v-model="isCompany"
+                                                            :class="{ 'is-invalid': errors.isCompany }"
+                                                            type="radio"
+                                                            class="form-check-input"
+                                                            name="is_company"
+                                                            id="is-company-no"
+                                                            :value="false"
+                                                        />
                                                         <label for="is-company-no">Private</label>
                                                     </div>
                                                 </div>
@@ -93,8 +161,21 @@
                                     </div>
                                     <div class="form-group" v-if="isCompany === true">
                                         <label for="email-id-vertical">Contact person</label>
-                                        <input v-model="contactperson_name" type="text" class="form-control mb-3" name="contactperson_name" placeholder="Name">
-                                        <input v-model="contactperson_email" :class="{ 'is-invalid': errors.contactperson_email }" type="email" class="form-control" name="contactperson_email" placeholder="Email">
+                                        <input
+                                            v-model="contactperson_name"
+                                            type="text"
+                                            class="form-control mb-3"
+                                            name="contactperson_name"
+                                            placeholder="Name"
+                                        />
+                                        <input
+                                            v-model="contactperson_email"
+                                            :class="{ 'is-invalid': errors.contactperson_email }"
+                                            type="email"
+                                            class="form-control"
+                                            name="contactperson_email"
+                                            placeholder="Email"
+                                        />
                                         <div v-if="errors.contactperson_email" class="invalid-feedback">
                                             <i class="bx bx-radio-circle"></i>
                                             {{ errors.contactperson_email }}
@@ -103,7 +184,6 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light-secondary">
@@ -132,69 +212,68 @@ export default {
         contactId: {
             type: [Number, String, Boolean],
             required: false,
-            default: false
-        }
+            default: false,
+        },
     },
     emits: ['close'],
-    setup(props, {emit}) {
-
+    setup(props, { emit }) {
         const store = useStore()
         const errors = ref('')
 
         const isCompany = computed({
             get: () => store.getters.contact.is_company,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'is_company', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'is_company', value: val }),
         })
         const name = computed({
             get: () => store.getters.contact.name,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'name', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'name', value: val }),
         })
         const logo = computed({
             get: () => store.getters.contact.logo || '',
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'logo', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'logo', value: val }),
         })
         const email = computed({
             get: () => store.getters.contact.email,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'email', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'email', value: val }),
         })
         const phone = computed({
             get: () => store.getters.contact.phone,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'phone', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'phone', value: val }),
         })
         const registration_no = computed({
             get: () => store.getters.contact.registration_no,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'registration_no', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'registration_no', value: val }),
         })
         const street = computed({
             get: () => store.getters.contact.street,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'street', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'street', value: val }),
         })
         const zipcode = computed({
             get: () => store.getters.contact.zipcode,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'zipcode', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'zipcode', value: val }),
         })
         const city = computed({
             get: () => store.getters.contact.city,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'city', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'city', value: val }),
         })
         const countryId = computed({
             get: () => store.getters.contact.country_id,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'country_id', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'country_id', value: val }),
         })
         const contactperson_email = computed({
             get: () => store.getters.contact.contactperson_email,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'contactperson_email', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'contactperson_email', value: val }),
         })
         const contactperson_name = computed({
             get: () => store.getters.contact.contactperson_name,
-            set: val => store.commit('UPDATE_CONTACT_PROPERTY', {key: 'contactperson_name', value: val})
+            set: (val) => store.commit('UPDATE_CONTACT_PROPERTY', { key: 'contactperson_name', value: val }),
         })
 
         onMounted(async () => {
             if (props.contactId) {
                 await store.dispatch('fetchContact', {
                     organizationId: store.getters.user.organizationId,
-                    contactId: props.contactId
+                    contactId: props.contactId,
                 })
             } else {
                 store.commit('SET_CONTACT', {
@@ -210,37 +289,38 @@ export default {
                     city: '',
                     country_id: 1,
                     contactperson_email: '',
-                    contactperson_name: ''
+                    contactperson_name: '',
                 })
             }
         })
 
-        const validateEmail = email => {
-            const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        const validateEmail = (email) => {
+            const re =
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
             return re.test(email)
         }
-        const required = value => {
+        const required = (value) => {
             const requiredMessage = 'This field is required'
             if (value === undefined || value === null) return requiredMessage
             if (!String(value).length) return requiredMessage
             return true
         }
-        const isCompanyValidate = val => {
+        const isCompanyValidate = (val) => {
             if (typeof val !== 'boolean') return 'Choose company or private'
             return true
         }
-        const nameValidate = val => {
+        const nameValidate = (val) => {
             const req = required(val)
             if (req !== true) return req
             return true
         }
-        const emailValidate = val => {
-            if (validateEmail(val) !== true) return "Enter Valid Email address"
-            return true;
+        const emailValidate = (val) => {
+            if (validateEmail(val) !== true) return 'Enter Valid Email address'
+            return true
         }
-        const contactEmailValidate = val => {
-            if (validateEmail(val) !== true) return "Enter Valid Email address"
-            return true;
+        const contactEmailValidate = (val) => {
+            if (validateEmail(val) !== true) return 'Enter Valid Email address'
+            return true
         }
 
         const validate = () => {
@@ -265,37 +345,43 @@ export default {
             errors.value = errs
         }
 
-        watch([
-            () => name.value,
-            () => email.value,
-            () => phone.value,
-            () => isCompany.value,
-            () => contactperson_email.value
-        ], () => {
-            validate()
-        })
+        watch(
+            [
+                () => name.value,
+                () => email.value,
+                () => phone.value,
+                () => isCompany.value,
+                () => contactperson_email.value,
+            ],
+            () => {
+                validate()
+            },
+        )
         const saveContact = () => {
             validate()
             if (!Object.keys(errors.value).length > 0) {
                 const actionName = props.contactId ? 'updateContact' : 'createContact'
-                store.dispatch(actionName, {
-                    organizationId: store.getters.user.organizationId,
-                    contact: store.getters.contact
-                }).then(() => {
-                    toast('Successfully saved !', 'success')
-                    emit('close')
-                }).catch(e => {
-                    if (e.response) {
-                        if (e.response.data.errors) {
-                            errors.value = e.response.data.errors
-                            toast(JSON.stringify( errors.value ), 'error')
+                store
+                    .dispatch(actionName, {
+                        organizationId: store.getters.user.organizationId,
+                        contact: store.getters.contact,
+                    })
+                    .then(() => {
+                        toast('Successfully saved !', 'success')
+                        emit('close')
+                    })
+                    .catch((e) => {
+                        if (e.response) {
+                            if (e.response.data.errors) {
+                                errors.value = e.response.data.errors
+                                toast(JSON.stringify(errors.value), 'error')
+                            } else {
+                                toast(e.response.data.error || e.response.data.msg, 'error')
+                            }
                         } else {
-                            toast(e.response.data.error || e.response.data.msg, 'error')
+                            toast(e.message, 'error')
                         }
-                    } else {
-                        toast(e.message, 'error')
-                    }
-                })
+                    })
             }
         }
 
@@ -313,7 +399,7 @@ export default {
             contactperson_email,
             contactperson_name,
             errors,
-            saveContact
+            saveContact,
         }
     },
 }

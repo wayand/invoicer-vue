@@ -6,9 +6,23 @@
                     <h3>Contacts</h3>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first">
-                    <button @click.prevent="openContactFormModal()" type="button" class="btn btn-primary me-1 mb-1 float-end">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"/>
+                    <button
+                        @click.prevent="openContactFormModal()"
+                        type="button"
+                        class="btn btn-primary me-1 mb-1 float-end"
+                    >
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            fill="currentColor"
+                            class="bi bi-plus-lg"
+                            viewBox="0 0 16 16"
+                        >
+                            <path
+                                fill-rule="evenodd"
+                                d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"
+                            />
                         </svg>
                         Create
                     </button>
@@ -25,7 +39,12 @@
                 <div class="card-header">
                     All contacts <span class="badge bg-secondary">{{ contacts.length }}</span>
                     <div class="form-check form-switch d-inline-block ms-2">
-                        <input v-model="showArchived" class="form-check-input" type="checkbox" id="flexSwitchCheckArchived">
+                        <input
+                            v-model="showArchived"
+                            class="form-check-input"
+                            type="checkbox"
+                            id="flexSwitchCheckArchived"
+                        />
                         <label class="form-check-label" for="flexSwitchCheckArchived">Show archived</label>
                     </div>
                 </div>
@@ -41,7 +60,11 @@
                         </thead>
                         <tbody>
                             <template v-if="contacts.length">
-                                <tr v-for="contact in contacts" :key="contact.id" @click.prevent="openContactFormModal(contact.id)">
+                                <tr
+                                    v-for="contact in contacts"
+                                    :key="contact.id"
+                                    @click.prevent="openContactFormModal(contact.id)"
+                                >
                                     <td>{{ contact.name }}</td>
                                     <td>{{ contact.email }}</td>
                                     <td>{{ contact.type }}</td>
@@ -72,34 +95,37 @@ export default {
     name: 'ContactList',
     components: {
         ContactFormModal,
-        SettingsNavigation
+        SettingsNavigation,
     },
     setup() {
         const store = useStore()
         const showContactFormModal = ref(false)
         const selectedContactId = ref(null)
         const showArchived = ref(false)
-        const contacts = computed(() => store.getters.contacts.filter(c => {
-            return showArchived.value ? true : c.archived === false
-        }))
+        const contacts = computed(() =>
+            store.getters.contacts.filter((c) => {
+                return showArchived.value ? true : c.archived === false
+            }),
+        )
 
-        onMounted( async () => {
-            await store.dispatch('fetchContacts', store.getters.user.organizationId)
-                .catch(e => toast('Contacts ' + e, 'error'))
+        onMounted(async () => {
+            await store
+                .dispatch('fetchContacts', store.getters.user.organizationId)
+                .catch((e) => toast('Contacts ' + e, 'error'))
         })
 
         const openContactFormModal = (contactId = null) => {
             if (contactId) {
-                selectedContactId.value = contacts.value.filter(c => c.id === contactId)[0].id
+                selectedContactId.value = contacts.value.filter((c) => c.id === contactId)[0].id
             } else {
                 selectedContactId.value = null
             }
-            document.body.classList.add("modal-open")
+            document.body.classList.add('modal-open')
             showContactFormModal.value = true
         }
 
         const closeContactFormModal = () => {
-            document.body.classList.remove("modal-open")
+            document.body.classList.remove('modal-open')
             showContactFormModal.value = false
         }
 
@@ -109,7 +135,7 @@ export default {
             openContactFormModal,
             closeContactFormModal,
             contacts,
-            showArchived
+            showArchived,
         }
     },
 }

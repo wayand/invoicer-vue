@@ -10,7 +10,7 @@ import { toast } from '@/utilities/toast'
 
 // Network-bound modules the form imports but this test does not use
 vi.mock('@/services/InvoiceService', () => ({
-    default: { getOne: vi.fn(), getAll: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() }
+    default: { getOne: vi.fn(), getAll: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
 }))
 vi.mock('@/utilities/toast', () => ({ toast: vi.fn() }))
 
@@ -34,17 +34,37 @@ const source = {
     created_at: '2026-01-01T10:00:00',
     updated_at: '2026-01-02T10:00:00',
     lines: [
-        { id: 11, invoice_id: 2, product_id: 1, description: 'First job', quantity: 1, unit_price: 100, amount: 100, created_at: 'x', updated_at: 'y' },
-        { id: 12, invoice_id: 2, product_id: 1, description: 'Second job', quantity: 2, unit_price: 100, amount: 200, created_at: 'x', updated_at: 'y' }
-    ]
+        {
+            id: 11,
+            invoice_id: 2,
+            product_id: 1,
+            description: 'First job',
+            quantity: 1,
+            unit_price: 100,
+            amount: 100,
+            created_at: 'x',
+            updated_at: 'y',
+        },
+        {
+            id: 12,
+            invoice_id: 2,
+            product_id: 1,
+            description: 'Second job',
+            quantity: 2,
+            unit_price: 100,
+            amount: 200,
+            created_at: 'x',
+            updated_at: 'y',
+        },
+    ],
 }
 const contacts = [
     { id: 4, name: 'Other ApS', street: 'Side St 2', zipcode: '9000', city: 'Aalborg' },
-    { id: 5, name: 'Acme ApS', street: 'Main St 1', zipcode: '8000', city: 'Aarhus' }
+    { id: 5, name: 'Acme ApS', street: 'Main St 1', zipcode: '8000', city: 'Aarhus' },
 ]
 
 const page = () => defineComponent({ render: () => h('div') })
-const stubbed = name => defineComponent({ name, render: () => null })
+const stubbed = (name) => defineComponent({ name, render: () => null })
 
 const newStore = () =>
     createStore({
@@ -55,20 +75,25 @@ const newStore = () =>
             contacts: () => contacts,
             products: () => [],
             invoiceSetting: () => ({ invoice_no_mode: 'sequential', next_invoice_no: 1003 }),
-            getAccountById: () => () => ({ name: 'Bank' })
+            getAccountById: () => () => ({ name: 'Bank' }),
         },
-        actions: { fetchOrganization: () => {}, fetchContacts: () => {}, fetchProducts: () => {}, fetchAccounts: () => {} }
+        actions: {
+            fetchOrganization: () => {},
+            fetchContacts: () => {},
+            fetchProducts: () => {},
+            fetchAccounts: () => {},
+        },
     })
 
-const openNewInvoice = async url => {
+const openNewInvoice = async (url) => {
     const store = newStore()
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
             { path: '/invoices/new', name: 'NewInvoice', component: InvoiceForm },
             { path: '/invoices/:invoiceId(\\d+)/edit', name: 'EditInvoice', component: page(), props: true },
-            { path: '/invoices/:invoiceId(\\d+)', name: 'ShowInvoice', component: page(), props: true }
-        ]
+            { path: '/invoices/:invoiceId(\\d+)', name: 'ShowInvoice', component: page(), props: true },
+        ],
     })
     router.push(url)
     await router.isReady()
@@ -77,8 +102,8 @@ const openNewInvoice = async url => {
             plugins: [store, router],
             components: { PromiseDialog: stubbed('PromiseDialog') },
             stubs: { teleport: true, Datepicker: true, InvoiceLine: true, ContactFormModal: true },
-            mocks: { $filters: { toCurrency: value => String(value), toFloat: value => value } }
-        }
+            mocks: { $filters: { toCurrency: (value) => String(value), toFloat: (value) => value } },
+        },
     })
     await flushPromises()
     return { store, wrapper }
@@ -129,7 +154,7 @@ describe('new invoice form, copying an existing invoice', () => {
 
         expect(store.getters.invoice.lines).toEqual([
             { product_id: 1, description: 'First job', quantity: 1, unit_price: 100, amount: 100 },
-            { product_id: 1, description: 'Second job', quantity: 2, unit_price: 100, amount: 200 }
+            { product_id: 1, description: 'Second job', quantity: 2, unit_price: 100, amount: 200 },
         ])
     })
 

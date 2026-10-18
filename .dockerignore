@@ -3,6 +3,7 @@ dist
 tests
 vitest.config.js
 eslint.config.mjs
+.prettierrc.json
 .git
 .github
 .claude

@@ -5,18 +5,33 @@
                 <div class="col-12 col-md-6 order-md-1 order-last">
                     <h3>Invoice #{{ invoiceNo }} for {{ contactName }}</h3>
                 </div>
-                <div class="col-12 col-md-6 order-md-2 order-first" style="text-align: right;">
+                <div class="col-12 col-md-6 order-md-2 order-first" style="text-align: right">
                     <div class="btn-group mb-1">
                         <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle me-1" type="button" id="dropdownMenuButtonSec" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <button
+                                class="btn btn-secondary dropdown-toggle me-1"
+                                type="button"
+                                id="dropdownMenuButtonSec"
+                                data-bs-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                            >
                                 More
                             </button>
-                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButtonSec" style="margin: 0px;">
-                                <router-link :to="{ name: 'EditInvoice' }" class='dropdown-item'>Edit</router-link>
-                                <a v-if="!invoice.is_sent&&isApproved" class="dropdown-item" href="#" @click="markInvoiceAsSent">Mark as sent</a>
+                            <div class="dropdown-menu" aria-labelledby="dropdownMenuButtonSec" style="margin: 0px">
+                                <router-link :to="{ name: 'EditInvoice' }" class="dropdown-item">Edit</router-link>
+                                <a
+                                    v-if="!invoice.is_sent && isApproved"
+                                    class="dropdown-item"
+                                    href="#"
+                                    @click="markInvoiceAsSent"
+                                    >Mark as sent</a
+                                >
                                 <a class="dropdown-item" href="#" @click="generatePdf()">Save as PDF</a>
                                 <a class="dropdown-item" href="#" @click.prevent="duplicateInvoice">Duplicate</a>
-                                <a v-if="isDraft" class="dropdown-item" href="#" @click.prevent="deleteInvoice">Delete</a>
+                                <a v-if="isDraft" class="dropdown-item" href="#" @click.prevent="deleteInvoice"
+                                    >Delete</a
+                                >
                             </div>
                         </div>
                     </div>
@@ -38,7 +53,7 @@
     </teleport>
 </template>
 <script>
-import html2pdf from "html2pdf.js";
+import html2pdf from 'html2pdf.js'
 import { ref, toRefs, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
@@ -49,28 +64,34 @@ export default {
     props: {
         invoiceId: {
             type: [Number, String],
-            required: true
-        }
+            required: true,
+        },
     },
     components: {
-        InvoicePreview
+        InvoicePreview,
     },
     methods: {
         generatePdf() {
-            const invoice = document.querySelector('#invoice-preview');
+            const invoice = document.querySelector('#invoice-preview')
             var opt = {
                 margin: 0,
                 filename: 'invoiceAsPdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { useCORS: true, scale: 2, imageTimeout: 1500, logging: true, onclone: renderInLightTheme },
+                html2canvas: {
+                    useCORS: true,
+                    scale: 2,
+                    imageTimeout: 1500,
+                    logging: true,
+                    onclone: renderInLightTheme,
+                },
                 jsPDF: {
                     unit: 'mm',
                     format: 'a4',
-                    orientation: 'portrait'
+                    orientation: 'portrait',
                 },
-                pagebreak: { mode: ['avoid-all'] }
+                pagebreak: { mode: ['avoid-all'] },
             }
-            html2pdf().from(invoice).set(opt).save();
+            html2pdf().from(invoice).set(opt).save()
         },
     },
     setup(props) {
@@ -93,19 +114,21 @@ export default {
             console.log('Mark invoice as sent.')
             refDialog.value.data = {
                 type: 'warning',
-                title: "Confirm",
-                content: "Mark the invoice as sent? You should only do this if you have sent the invoice to the customer.",
-                accept: "Yes, mark as sent",
-                reject: "Cancel"
+                title: 'Confirm',
+                content:
+                    'Mark the invoice as sent? You should only do this if you have sent the invoice to the customer.',
+                accept: 'Yes, mark as sent',
+                reject: 'Cancel',
             }
 
             const confirmation = await refDialog.value.showModal()
             if (confirmation === true) {
-                store.dispatch('markInvoiceAsSent', { invoiceId: invoiceId.value, is_sent: true })
+                store
+                    .dispatch('markInvoiceAsSent', { invoiceId: invoiceId.value, is_sent: true })
                     .then(() => {
                         toast('the invoice marked as sent', 'success')
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         console.log(e.message)
                         toast(e.response.data.error || e.message, 'error')
                     })
@@ -122,31 +145,34 @@ export default {
                 title: 'Confirm delete invoice',
                 content: 'Are you sure, you want to delete this draft invoice?',
                 accept: 'Yes, delete invoice',
-                reject: 'No, Cancel'
+                reject: 'No, Cancel',
             }
 
             const confirmation = await refDialog.value.showModal()
             if (confirmation === true) {
-                store.dispatch('deleteInvoice', {
-                    organizationId: store.getters.user.organizationId,
-                    invoiceId: parseInt(invoiceId.value)
-                })
+                store
+                    .dispatch('deleteInvoice', {
+                        organizationId: store.getters.user.organizationId,
+                        invoiceId: parseInt(invoiceId.value),
+                    })
                     .then(() => {
                         toast('Draft invoice deleted', 'success')
                         router.push({ name: 'Invoices' })
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         toast(e.response?.data?.error || e.message, 'error')
                     })
             }
         }
 
-        onMounted( async () => {
+        onMounted(async () => {
             await store.dispatch('fetchOrganization', store.getters.user.organizationId)
-            await store.dispatch('fetchInvoice', {
-                organizationId: store.getters.user.organizationId,
-                invoiceId: invoiceId.value
-            }).catch(e => console.log('fetchInvoice ' + e))
+            await store
+                .dispatch('fetchInvoice', {
+                    organizationId: store.getters.user.organizationId,
+                    invoiceId: invoiceId.value,
+                })
+                .catch((e) => console.log('fetchInvoice ' + e))
         })
 
         return {
@@ -159,8 +185,8 @@ export default {
             contactName,
             markInvoiceAsSent,
             duplicateInvoice,
-            deleteInvoice
+            deleteInvoice,
         }
-    }
+    },
 }
 </script>

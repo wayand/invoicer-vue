@@ -5,22 +5,17 @@
         :value="modelValue"
         v-bind="{
             ...$attrs,
-            onChange: ($event) => { $emit('update:modelValue', $event.target.value) }
+            onChange: ($event) => {
+                $emit('update:modelValue', $event.target.value)
+            },
         }"
     >
-        <option value=0>Select {{label}}</option>
-        <option
-            v-for="option in options"
-            :value="option.id"
-            :key="option.id"
-            :selected="option.id === modelValue"
-        >{{ option.name }}</option>
+        <option value="0">Select {{ label }}</option>
+        <option v-for="option in options" :value="option.id" :key="option.id" :selected="option.id === modelValue">
+            {{ option.name }}
+        </option>
     </select>
-    <p
-        v-if="error"
-        class="invalid-feedback"
-        aria-live="assertive"
-    >
+    <p v-if="error" class="invalid-feedback" aria-live="assertive">
         {{ error }}
     </p>
 </template>
@@ -30,21 +25,21 @@ export default {
     props: {
         label: {
             type: String,
-            default: ''
+            default: '',
         },
         modelValue: {
             required: true,
-            type:  [Number],
+            type: [Number],
             default: 0,
         },
         options: {
             type: Array,
-            required: true
+            required: true,
         },
         error: {
             type: [String, Array],
-            default: ''
-        }
-    }
+            default: '',
+        },
+    },
 }
 </script>

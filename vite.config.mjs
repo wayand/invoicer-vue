@@ -7,11 +7,11 @@ export default defineConfig({
     resolve: {
         extensions: ['.js', '.vue'],
         alias: {
-            "@": fileURLToPath(new URL('./src', import.meta.url)),
+            '@': fileURLToPath(new URL('./src', import.meta.url)),
             '~bootstrap': fileURLToPath(new URL('./node_modules/bootstrap', import.meta.url)),
             '~bootstrap-icons': fileURLToPath(new URL('./node_modules/bootstrap-icons', import.meta.url)),
-            '~perfect-scrollbar': fileURLToPath(new URL('./node_modules/perfect-scrollbar', import.meta.url))
-        }
+            '~perfect-scrollbar': fileURLToPath(new URL('./node_modules/perfect-scrollbar', import.meta.url)),
+        },
     },
     server: {
         port: 8080,
@@ -23,8 +23,8 @@ export default defineConfig({
                 target: 'http://localhost:8080',
                 // Tvinger Vite til internt at servere index.html, så Vue Router kan overtage stien
                 rewrite: () => '/index.html',
-            }
-        }
+            },
+        },
     },
     // build: {
     //     outDir: 'dist'

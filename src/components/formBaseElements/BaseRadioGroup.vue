@@ -4,10 +4,10 @@
         :key="option.value"
         :is="vertical ? 'div' : 'span'"
         :class="{
-            horizontal: !vertical
+            horizontal: !vertical,
         }"
     >
-        <BaseRadio 
+        <BaseRadio
             v-for="option in options"
             :key="option.value"
             :label="optio.label"
@@ -22,26 +22,26 @@
 import BaseRadio from '@/components/formBaseElements/BaseRadio'
 export default {
     components: {
-        BaseRadio
+        BaseRadio,
     },
     props: {
         options: {
             type: Array,
-            required: true
+            required: true,
         },
         name: {
             type: String,
-            required: true
+            required: true,
         },
         modelValue: {
             type: [String, Number],
-            required: true
+            required: true,
         },
         vertical: {
             type: Boolean,
-            default: false
-        }
-    }
+            default: false,
+        },
+    },
 }
 </script>
 <style scoped>

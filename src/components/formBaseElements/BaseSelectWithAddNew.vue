@@ -6,17 +6,16 @@
         :value="modelValue"
         v-bind="{
             ...$attrs,
-            onChange: ($event) => { $emit('update:modelValue', $event.target.value) }
+            onChange: ($event) => {
+                $emit('update:modelValue', $event.target.value)
+            },
         }"
     >
         <optgroup label="">
             <option value="-1">Select {{ name }}</option>
-            <option
-                v-for="option in options"
-                :value="option.id"
-                :key="option.id"
-                :selected="option.id == modelValue"
-                >{{ option.name }}</option>
+            <option v-for="option in options" :value="option.id" :key="option.id" :selected="option.id == modelValue">
+                {{ option.name }}
+            </option>
         </optgroup>
         <optgroup label="">
             <option value="new">+ Create {{ name }}</option>
@@ -29,25 +28,25 @@ export default {
     props: {
         name: {
             type: String,
-            default: 'new'
+            default: 'new',
         },
         label: {
             type: String,
-            default: ''
+            default: '',
         },
         modelValue: {
             type: [String, Number],
-            default: ''
+            default: '',
         },
         options: {
             type: Array,
-            required: true
-        }
+            required: true,
+        },
     },
     setup() {
         const uuid = UniqueID().getID()
         return {
-            uuid
+            uuid,
         }
     },
 }
