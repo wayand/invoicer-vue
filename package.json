@@ -7,7 +7,7 @@
     "build": "vite build",
     "serve": "vite preview",
     "test": "vitest run",
-    "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src"
+    "lint": "eslint --fix src"
   },
   "dependencies": {
     "@popperjs/core": "^2.11.7",
@@ -28,28 +28,18 @@
     "vuex": "^4.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@vitejs/plugin-vue": "^6.0.10",
     "@vue/compiler-sfc": "^3.5.44",
     "@vue/test-utils": "^2.5.1",
-    "eslint": "^8.40.0",
-    "eslint-plugin-vue": "^9.12.0",
+    "eslint": "^10.13.0",
+    "eslint-plugin-vue": "^10.11.1",
+    "globals": "^17.13.0",
     "jsdom": "^29.1.1",
     "sass": "^1.105.2",
     "vite": "^8.3.4",
-    "vitest": "^4.1.12"
-  },
-  "eslintConfig": {
-    "root": true,
-    "env": {
-      "es2021": true
-    },
-    "extends": [
-      "plugin:vue/vue3-essential",
-      "eslint:recommended"
-    ],
-    "rules": {
-      "vue/no-deprecated-slot-attribute": "off"
-    }
+    "vitest": "^4.1.12",
+    "vue-eslint-parser": "^10.4.1"
   },
   "browserslist": [
     "> 1%",

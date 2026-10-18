@@ -2,6 +2,7 @@ node_modules
 dist
 tests
 vitest.config.js
+eslint.config.mjs
 .git
 .github
 .claude

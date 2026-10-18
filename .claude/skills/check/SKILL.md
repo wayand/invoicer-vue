@@ -10,7 +10,7 @@ Mirror `.github/workflows/deploy.yml` (job `build-and-deploy`, minus the deploy 
 
 1. `npm ci`: only if `node_modules/` is missing or the user asks. It wipes and reinstalls `node_modules`, so otherwise report this step as skipped.
 2. `npm run build`: the only gate CI enforces.
-3. `npx eslint --ext .js,.vue --ignore-path .gitignore src`: not part of CI. Never use `npm run lint` here, because it runs `--fix` and rewrites files.
+3. `npx eslint src`: not part of CI. Never use `npm run lint` here, because it runs `--fix` and rewrites files.
 
 There is no test suite. Say so in the report and don't imply tests ran.
 

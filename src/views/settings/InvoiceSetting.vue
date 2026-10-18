@@ -199,8 +199,7 @@ export default {
         const validate = () => {
             errors.value = []
             let errs = {}
-            let res = ''
-            , req = ''
+            let res, req
 
             req = required(defaultAccountId.value)
             res = isNum(defaultAccountId.value)

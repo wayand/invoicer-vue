@@ -335,8 +335,7 @@ export default {
         const validate = () => {
             errors.value = []
             let errs = {}
-            let res = ''
-            , req = ''
+            let res, req
             console.log('validating starts')
 
             req = required(accountGroupId.value)

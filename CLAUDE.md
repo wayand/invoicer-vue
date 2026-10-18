@@ -9,7 +9,7 @@ npm ci                                                     # install exactly fro
 npm run dev                                                # dev server
 npm test                                                   # unit tests (Vitest, tests/)
 npm run build                                              # production build
-npx eslint --ext .js,.vue --ignore-path .gitignore src     # lint without rewriting files
+npx eslint src                                             # lint without rewriting files
 npm run lint                                               # lint with --fix (modifies files; use deliberately)
 ```
 
