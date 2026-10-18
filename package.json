@@ -15,7 +15,7 @@
     "axios": "^1.20.0",
     "bootstrap": "^5.2.3",
     "bootstrap-icons": "^1.10.5",
-    "html2pdf.js": "^0.10.1",
+    "html2pdf.js": "^0.14.0",
     "jenesius-vue-modal": "^1.9.0",
     "luxon": "^2.5.2",
     "perfect-scrollbar": "^1.5.5",
