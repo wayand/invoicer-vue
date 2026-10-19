@@ -15,6 +15,8 @@ npm run format:check                                       # Prettier check (CI)
 npm run format                                             # Prettier write (reformats files)
 ```
 
+`git blame` skips the Prettier reformat commit via `.git-blame-ignore-revs`; enable it once per clone with `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+
 CI (`.github/workflows/deploy.yml`) runs `Lint` (eslint with zero errors plus the Prettier check: keep both clean), `Test` and `Build image` on every pull request; deploys only after all three pass on `master`.
 
 Tests live in `tests/` (Vitest + @vue/test-utils, jsdom), outside `src/`, so eslint does not cover them. Mock the services (`vi.mock('@/services/...')`): importing `@/services/http` pulls in the real router and store. Fix a bug with a test that fails without the fix.
