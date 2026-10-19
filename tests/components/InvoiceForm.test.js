@@ -247,3 +247,36 @@ describe('invoice form unsaved changes', () => {
         expect(await leavesWithoutAsking(router)).toBe(true)
     })
 })
+
+describe('invoice form menu on the edit page', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        InvoiceService.getOne.mockResolvedValue({ data: structuredClone(saved) })
+    })
+
+    const menuItem = (wrapper, text) => wrapper.findAll('a.dropdown-item').find((link) => link.text() === text)
+
+    // The links have href="#". If the click is not cancelled, the browser also
+    // navigates to "#", and that navigation cancels the router's own.
+    const click = (link) => {
+        const event = new MouseEvent('click', { bubbles: true, cancelable: true })
+        link.element.dispatchEvent(event)
+        return event
+    }
+
+    it.each(['Save as PDF', 'Duplicate', 'Delete'])('does not let the browser follow the "%s" link', async (text) => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        expect(click(menuItem(wrapper, text)).defaultPrevented).toBe(true)
+    })
+
+    it('opens a copy of the invoice when Duplicate is clicked', async () => {
+        const { router, wrapper } = await openForm('/invoices/2/edit')
+
+        click(menuItem(wrapper, 'Duplicate'))
+        await flushPromises()
+
+        expect(router.currentRoute.value.name).toBe('NewInvoice')
+        expect(router.currentRoute.value.query.copyFrom).toBe('2')
+    })
+})

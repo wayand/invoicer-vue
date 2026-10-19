@@ -54,13 +54,17 @@
                                     class="dropdown-item"
                                     >Preview</router-link
                                 >
-                                <a class="dropdown-item" href="#" v-if="invoiceId" @click="createInvoicePDF()"
+                                <a class="dropdown-item" href="#" v-if="invoiceId" @click.prevent="createInvoicePDF()"
                                     >Save as PDF</a
                                 >
-                                <a class="dropdown-item" href="#" v-if="invoiceId" @click="duplicateInvoice()"
+                                <a class="dropdown-item" href="#" v-if="invoiceId" @click.prevent="duplicateInvoice()"
                                     >Duplicate</a
                                 >
-                                <a class="dropdown-item" href="#" v-if="invoiceId && isDraft" @click="deleteInvoice()"
+                                <a
+                                    class="dropdown-item"
+                                    href="#"
+                                    v-if="invoiceId && isDraft"
+                                    @click.prevent="deleteInvoice()"
                                     >Delete</a
                                 >
                             </div>
