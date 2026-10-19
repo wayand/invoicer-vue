@@ -248,7 +248,7 @@ describe('invoice form unsaved changes', () => {
     })
 })
 
-describe('invoice form menu on the edit page', () => {
+describe('invoice form More menu', () => {
     beforeEach(() => {
         vi.clearAllMocks()
         InvoiceService.getOne.mockResolvedValue({ data: structuredClone(saved) })
@@ -263,6 +263,25 @@ describe('invoice form menu on the edit page', () => {
         link.element.dispatchEvent(event)
         return event
     }
+
+    it('has no More menu on a new invoice, where every item in it needs a saved invoice', async () => {
+        const { wrapper } = await openForm('/invoices/new')
+
+        expect(wrapper.find('.dropdown-toggle').exists()).toBe(false)
+        expect(wrapper.findAll('a.dropdown-item')).toHaveLength(0)
+    })
+
+    it('has the More menu on a saved invoice', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        expect(wrapper.find('.dropdown-toggle').text()).toBe('More')
+        expect(wrapper.findAll('a.dropdown-item').map((link) => link.text())).toEqual([
+            'Preview',
+            'Save as PDF',
+            'Duplicate',
+            'Delete',
+        ])
+    })
 
     it.each(['Save as PDF', 'Duplicate', 'Delete'])('does not let the browser follow the "%s" link', async (text) => {
         const { wrapper } = await openForm('/invoices/2/edit')
