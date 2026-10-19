@@ -319,7 +319,7 @@ export default {
             } else {
                 await prepareNewInvoice()
             }
-            isInvoiceFormSaved.value = true
+            markSaved()
         })
 
         const { luxon } = MyDatetimeObject()
@@ -328,7 +328,17 @@ export default {
         const router = useRouter()
         const route = useRoute()
         const store = useStore()
-        const isInvoiceFormSaved = ref(true)
+        // The invoice as it was when loaded or last saved. The form has unsaved
+        // changes exactly when the invoice no longer matches it.
+        const savedSnapshot = ref(null)
+        const markSaved = () => {
+            savedSnapshot.value = JSON.stringify(store.getters.invoice)
+        }
+        const isInvoiceFormSaved = computed(
+            () => savedSnapshot.value === null || savedSnapshot.value === JSON.stringify(store.getters.invoice),
+        )
+        // Validation errors stay hidden until a save has been tried
+        const showErrors = ref(false)
         const showContactFormModal = ref(false)
         const oldContactID = ref(-1)
         const selectedContact = ref(null)
@@ -476,11 +486,14 @@ export default {
         watch(
             () => props.invoiceId,
             async () => {
+                showErrors.value = false
+                error.value = {}
                 if (props.invoiceId) {
                     await loadEditingInvoice()
                 } else {
                     await prepareNewInvoice()
                 }
+                markSaved()
             },
         )
 
@@ -502,9 +515,6 @@ export default {
             total_ex_vat.value = lines.value.reduce((total, val) => total + val.quantity * val.unit_price, 0)
             vatAmount.value = total_ex_vat.value * 0.25
             total_inc_vat.value = total_ex_vat.value + vatAmount.value
-
-            isInvoiceFormSaved.value = false
-            console.log('updateInvoice ...')
         }
 
         const openContactFormModal = () => {
@@ -537,7 +547,6 @@ export default {
         const validate = () => {
             let errs = {}
             let err = ''
-            console.log('validate starts')
             err = isNum(contactID.value)
             if (err !== true) errs.contactID = err
             if (contactID.value == -1) errs.contactID = 'This field is required'
@@ -565,15 +574,12 @@ export default {
             if (linesError.filter((lineErrs) => JSON.stringify(lineErrs) !== '{}').length) {
                 errs['lines'] = linesError
             }
-            console.log('Validate ends, err No', Object.keys(error.value).length)
-            error.value = errs
-            if (!Object.keys(error.value).length > 0) {
-                return true
-            }
-            return false
+            error.value = showErrors.value ? errs : {}
+            return Object.keys(errs).length === 0
         }
 
         const saveInvoice = (e) => {
+            showErrors.value = true
             if (validate()) {
                 const actionName = props.invoiceId ? 'updateInvoice' : 'createInvoice'
 
@@ -587,7 +593,7 @@ export default {
                         invoice: store.getters.invoice,
                     })
                     .then((response) => {
-                        isInvoiceFormSaved.value = true
+                        markSaved()
                         toast('Successfully saved !', 'success')
                         router.push({ name: 'EditInvoice', params: { invoiceId: response.data.id } })
                     })
