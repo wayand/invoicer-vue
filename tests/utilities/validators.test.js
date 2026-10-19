@@ -8,6 +8,7 @@ import {
     maxLength,
     minLength,
     required,
+    requiredAmount,
     validateEmail,
 } from '@/utilities/validators'
 
@@ -20,6 +21,16 @@ describe('required', () => {
 
     it.each(['a', ' ', 7, false])('accepts %j', (value) => {
         expect(required(value)).toBe(true)
+    })
+})
+
+describe('requiredAmount', () => {
+    it.each([undefined, null, ''])('rejects %j', (value) => {
+        expect(requiredAmount(value)).toBe(REQUIRED)
+    })
+
+    it.each([0, '0', 7, '12.5'])('accepts %j, as 0 is an amount', (value) => {
+        expect(requiredAmount(value)).toBe(true)
     })
 })
 

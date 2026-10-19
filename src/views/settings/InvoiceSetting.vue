@@ -157,7 +157,7 @@ import BaseSelect from '@/components/formBaseElements/BaseSelect'
 import BaseCheckbox from '@/components/formBaseElements/BaseCheckbox'
 import BaseInput from '@/components/formBaseElements/BaseInput'
 import { toast } from '@/utilities/toast'
-import { required, isNum } from '@/utilities/validators'
+import { required, requiredAmount, isNum } from '@/utilities/validators'
 
 export default {
     components: {
@@ -238,7 +238,7 @@ export default {
                 if (req !== true) errs.next_invoice_no = req
             }
 
-            req = required(defaultReminderFee.value)
+            req = requiredAmount(defaultReminderFee.value)
             res = isNum(defaultReminderFee.value)
             if (req !== true) errs.default_reminder_fee = req
             if (res !== true) errs.default_reminder_fee = res

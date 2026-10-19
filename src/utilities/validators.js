@@ -5,6 +5,10 @@ const required = (value) => {
     return true
 }
 
+// Like required, but 0 counts as a value, for amounts where 0 is allowed. Not for
+// dropdowns, where 0 means that nothing is selected.
+const requiredAmount = (value) => (value === 0 ? true : required(value))
+
 const minLength = (value, min) => {
     return value.length < min ? `The field must be atleast ${min} characters long` : true
 }
@@ -59,4 +63,4 @@ const isPassword = (value, min, max) => {
     return true
 }
 
-export { required, minLength, maxLength, validateEmail, isEmail, isNum, isPhone, isName, isPassword }
+export { required, requiredAmount, minLength, maxLength, validateEmail, isEmail, isNum, isPhone, isName, isPassword }
