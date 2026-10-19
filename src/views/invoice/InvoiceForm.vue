@@ -35,7 +35,7 @@
                     >
                         Save{{ !invoiceId || state === 'draft' ? ' as draft' : '' }}
                     </button>
-                    <div class="btn-group mb-1">
+                    <div class="btn-group mb-1" v-if="invoiceId">
                         <div class="dropdown">
                             <button
                                 class="btn btn-secondary dropdown-toggle me-1"
