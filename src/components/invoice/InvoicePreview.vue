@@ -89,7 +89,7 @@
                                     <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
                                 </tr>
                                 <tr>
-                                    <td>Moms (25%)</td>
+                                    <td>Moms{{ vatLabel }}</td>
                                     <td>{{ $filters.toCurrency(vatAmount) }}</td>
                                 </tr>
                                 <tr class="fw-bold border-bottom border-top">
@@ -132,6 +132,7 @@ import { computed, toRefs, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import LineShow from '@/components/invoice/LineShow'
 import { HTTP } from '@/services/http'
+import { ratePercent } from '@/utilities/money'
 export default {
     props: {
         organization: {
@@ -150,7 +151,10 @@ export default {
         const store = useStore()
         const { invoice, organization } = toRefs(props)
 
-        onMounted(async () => await store.dispatch('fetchAccounts'))
+        onMounted(async () => {
+            await store.dispatch('fetchAccounts')
+            await store.dispatch('fetchTaxRates')
+        })
 
         const settingDefaultAccount = computed(() =>
             store.getters.getAccountById(organization.value.invoice_setting?.default_account_id),
@@ -164,16 +168,19 @@ export default {
                 HTTP.defaults.baseURL + '/organizations/' + organization.value.slug + '/logo/' + organization.value.logo
             )
         })
-        const total_ex_vat = computed(() => {
-            return invoice.value.lines?.reduce((total, val) => total + val.quantity * val.unit_price, 0)
-        })
-        const vatAmount = computed(() => invoice.value.amount * 0.25)
-        const total_inc_vat = computed(() => invoice.value.amount + vatAmount.value)
+        // The amounts the server calculated when the invoice was saved
+        const total_ex_vat = computed(() => invoice.value.amount)
+        const vatAmount = computed(() => invoice.value.vat_amount)
+        const total_inc_vat = computed(() => invoice.value.gross_amount)
+        // The rate is not saved with the invoice yet, so the label shows today's sales rate
+        const salesVatRate = computed(() => store.getters.salesVatRate)
+        const vatLabel = computed(() => (salesVatRate.value === null ? '' : ` (${ratePercent(salesVatRate.value)}%)`))
 
         return {
             organizationLogo,
             total_ex_vat,
             vatAmount,
+            vatLabel,
             total_inc_vat,
             settingDefaultAccount,
             settingDefaultDepositAccount,

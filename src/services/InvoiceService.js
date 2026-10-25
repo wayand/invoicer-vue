@@ -1,5 +1,14 @@
 import { HTTP } from './http'
 
+// The server calculates every amount from the lines (docs/money-rules.md in invoicer-api)
+// and ignores what it is sent, so none are sent.
+/* eslint-disable no-unused-vars */
+const withoutAmounts = ({ amount, vat_amount, gross_amount, excluding_vat, lines = [], ...invoice }) => ({
+    ...invoice,
+    lines: lines.map(({ amount, created_at, updated_at, ...line }) => line),
+})
+/* eslint-enable no-unused-vars */
+
 export default {
     getAll() {
         return HTTP.get(`/invoices`)
@@ -9,20 +18,11 @@ export default {
     },
     update(organizationId, invoice) {
         // eslint-disable-next-line no-unused-vars
-        const { id: invoiceId, contact, lines, created_at, updated_at, ...invoiceRequiredFields } = invoice
-
-        /* eslint-disable no-unused-vars */
-        const requiredLines = lines.map(({ created_at, updated_at, ...requiredFields }) => ({
-            ...requiredFields,
-        }))
-        /* eslint-enable no-unused-vars */
-        return HTTP.put(`/organizations/${organizationId}/invoices/${invoiceId}`, {
-            lines: requiredLines,
-            ...invoiceRequiredFields,
-        })
+        const { id: invoiceId, contact, created_at, updated_at, ...fields } = invoice
+        return HTTP.put(`/organizations/${organizationId}/invoices/${invoiceId}`, withoutAmounts(fields))
     },
     create(organizationId, invoice) {
-        return HTTP.post(`/organizations/${organizationId}/invoices`, invoice)
+        return HTTP.post(`/organizations/${organizationId}/invoices`, withoutAmounts(invoice))
     },
     delete(organizationId, invoiceId) {
         return HTTP.delete(`/organizations/${organizationId}/invoices/${invoiceId}`)

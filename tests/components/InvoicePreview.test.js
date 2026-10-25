@@ -7,19 +7,20 @@ import InvoicePreview from '@/components/invoice/InvoicePreview.vue'
 // the store; the preview only needs the address
 vi.mock('@/services/http', () => ({ HTTP: { defaults: { baseURL: 'https://api.example.test' } } }))
 
-const store = createStore({
-    getters: { getAccountById: () => () => ({ name: 'Bank', number: 5710 }) },
-    actions: { fetchAccounts: () => {} },
-})
+const newStore = (salesVatRate) =>
+    createStore({
+        getters: { getAccountById: () => () => ({ name: 'Bank', number: 5710 }), salesVatRate: () => salesVatRate },
+        actions: { fetchAccounts: () => {}, fetchTaxRates: () => {} },
+    })
 
-const mountPreview = (organization, invoice = {}) =>
+const mountPreview = (organization, invoice = {}, salesVatRate = 0.25) =>
     mount(InvoicePreview, {
         props: {
             organization: { name: 'Demo ApS', ...organization },
             invoice: { lines: [], amount: 0, ...invoice },
         },
         global: {
-            plugins: [store],
+            plugins: [newStore(salesVatRate)],
             stubs: { LineShow: true },
             mocks: { $filters: { toCurrency: (value) => `kr ${Number(value).toFixed(2)}`, toFloat: (value) => value } },
         },
@@ -38,22 +39,33 @@ describe('InvoicePreview', () => {
         expect(mountPreview({ slug: undefined, logo: '' }).find('img').exists()).toBe(false)
     })
 
-    it('shows the totals: lines, 25% VAT and the total including VAT', () => {
+    it('shows the amounts the server saved: total, VAT and the total including VAT', () => {
         const wrapper = mountPreview(
             { slug: 'demo-aps', logo: 'logo.png' },
-            {
-                amount: 300,
-                lines: [
-                    { quantity: 1, unit_price: 100 },
-                    { quantity: 2, unit_price: 100 },
-                ],
-            },
+            { amount: 300, vat_amount: 75, gross_amount: 375, lines: [{ quantity: 3, unit_price: 100, amount: 300 }] },
         )
 
-        const text = wrapper.text()
-        expect(text).toContain('kr 300.00') // 1 x 100 + 2 x 100
-        expect(text).toContain('kr 75.00') // 25% of the invoice amount
-        expect(text).toContain('kr 375.00') // amount + VAT
+        expect(wrapper.text()).toContain('I alt ekskl. momskr 300.00')
+        expect(wrapper.text()).toContain('Moms (25%)kr 75.00')
+        expect(wrapper.text()).toContain('I alt inkl. momskr 375.00')
+    })
+
+    it('does not calculate the VAT itself: it shows what was saved', () => {
+        // saved while the rate was 0%: a recalculation with 25% would show 25.00 and 125.00
+        const wrapper = mountPreview(
+            { slug: 'demo-aps', logo: 'logo.png' },
+            { amount: 100, vat_amount: 0, gross_amount: 100, lines: [{ quantity: 1, unit_price: 100, amount: 100 }] },
+        )
+
+        expect(wrapper.text()).toContain('Moms (25%)kr 0.00')
+        expect(wrapper.text()).toContain('I alt inkl. momskr 100.00')
+    })
+
+    it('names the rate from the store, and no rate when there is no single sales rate', () => {
+        const invoice = { amount: 100, vat_amount: 6.25, gross_amount: 106.25, lines: [] }
+
+        expect(mountPreview({}, invoice, 0.0625).text()).toContain('Moms (6.25%)')
+        expect(mountPreview({}, invoice, null).text()).toMatch(/Moms\s*kr 6\.25/)
     })
 
     it('shows the invoice number, the dates and the contact', () => {
