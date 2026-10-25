@@ -189,7 +189,6 @@
                                                         :the-line="line"
                                                         :count="count"
                                                         @validate="validate"
-                                                        @updateInvoice="updateInvoice"
                                                         @deleteLine="deleteLine"
                                                     />
                                                 </tbody>
@@ -217,7 +216,7 @@
                                                         <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td>Sale VAT (25%)</td>
+                                                        <td>Sale VAT{{ vatLabel }}</td>
                                                         <td>{{ $filters.toCurrency(vatAmount) }}</td>
                                                     </tr>
                                                     <tr class="fw-bold border-bottom border-top">
@@ -280,6 +279,7 @@ import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import MyDatetimeObject from '@/utilities/mydate'
 import { isNum, required } from '@/utilities/validators'
 import { toast } from '@/utilities/toast'
+import { invoiceTotals, ratePercent } from '@/utilities/money'
 
 export default {
     props: {
@@ -317,6 +317,7 @@ export default {
             await store.dispatch('fetchContacts', store.getters.user.organizationId)
             await store.dispatch('fetchProducts', store.getters.user.organizationId)
             await store.dispatch('fetchAccounts')
+            await store.dispatch('fetchTaxRates').catch((e) => toast(e.response?.data?.error || e.message, 'error'))
 
             if (props.invoiceId) {
                 await loadEditingInvoice()
@@ -363,10 +364,6 @@ export default {
             }
         })
 
-        const vatAmount = computed({
-            get: () => store.getters.invoice.vat_amount,
-            set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'vat_amount', value: val }),
-        })
         const contactID = computed({
             get: () => store.getters.invoice.contact_id || -1,
             set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'contact_id', value: val }),
@@ -388,14 +385,14 @@ export default {
             set: (val) =>
                 store.commit('UPDATE_INVOICE_PROPERTY', { key: 'duedate', value: luxon(val).toFormat('yyyy-MM-dd') }),
         })
-        const total_ex_vat = computed({
-            get: () => store.getters.invoice.amount,
-            set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'amount', value: val }),
-        })
-        const total_inc_vat = computed({
-            get: () => store.getters.invoice.gross_amount,
-            set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'gross_amount', value: val }),
-        })
+        // The totals shown while editing. The server calculates the saved ones with the same
+        // rules (src/utilities/money.js) and the organization's one active sales VAT rate.
+        const vatRate = computed(() => store.getters.salesVatRate)
+        const totals = computed(() => invoiceTotals(lines.value, vatRate.value))
+        const total_ex_vat = computed(() => totals.value.amount)
+        const vatAmount = computed(() => totals.value.vat_amount)
+        const total_inc_vat = computed(() => totals.value.gross_amount)
+        const vatLabel = computed(() => (vatRate.value === null ? '' : ` (${ratePercent(vatRate.value)}%)`))
         const state = computed({
             get: () => store.getters.invoice.state,
             set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'state', value: val }),
@@ -420,7 +417,6 @@ export default {
                     })
                     .catch((e) => console.log('fetchInvoice ' + e))
                 selectedContact.value = contacts.value.filter((c) => c.id === contactID.value)[0]
-                updateInvoice()
             }
         }
 
@@ -429,16 +425,12 @@ export default {
                 organization_id: store.getters.user.organizationId,
                 contact_id: null,
                 currency_id: 'DKK',
-                excluding_vat: true,
                 invoice_no: invoiceNumber.value,
                 is_paid: false,
                 is_sent: false,
                 invoice_date: luxon().toFormat('yyyy-MM-dd'),
                 duedate: luxon().toFormat('yyyy-MM-dd'),
-                amount: 0.0,
-                gross_amount: 0.0,
                 template_id: '1',
-                vat_amount: 0.0,
                 state: 'draft',
                 lines: [
                     {
@@ -446,7 +438,6 @@ export default {
                         description: '',
                         quantity: 1,
                         unit_price: 0,
-                        amount: 0.0,
                     },
                 ],
                 ...overrides,
@@ -470,14 +461,12 @@ export default {
             initNewInvoice({
                 contact_id: source.contact_id,
                 currency_id: source.currency_id,
-                excluding_vat: source.excluding_vat,
                 template_id: source.template_id,
                 // eslint-disable-next-line no-unused-vars
-                lines: source.lines.map(({ id, invoice_id, created_at, updated_at, ...line }) => line),
+                lines: source.lines.map(({ id, invoice_id, created_at, updated_at, amount, ...line }) => line),
             })
             selectedContact.value = contacts.value.filter((c) => c.id === contactID.value)[0]
             oldContactID.value = contactID.value
-            updateInvoice()
         }
 
         async function prepareNewInvoice() {
@@ -507,18 +496,10 @@ export default {
                 description: '',
                 quantity: 1,
                 unit_price: 0,
-                amount: 0.0,
             })
         }
         const deleteLine = (lineIndex) => {
             store.commit('REMOVE_INVOICE_LINE', lineIndex)
-            updateInvoice()
-        }
-
-        const updateInvoice = () => {
-            total_ex_vat.value = lines.value.reduce((total, val) => total + val.quantity * val.unit_price, 0)
-            vatAmount.value = total_ex_vat.value * 0.25
-            total_inc_vat.value = total_ex_vat.value + vatAmount.value
         }
 
         const openContactFormModal = () => {
@@ -664,7 +645,6 @@ export default {
             closeContactFormModal,
             contacts,
             contactHandler,
-            updateInvoice,
             validate,
             selectedContact,
             contactID,
@@ -678,6 +658,7 @@ export default {
             total_inc_vat,
             state,
             vatAmount,
+            vatLabel,
             error,
             createInvoicePDF,
             duplicateInvoice,

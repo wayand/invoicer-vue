@@ -8,6 +8,12 @@ export default {
     getters: {
         taxRates: (state) => state.taxRates,
         taxRate: (state) => state.taxRate,
+        // The one active sales rate the server calculates invoices with (a fraction: 0.25 is 25%).
+        // null when there is none or several: the server refuses to save an invoice then.
+        salesVatRate: (state) => {
+            const rates = state.taxRates.filter((taxRate) => taxRate.applies_to_sales && taxRate.is_active)
+            return rates.length === 1 ? rates[0].rate : null
+        },
     },
     actions: {
         fetchTaxRates({ commit }) {

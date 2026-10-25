@@ -76,12 +76,14 @@ const newStore = () =>
             products: () => [],
             invoiceSetting: () => ({ invoice_no_mode: 'sequential', next_invoice_no: 1003 }),
             getAccountById: () => () => ({ name: 'Bank' }),
+            salesVatRate: () => 0.25,
         },
         actions: {
             fetchOrganization: () => {},
             fetchContacts: () => {},
             fetchProducts: () => {},
             fetchAccounts: () => {},
+            fetchTaxRates: () => {},
         },
     })
 
@@ -139,32 +141,35 @@ describe('new invoice form, copying an existing invoice', () => {
         expect(copy.duedate).toBe('2026-10-17')
     })
 
-    it('keeps the contact, currency, VAT setting and template of the original', async () => {
+    it('keeps the contact, currency and template of the original', async () => {
         const { store } = await openNewInvoice('/invoices/new?copyFrom=2')
         const copy = store.getters.invoice
 
         expect(copy.contact_id).toBe(5)
         expect(copy.currency_id).toBe('EUR')
-        expect(copy.excluding_vat).toBe(false)
         expect(copy.template_id).toBe('2')
     })
 
-    it('copies the lines without their ids and timestamps', async () => {
+    it('copies the lines without their ids, timestamps and amounts', async () => {
         const { store } = await openNewInvoice('/invoices/new?copyFrom=2')
 
         expect(store.getters.invoice.lines).toEqual([
-            { product_id: 1, description: 'First job', quantity: 1, unit_price: 100, amount: 100 },
-            { product_id: 1, description: 'Second job', quantity: 2, unit_price: 100, amount: 200 },
+            { product_id: 1, description: 'First job', quantity: 1, unit_price: 100 },
+            { product_id: 1, description: 'Second job', quantity: 2, unit_price: 100 },
         ])
     })
 
-    it('recalculates the totals for the copy', async () => {
-        const { store } = await openNewInvoice('/invoices/new?copyFrom=2')
+    it('has no amounts of its own: the totals shown are calculated from the lines', async () => {
+        const { store, wrapper } = await openNewInvoice('/invoices/new?copyFrom=2')
         const copy = store.getters.invoice
 
-        expect(copy.amount).toBe(300)
-        expect(copy.vat_amount).toBe(75)
-        expect(copy.gross_amount).toBe(375)
+        expect(copy.amount).toBeUndefined()
+        expect(copy.vat_amount).toBeUndefined()
+        expect(copy.gross_amount).toBeUndefined()
+        expect(copy.excluding_vat).toBeUndefined()
+        expect(wrapper.text()).toContain('Total excluding VAT300')
+        expect(wrapper.text()).toContain('Sale VAT (25%)75')
+        expect(wrapper.text()).toContain('Total including VAT375')
     })
 
     it('shows the contact of the original as the selected one', async () => {
@@ -205,6 +210,6 @@ describe('new invoice form, without copying', () => {
         expect(blank.contact_id).toBeNull()
         expect(blank.invoice_no).toBe('1003')
         expect(blank.invoice_date).toBe('2026-10-17')
-        expect(blank.lines).toEqual([{ product_id: -1, description: '', quantity: 1, unit_price: 0, amount: 0 }])
+        expect(blank.lines).toEqual([{ product_id: -1, description: '', quantity: 1, unit_price: 0 }])
     })
 })

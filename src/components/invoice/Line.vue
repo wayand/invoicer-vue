@@ -66,6 +66,7 @@ import { ref, watch, computed } from 'vue'
 import { useStore } from 'vuex'
 import BaseSelectWithAddNew from '@/components/formBaseElements/BaseSelectWithAddNew'
 import ProductFormModal from '@/components/product/ProductFormModal'
+import { lineAmount } from '@/utilities/money'
 
 export default {
     name: 'InvoiceLine',
@@ -73,7 +74,7 @@ export default {
         BaseSelectWithAddNew,
         ProductFormModal,
     },
-    emits: ['deleteLine', 'updateInvoice', 'validate'],
+    emits: ['deleteLine', 'validate'],
     props: {
         products: {
             type: Object,
@@ -136,11 +137,7 @@ export default {
                     value: val,
                 }),
         })
-        const total = computed({
-            get: () => parseFloat(quantity.value * unit_price.value),
-            set: (val) =>
-                store.commit('UPDATE_INVOICE_LINES_PROPERTY', { index: props.lineIndex, key: 'amount', value: val }),
-        })
+        const total = computed(() => lineAmount(quantity.value, unit_price.value))
 
         const openProductFormModal = () => {
             document.body.classList.add('modal-open')
@@ -166,9 +163,6 @@ export default {
         }
 
         watch([() => product_id.value, () => unit_price.value, () => quantity.value], () => {
-            store.commit('UPDATE_INVOICE_LINES_PROPERTY', { index: props.lineIndex, key: 'amount', value: total.value })
-            emit('updateInvoice')
-
             setTimeout(function () {
                 emit('validate')
             }, 1)

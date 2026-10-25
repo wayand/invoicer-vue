@@ -54,7 +54,7 @@ const PromiseDialog = defineComponent({
 })
 const page = () => defineComponent({ render: () => h('div') })
 
-const newStore = () =>
+const newStore = (salesVatRate) =>
     createStore({
         modules: { invoice: { ...invoice, state: () => ({ invoices: [], invoice: {} }) } },
         getters: {
@@ -64,17 +64,19 @@ const newStore = () =>
             products: () => products,
             invoiceSetting: () => ({ invoice_no_mode: 'sequential', next_invoice_no: 1003 }),
             getAccountById: () => () => ({ name: 'Bank' }),
+            salesVatRate: () => salesVatRate,
         },
         actions: {
             fetchOrganization: () => {},
             fetchContacts: () => {},
             fetchProducts: () => {},
             fetchAccounts: () => {},
+            fetchTaxRates: () => {},
         },
     })
 
-const openForm = async (url) => {
-    const store = newStore()
+const openForm = async (url, salesVatRate = 0.25) => {
+    const store = newStore(salesVatRate)
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -160,6 +162,56 @@ describe('invoice form validation', () => {
         await new Promise((resolve) => setTimeout(resolve, 20))
 
         expect(wrapper.findAll('.is-invalid')).toHaveLength(0)
+    })
+})
+
+describe('invoice form totals', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        InvoiceService.getOne.mockResolvedValue({ data: structuredClone(saved) })
+    })
+
+    const totalsText = (wrapper) => wrapper.find('table.float-end').text()
+
+    it('shows the totals of the lines and the VAT at the active sales rate', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        expect(totalsText(wrapper)).toContain('Total excluding VAT300')
+        expect(totalsText(wrapper)).toContain('Sale VAT (25%)75')
+        expect(totalsText(wrapper)).toContain('Total including VAT375')
+    })
+
+    it('rounds as the server does when a line changes, where floats would not', async () => {
+        const { wrapper } = await openForm('/invoices/new')
+
+        await wrapper.find('input.quantity').setValue(3)
+        await wrapper.find('input.unit-price').setValue(0.335)
+        await flushPromises()
+
+        expect(wrapper.find('td.total').text()).toBe('1.01')
+        expect(totalsText(wrapper)).toContain('Total excluding VAT1.01')
+        expect(totalsText(wrapper)).toContain('Sale VAT (25%)0.25')
+        expect(totalsText(wrapper)).toContain('Total including VAT1.26')
+    })
+
+    it('uses the rate from the store, not 25%', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit', 0.0625)
+
+        expect(totalsText(wrapper)).toContain('Sale VAT (6.25%)18.75') // 6.25% of 300
+        expect(totalsText(wrapper)).toContain('Total including VAT318.75')
+    })
+
+    it('shows no VAT while there is no single sales rate', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit', null)
+
+        expect(totalsText(wrapper)).toContain('Sale VAT0')
+        expect(totalsText(wrapper)).toContain('Total including VAT300')
+    })
+
+    it('does not count the totals as a change', async () => {
+        const { router } = await openForm('/invoices/2/edit')
+
+        expect(await leavesWithoutAsking(router)).toBe(true)
     })
 })
 
