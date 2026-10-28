@@ -20,6 +20,8 @@ export default {
             account_type,
             account_group,
             tax_rate,
+            standard_account,
+            system_role,
             created_at,
             updated_at,
             ...requiredFields
