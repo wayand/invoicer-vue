@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { invoiceTotals, lineAmount, ratePercent } from '@/utilities/money'
+import { invoiceTotals, lineAmount, ratePercent, roundAmount, voucherTotals } from '@/utilities/money'
 import cases from './money_cases.json'
 
 const money = (value) => value.toFixed(2)
@@ -61,5 +61,55 @@ describe('ratePercent', () => {
         [1, 100],
     ])('%s is %s percent', (rate, percent) => {
         expect(ratePercent(rate)).toBe(percent)
+    })
+})
+
+describe('roundAmount', () => {
+    it('rounds half up to 2 decimals, as the server does', () => {
+        expect(roundAmount(1.005)).toBe(1.01)
+        expect(roundAmount(10.004)).toBe(10)
+        expect(roundAmount(125)).toBe(125)
+    })
+
+    it('counts an empty field as 0', () => {
+        expect(roundAmount('')).toBe(0)
+        expect(roundAmount(undefined)).toBe(0)
+    })
+})
+
+describe('voucherTotals', () => {
+    it('adds up the debits and the credits and gives the difference', () => {
+        const totals = voucherTotals([
+            { debit: 125, credit: '' },
+            { debit: '', credit: 100 },
+            { debit: '', credit: 25 },
+        ])
+
+        expect(totals).toEqual({ debit: 125, credit: 125, difference: 0 })
+    })
+
+    it('has no rounding error where floats would: 0.1 + 0.2 against 0.3', () => {
+        expect(0.1 + 0.2 - 0.3).not.toBe(0)
+
+        const totals = voucherTotals([{ debit: 0.1 }, { debit: 0.2 }, { credit: 0.3 }])
+
+        expect(totals.difference).toBe(0)
+    })
+
+    it('rounds each amount before adding, as the server does', () => {
+        // 0.005 + 0.005 is 0.01 + 0.01 for the server, not 0.01
+        const totals = voucherTotals([{ debit: 0.005 }, { debit: 0.005 }, { credit: 0.01 }])
+
+        expect(totals).toEqual({ debit: 0.02, credit: 0.01, difference: 0.01 })
+    })
+
+    it('shows the difference of an unbalanced voucher, in either direction', () => {
+        expect(voucherTotals([{ debit: 100 }, { credit: 99.99 }]).difference).toBe(0.01)
+        expect(voucherTotals([{ debit: 99.99 }, { credit: 100 }]).difference).toBe(-0.01)
+    })
+
+    it('is all zero without lines', () => {
+        expect(voucherTotals()).toEqual({ debit: 0, credit: 0, difference: 0 })
+        expect(voucherTotals([])).toEqual({ debit: 0, credit: 0, difference: 0 })
     })
 })

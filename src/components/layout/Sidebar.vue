@@ -98,6 +98,21 @@
                         </ul>
                     </li>
 
+                    <li :class="{ active: isActive('/vouchers') }" class="sidebar-item has-sub">
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-journal-text"></i>
+                            <span>Bookkeeping</span>
+                        </a>
+                        <ul class="submenu" :class="{ active: isActive('/vouchers') }">
+                            <li class="submenu-item" :class="{ active: route.name === 'Vouchers' }">
+                                <router-link class="submenu-link" :to="{ name: 'Vouchers' }">Vouchers</router-link>
+                            </li>
+                            <li class="submenu-item" :class="{ active: route.name === 'NewVoucher' }">
+                                <router-link class="submenu-link" :to="{ name: 'NewVoucher' }">New voucher</router-link>
+                            </li>
+                        </ul>
+                    </li>
+
                     <li :class="{ active: isActive('/reports') }" class="sidebar-item has-sub">
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-clipboard-data"></i>

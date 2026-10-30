@@ -57,3 +57,16 @@ export const invoiceTotals = (lines = [], vatRate = null) => {
 
 // A VAT rate as a percentage for a label: 0.25 -> 25, 0.0625 -> 6.25
 export const ratePercent = (rate) => Number(scaled(rate, SCALES.rate)) / 100
+
+// An amount of a voucher line, rounded to 2 decimals half up as the server does
+export const roundAmount = (value) => toNumber(scaled(value, SCALES.amount))
+
+// The debit and credit of the lines of a voucher, and the difference between them. Each
+// amount is rounded to 2 decimals as the server does before they are added, and the sums are
+// whole numbers, so 0.10 + 0.20 against 0.30 is a difference of exactly 0.
+export const voucherTotals = (lines = []) => {
+    const sum = (key) => lines.reduce((total, line) => total + scaled(line[key], SCALES.amount), 0n)
+    const debit = sum('debit')
+    const credit = sum('credit')
+    return { debit: toNumber(debit), credit: toNumber(credit), difference: toNumber(debit - credit) }
+}

@@ -36,3 +36,9 @@ export default function MyDatetimeObject() {
         toLocaleString,
     }
 }
+
+// Today as yyyy-mm-dd in the local time zone (toISOString would give the UTC date)
+export const todayIso = (now = new Date()) =>
+    [now.getFullYear(), now.getMonth() + 1, now.getDate()]
+        .map((part, i) => String(part).padStart(i ? 2 : 4, '0'))
+        .join('-')
