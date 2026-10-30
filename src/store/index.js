@@ -7,6 +7,7 @@ import productModule from './modules/product'
 import contactModule from './modules/contact'
 import accountModule from './modules/account'
 import taxrateModule from './modules/taxrate'
+import journalModule from './modules/journal'
 
 const debug = false //process.env.NODE_ENV !== 'production'
 
@@ -22,6 +23,7 @@ const Store = createStore({
         contact: contactModule,
         account: accountModule,
         taxrate: taxrateModule,
+        journal: journalModule,
     },
 })
 

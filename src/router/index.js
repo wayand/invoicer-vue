@@ -52,6 +52,25 @@ const routes = [
         meta: { requiresAuth: true, title: 'Invoicer - Edit invoice' },
     },
     {
+        path: '/vouchers',
+        name: 'Vouchers',
+        component: () => import('@/views/voucher/VoucherList'),
+        meta: { requiresAuth: true, title: 'Invoicer - Vouchers' },
+    },
+    {
+        path: '/vouchers/new',
+        name: 'NewVoucher',
+        component: () => import('@/views/voucher/VoucherForm'),
+        meta: { requiresAuth: true, title: 'Invoicer - New voucher' },
+    },
+    {
+        path: '/vouchers/:entryId(\\d+)',
+        name: 'ShowVoucher',
+        component: () => import('@/views/voucher/ShowVoucher'),
+        props: true,
+        meta: { requiresAuth: true, title: 'Invoicer - Voucher' },
+    },
+    {
         path: '/reports/annual-report',
         name: 'AnnualReport',
         component: AnnualReport,
