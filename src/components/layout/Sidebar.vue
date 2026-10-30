@@ -119,6 +119,16 @@
                             <span>Reports</span>
                         </a>
                         <ul class="submenu" :class="{ active: isActive('/reports') }">
+                            <li class="submenu-item" :class="{ active: route.name === 'TrialBalance' }">
+                                <router-link class="submenu-link" :to="{ name: 'TrialBalance' }"
+                                    >Trial balance</router-link
+                                >
+                            </li>
+                            <li class="submenu-item" :class="{ active: route.name === 'AccountLedger' }">
+                                <router-link class="submenu-link" :to="{ name: 'AccountLedger' }"
+                                    >Account ledger</router-link
+                                >
+                            </li>
                             <li class="submenu-item" :class="{ active: route.name === 'AnnualReport' }">
                                 <router-link class="submenu-link" :to="{ name: 'AnnualReport' }"
                                     >Annual report</router-link

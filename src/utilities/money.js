@@ -70,3 +70,8 @@ export const voucherTotals = (lines = []) => {
     const credit = sum('credit')
     return { debit: toNumber(debit), credit: toNumber(credit), difference: toNumber(debit - credit) }
 }
+
+// A balance from the reports is debit minus credit: debit positive, credit negative. On an
+// account whose normal side is credit (sales, VAT owed, equity) that reads backwards, so it is
+// turned round: income shows as a positive number, and a negative one is on the other side.
+export const normalBalanceAmount = (balance, normalBalance) => (normalBalance === 'credit' ? 0 - balance : balance)

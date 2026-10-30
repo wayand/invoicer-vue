@@ -42,3 +42,6 @@ export const todayIso = (now = new Date()) =>
     [now.getFullYear(), now.getMonth() + 1, now.getDate()]
         .map((part, i) => String(part).padStart(i ? 2 : 4, '0'))
         .join('-')
+
+// The first and last day of a calendar year as yyyy-mm-dd
+export const yearRange = (year) => ({ from: `${year}-01-01`, to: `${year}-12-31` })

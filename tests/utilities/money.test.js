@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { invoiceTotals, lineAmount, ratePercent, roundAmount, voucherTotals } from '@/utilities/money'
+import {
+    invoiceTotals,
+    lineAmount,
+    normalBalanceAmount,
+    ratePercent,
+    roundAmount,
+    voucherTotals,
+} from '@/utilities/money'
 import cases from './money_cases.json'
 
 const money = (value) => value.toFixed(2)
@@ -111,5 +118,21 @@ describe('voucherTotals', () => {
     it('is all zero without lines', () => {
         expect(voucherTotals()).toEqual({ debit: 0, credit: 0, difference: 0 })
         expect(voucherTotals([])).toEqual({ debit: 0, credit: 0, difference: 0 })
+    })
+})
+
+describe('normalBalanceAmount', () => {
+    it('keeps a balance on an account whose normal side is debit', () => {
+        expect(normalBalanceAmount(125, 'debit')).toBe(125)
+        expect(normalBalanceAmount(-5, 'debit')).toBe(-5)
+    })
+
+    it('turns the balance of a credit account round: income is positive', () => {
+        expect(normalBalanceAmount(-100, 'credit')).toBe(100)
+        expect(normalBalanceAmount(40.5, 'credit')).toBe(-40.5)
+    })
+
+    it('never gives minus zero', () => {
+        expect(Object.is(normalBalanceAmount(0, 'credit'), 0)).toBe(true)
     })
 })
