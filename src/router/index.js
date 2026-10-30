@@ -71,6 +71,18 @@ const routes = [
         meta: { requiresAuth: true, title: 'Invoicer - Voucher' },
     },
     {
+        path: '/reports/trial-balance',
+        name: 'TrialBalance',
+        component: () => import('@/views/reports/TrialBalance'),
+        meta: { requiresAuth: true, title: 'Invoicer - Trial balance' },
+    },
+    {
+        path: '/reports/account-ledger',
+        name: 'AccountLedger',
+        component: () => import('@/views/reports/AccountLedger'),
+        meta: { requiresAuth: true, title: 'Invoicer - Account ledger' },
+    },
+    {
         path: '/reports/annual-report',
         name: 'AnnualReport',
         component: AnnualReport,
