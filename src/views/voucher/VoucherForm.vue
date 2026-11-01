@@ -53,10 +53,11 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th style="width: 32%">Account</th>
+                                    <th style="width: 28%">Account</th>
+                                    <th v-if="vatEnabled" style="width: 14%">VAT</th>
                                     <th>Text</th>
-                                    <th style="width: 14%" class="text-end">Debit</th>
-                                    <th style="width: 14%" class="text-end">Credit</th>
+                                    <th style="width: 13%" class="text-end">Debit</th>
+                                    <th style="width: 13%" class="text-end">Credit</th>
                                     <th style="width: 4%"></th>
                                 </tr>
                             </thead>
@@ -77,6 +78,31 @@
                                                 >
                                                     {{ account.number }} {{ account.name }}
                                                 </option>
+                                            </select>
+                                        </td>
+                                        <td v-if="vatEnabled">
+                                            <select class="vat-code form-select" v-model="line.vat_code">
+                                                <option value="">No VAT</option>
+                                                <optgroup label="Sales">
+                                                    <option
+                                                        v-for="code in salesCodes"
+                                                        :key="code.code"
+                                                        :value="code.code"
+                                                        :title="code.title"
+                                                    >
+                                                        {{ code.code }} {{ percent(code.rate) }}%
+                                                    </option>
+                                                </optgroup>
+                                                <optgroup label="Purchases">
+                                                    <option
+                                                        v-for="code in purchaseCodes"
+                                                        :key="code.code"
+                                                        :value="code.code"
+                                                        :title="code.title"
+                                                    >
+                                                        {{ code.code }} {{ percent(code.rate) }}%
+                                                    </option>
+                                                </optgroup>
                                             </select>
                                         </td>
                                         <td>
@@ -120,15 +146,34 @@
                                         </td>
                                     </tr>
                                     <tr v-if="showErrors && errors.lines[index]" class="line-error">
-                                        <td colspan="5" class="text-danger small">
+                                        <td :colspan="columns" class="text-danger small">
                                             Line {{ index + 1 }}: {{ errors.lines[index] }}
                                         </td>
+                                    </tr>
+                                </template>
+                                <template v-if="vatPreview.length">
+                                    <tr class="vat-heading">
+                                        <td :colspan="columns" class="small text-muted">
+                                            VAT lines, added when the voucher is posted
+                                        </td>
+                                    </tr>
+                                    <tr v-for="(item, index) in vatPreview" :key="'vat' + index" class="vat-line">
+                                        <td>{{ item.account }}</td>
+                                        <td v-if="vatEnabled"></td>
+                                        <td>{{ item.description }}</td>
+                                        <td class="text-end">
+                                            {{ item.debit ? $filters.toCurrency(item.debit) : '' }}
+                                        </td>
+                                        <td class="text-end">
+                                            {{ item.credit ? $filters.toCurrency(item.credit) : '' }}
+                                        </td>
+                                        <td></td>
                                     </tr>
                                 </template>
                             </tbody>
                             <tfoot>
                                 <tr class="fw-bold">
-                                    <td colspan="2">
+                                    <td :colspan="vatEnabled ? 3 : 2">
                                         <button type="button" class="add-line btn btn-outline-primary" @click="addLine">
                                             Add line
                                         </button>
@@ -138,7 +183,7 @@
                                     <td></td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2" class="text-end">Difference</td>
+                                    <td :colspan="vatEnabled ? 3 : 2" class="text-end">Difference</td>
                                     <td colspan="2" class="difference text-end">
                                         <span
                                             :class="
@@ -156,6 +201,7 @@
                         <div v-if="showErrors && errors.balance" class="balance-error text-danger mb-3">
                             {{ errors.balance }}
                         </div>
+                        <div v-if="showErrors && errors.vat" class="vat-error text-danger mb-3">{{ errors.vat }}</div>
                     </form>
                 </div>
             </div>
@@ -171,7 +217,8 @@ import { useStore } from 'vuex'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 import { toast } from '@/utilities/toast'
 import { apiErrorMessage } from '@/utilities/apiErrors'
-import { roundAmount, voucherTotals } from '@/utilities/money'
+import { ratePercent, roundAmount, voucherTotals } from '@/utilities/money'
+import { NONDEDUCTIBLE, VAT_ACCOUNT_ROLES, vatLines } from '@/utilities/vat'
 import { todayIso } from '@/utilities/mydate'
 
 const MIN_LINES = 2
@@ -188,7 +235,7 @@ export default {
         const saved = ref(false)
 
         let nextKey = 0
-        const newLine = () => ({ key: nextKey++, account_id: -1, debit: '', credit: '', description: '' })
+        const newLine = () => ({ key: nextKey++, account_id: -1, vat_code: '', debit: '', credit: '', description: '' })
         const voucher = reactive({
             entry_date: todayIso(),
             description: '',
@@ -211,24 +258,76 @@ export default {
             return (await refDialog.value.showModal()) === true
         })
 
-        onMounted(() => store.dispatch('fetchAccounts').catch((e) => toast(apiErrorMessage(e), 'error')))
+        onMounted(async () => {
+            const load = (action, payload) =>
+                store.dispatch(action, payload).catch((e) => toast(apiErrorMessage(e), 'error'))
+            await Promise.all([
+                load('fetchAccounts'),
+                load('fetchOrganization', store.getters.user.organizationId),
+                load('fetchVatCodes'),
+            ])
+        })
 
         // Archived accounts cannot be posted to
         const accounts = computed(() =>
             store.getters.accounts.filter((account) => !account.is_archived).sort((a, b) => a.number - b.number),
         )
-        const totals = computed(() => voucherTotals(voucher.lines))
+
+        // VAT codes can be used by an organization that is VAT-registered: it has a VAT period
+        const vatEnabled = computed(() => Boolean(store.getters.organization?.vat_period_type))
+        const columns = computed(() => (vatEnabled.value ? 6 : 5))
+        const supportedCodes = computed(() => store.getters.supportedVatCodes)
+        const salesCodes = computed(() => supportedCodes.value.filter((code) => code.applies_to === 'sales'))
+        const purchaseCodes = computed(() => supportedCodes.value.filter((code) => code.applies_to === 'purchases'))
+        const percent = (rate) => ratePercent(rate ?? 0)
+
+        // The VAT lines the server adds to the lines that carry a code, with the account each goes to
+        const accountByRole = computed(
+            () => new Map(accounts.value.filter((account) => account.system_role).map((a) => [a.system_role, a])),
+        )
+        const accountById = computed(() => new Map(store.getters.accounts.map((account) => [account.id, account])))
+        const vatRules = computed(() => new Map(supportedCodes.value.map((code) => [code.code, code])))
+        const coded = computed(() =>
+            vatEnabled.value
+                ? voucher.lines.filter(
+                      (line) => line.vat_code && vatRules.value.has(line.vat_code) && line.account_id !== -1,
+                  )
+                : [],
+        )
+        const vatPreview = computed(() =>
+            vatLines(
+                coded.value.map((line) => ({
+                    account_id: line.account_id,
+                    debit: line.debit,
+                    credit: line.credit,
+                    rule: vatRules.value.get(line.vat_code),
+                })),
+            ).map((item) => {
+                const account = item.role ? accountByRole.value.get(item.role) : accountById.value.get(item.account_id)
+                return {
+                    ...item,
+                    account: account ? `${account.number} ${account.name}` : `No account for ${item.role}`,
+                    missing: !account,
+                    description: `${item.part === NONDEDUCTIBLE ? 'Non-deductible VAT' : 'VAT'} ${item.code}`,
+                }
+            }),
+        )
+        // What the server checks: the lines and the VAT lines together must balance
+        const totals = computed(() => voucherTotals([...voucher.lines, ...vatPreview.value]))
         const balanced = computed(() => totals.value.difference === 0 && totals.value.debit > 0)
 
         const errors = computed(() => {
-            const found = { lines: voucher.lines.map(lineError) }
+            const found = { lines: voucher.lines.map((line) => lineError(line, accountById.value)) }
             if (!voucher.entry_date) found.date = 'The date is required'
             const text = voucher.description.trim()
             if (!text) found.description = 'The description is required'
             else if (text.length > MAX_TEXT) found.description = `At most ${MAX_TEXT} characters`
             if (totals.value.difference !== 0) {
-                found.balance = `The voucher does not balance: the difference is ${totals.value.difference.toFixed(2)}`
+                found.balance = `The voucher does not balance${vatPreview.value.length ? ' (with the VAT lines)' : ''}: the difference is ${totals.value.difference.toFixed(2)}`
             }
+            const missing = vatPreview.value.find((item) => item.missing)
+            if (missing)
+                found.vat = `The chart of accounts has no ${missing.role} account for the VAT of ${missing.code}`
             return found
         })
         const isValid = computed(
@@ -236,6 +335,7 @@ export default {
                 !errors.value.date &&
                 !errors.value.description &&
                 !errors.value.balance &&
+                !errors.value.vat &&
                 !errors.value.lines.some(Boolean),
         )
 
@@ -256,6 +356,7 @@ export default {
                     description: voucher.description.trim(),
                     lines: voucher.lines.map((line) => ({
                         account_id: line.account_id,
+                        ...(vatEnabled.value && line.vat_code ? { vat_code: line.vat_code } : {}),
                         debit: roundAmount(line.debit),
                         credit: roundAmount(line.credit),
                         description: line.description.trim() || null,
@@ -278,6 +379,12 @@ export default {
             accounts,
             totals,
             balanced,
+            vatEnabled,
+            columns,
+            salesCodes,
+            purchaseCodes,
+            percent,
+            vatPreview,
             errors,
             showErrors,
             saving,
@@ -289,8 +396,12 @@ export default {
 }
 
 // What is wrong with a line, or null. A line is either a debit or a credit: not both, not neither.
-function lineError(line) {
+function lineError(line, accountById) {
     if (line.account_id === -1) return 'Select an account'
+    // The VAT goes to these accounts: a code on one of them would count the VAT twice
+    if (line.vat_code && VAT_ACCOUNT_ROLES.includes(accountById.get(line.account_id)?.system_role)) {
+        return 'A VAT code cannot be used on a VAT account'
+    }
     const debit = roundAmount(line.debit)
     const credit = roundAmount(line.credit)
     if (debit < 0 || credit < 0) return 'An amount cannot be negative'

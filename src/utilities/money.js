@@ -5,10 +5,10 @@
 // invoice is being edited. The cases in tests/utilities/money_cases.json are shared
 // with the server: change both together.
 
-const SCALES = { amount: 100n, quantity: 1000n, price: 1000n, rate: 10000n }
+export const SCALES = { amount: 100n, quantity: 1000n, price: 1000n, rate: 10000n }
 
 // Integer division, half up, away from zero (the server's ROUND_HALF_UP)
-const divideRounded = (numerator, divisor) => {
+export const divideRounded = (numerator, divisor) => {
     const negative = numerator < 0n
     const size = negative ? -numerator : numerator
     const rounded = (2n * size + divisor) / (2n * divisor)
@@ -17,7 +17,7 @@ const divideRounded = (numerator, divisor) => {
 
 // A number as an integer count of 1/scale units (3 decimals: 1.005 -> 1005n), rounded half up.
 // Anything that is not a finite number (an emptied input gives '') counts as 0.
-const scaled = (value, scale) => {
+export const scaled = (value, scale) => {
     if (typeof value !== 'number' || !Number.isFinite(value)) return 0n
     if (Number.isInteger(value)) return BigInt(value) * scale
     // String() is the shortest text that gives the same number back: 0.335 -> '0.335'.
@@ -32,7 +32,7 @@ const scaled = (value, scale) => {
     return negative ? -(kept + up) : kept + up
 }
 
-const toNumber = (ore) => Number(ore) / 100
+export const toNumber = (ore) => Number(ore) / 100
 
 // quantity x unit price, rounded to 2 decimals
 export const lineAmount = (quantity, unitPrice) =>

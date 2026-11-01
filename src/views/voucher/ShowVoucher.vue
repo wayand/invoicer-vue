@@ -54,6 +54,7 @@
                         <thead>
                             <tr>
                                 <th>Account</th>
+                                <th v-if="hasVat">VAT</th>
                                 <th>Text</th>
                                 <th class="text-end">Debit</th>
                                 <th class="text-end">Credit</th>
@@ -62,6 +63,7 @@
                         <tbody>
                             <tr v-for="line in entry.lines" :key="line.id" class="line">
                                 <td>{{ line.account_number }} {{ line.account_name }}</td>
+                                <td v-if="hasVat" class="vat">{{ vatLabel(line) }}</td>
                                 <td>{{ line.description }}</td>
                                 <td class="text-end">{{ line.debit ? $filters.toCurrency(line.debit) : '' }}</td>
                                 <td class="text-end">{{ line.credit ? $filters.toCurrency(line.credit) : '' }}</td>
@@ -69,7 +71,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="fw-bold">
-                                <td colspan="2">Total</td>
+                                <td :colspan="hasVat ? 3 : 2">Total</td>
                                 <td class="text-end">{{ $filters.toCurrency(totals.debit) }}</td>
                                 <td class="text-end">{{ $filters.toCurrency(totals.credit) }}</td>
                             </tr>
@@ -141,9 +143,20 @@ export default {
 
         const askAndReverse = useVoucherReversal(store, refDialog)
 
+        // Only vouchers with VAT have the column. A line is its code, and for a VAT line what it is.
+        const hasVat = computed(() => Boolean(entry.value?.lines?.some((line) => line.vat_code)))
+        const vatLabel = (line) => {
+            if (!line.vat_code) return ''
+            if (line.vat_part === 'vat') return `${line.vat_code} VAT`
+            if (line.vat_part === 'nondeductible') return `${line.vat_code} non-deductible VAT`
+            return line.vat_code
+        }
+
         return {
             refDialog,
             entry,
+            hasVat,
+            vatLabel,
             reverses,
             reversedBy,
             totals: computed(() => voucherTotals(entry.value?.lines)),
