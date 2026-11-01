@@ -139,6 +139,37 @@
                                                 </div>
 
                                                 <div class="form-group">
+                                                    <label for="vat-period-type">VAT</label>
+                                                    <select
+                                                        v-model="vatPeriodType"
+                                                        :class="{ 'is-invalid': errors.vat_period_type }"
+                                                        class="form-select"
+                                                        name="vat_period_type"
+                                                        id="vat-period-type"
+                                                    >
+                                                        <option value="">Not VAT-registered</option>
+                                                        <option value="month">VAT-registered, monthly return</option>
+                                                        <option value="quarter">
+                                                            VAT-registered, quarterly return
+                                                        </option>
+                                                        <option value="half_year">
+                                                            VAT-registered, half-yearly return
+                                                        </option>
+                                                    </select>
+                                                    <div v-if="errors.vat_period_type" class="invalid-feedback">
+                                                        <span
+                                                            v-for="(err, index) in errors.vat_period_type"
+                                                            :key="index"
+                                                            >{{ err }}</span
+                                                        >
+                                                    </div>
+                                                    <small class="text-muted"
+                                                        >VAT codes can be used on vouchers once the organization is
+                                                        VAT-registered.</small
+                                                    >
+                                                </div>
+
+                                                <div class="form-group">
                                                     <label>Logo</label>
                                                     <input
                                                         class="form-control"
@@ -228,6 +259,12 @@ export default {
         const phone = computed({
             get: () => store.getters.organization.phone,
             set: (val) => store.commit('UPDATE_ORGANIZATION_PROPERTY', { key: 'phone', value: val }),
+        })
+
+        // Empty: not VAT-registered (the service sends it as null)
+        const vatPeriodType = computed({
+            get: () => store.getters.organization.vat_period_type || '',
+            set: (val) => store.commit('UPDATE_ORGANIZATION_PROPERTY', { key: 'vat_period_type', value: val }),
         })
 
         const countries = computed(() => store.getters.countries)
@@ -338,6 +375,7 @@ export default {
             registrationNo,
             countryId,
             phone,
+            vatPeriodType,
             countries,
             fileInput,
             file,

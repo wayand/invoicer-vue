@@ -10,6 +10,8 @@ export default {
     update(organization) {
         // eslint-disable-next-line no-unused-vars
         const { id, created_at, updated_at, country, users, invoice_setting, ...requiredOrgFields } = organization
+        // The form keeps "not VAT-registered" as an empty text: the API takes null
+        if (requiredOrgFields.vat_period_type === '') requiredOrgFields.vat_period_type = null
         return HTTP.put('/organizations/' + id, requiredOrgFields)
     },
     uploadLogo(organizationId, logo) {

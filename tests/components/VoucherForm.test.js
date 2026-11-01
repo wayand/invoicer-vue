@@ -38,11 +38,16 @@ const PromiseDialog = defineComponent({
 })
 const page = () => defineComponent({ render: () => h('div') })
 
-const openForm = async () => {
+const openForm = async ({ chart = accounts, organization = { id: 1 }, vatCodes = [] } = {}) => {
     const store = createStore({
         modules: { journal: { ...journal, state: () => ({ journalEntries: [], journalEntry: null }) } },
-        getters: { accounts: () => accounts },
-        actions: { fetchAccounts: () => {} },
+        getters: {
+            accounts: () => chart,
+            user: () => ({ organizationId: 1 }),
+            organization: () => organization,
+            supportedVatCodes: () => vatCodes,
+        },
+        actions: { fetchAccounts: () => {}, fetchOrganization: () => {}, fetchVatCodes: () => {} },
     })
     const router = createRouter({
         history: createMemoryHistory(),
@@ -444,6 +449,250 @@ describe('voucher form', () => {
             await submit(wrapper)
 
             expect(confirmations).not.toHaveBeenCalled()
+        })
+    })
+
+    describe('VAT codes', () => {
+        const chart = [
+            { id: 1, number: 6480, name: 'Bankkonto', is_archived: false, system_role: 'bank' },
+            { id: 2, number: 1010, name: 'Salg af varer og ydelser', is_archived: false, system_role: 'sales' },
+            { id: 7, number: 7680, name: 'Salgsmoms', is_archived: false, system_role: 'output_vat' },
+            { id: 8, number: 7740, name: 'Købsmoms', is_archived: false, system_role: 'input_vat' },
+            {
+                id: 9,
+                number: 7720,
+                name: 'Moms af ydelseskøb i udlandet',
+                is_archived: false,
+                system_role: 'vat_eu_services',
+            },
+            { id: 10, number: 1610, name: 'Vareforbrug', is_archived: false, system_role: null },
+            { id: 11, number: 1910, name: 'Repræsentation', is_archived: false, system_role: null },
+            { id: 12, number: 7440, name: 'Leverandørgæld', is_archived: false, system_role: 'payables' },
+            { id: 13, number: 1710, name: 'Ydelseskøb', is_archived: false, system_role: null },
+        ]
+        const vatCodes = [
+            {
+                code: 'S01',
+                title: 'Momspligtige salg (DK), 25% moms',
+                applies_to: 'sales',
+                rate: 0.25,
+                deduction: null,
+                direction: 'output',
+            },
+            {
+                code: 'S23',
+                title: 'Ydelsessalg B2B (EU), 0% moms',
+                applies_to: 'sales',
+                rate: 0,
+                deduction: null,
+                direction: 'none',
+            },
+            {
+                code: 'K010',
+                title: 'Indgående moms (DK)',
+                applies_to: 'purchases',
+                rate: 0.25,
+                deduction: 1,
+                direction: 'input',
+            },
+            {
+                code: 'K070',
+                title: 'Repræsentationsmoms',
+                applies_to: 'purchases',
+                rate: 0.25,
+                deduction: 0.25,
+                direction: 'input',
+            },
+            {
+                code: 'K260',
+                title: 'Ydelseskøb (EU)',
+                applies_to: 'purchases',
+                rate: 0.25,
+                deduction: 1,
+                direction: 'acquisition_services',
+            },
+        ]
+        const registered = { id: 1, vat_period_type: 'quarter' }
+        const openWithVat = (extra = {}) => openForm({ chart, organization: registered, vatCodes, ...extra })
+
+        const setCode = (wrapper, index, code) => lineRows(wrapper)[index].find('select.vat-code').setValue(code)
+        const vatRows = (wrapper) =>
+            wrapper.findAll('tr.vat-line').map((row) => row.findAll('td').map((cell) => cell.text()))
+
+        it('has no VAT column while the organization is not VAT-registered', async () => {
+            const { wrapper } = await openForm({ chart, organization: { id: 1, vat_period_type: null }, vatCodes })
+
+            expect(wrapper.find('select.vat-code').exists()).toBe(false)
+            expect(wrapper.text()).not.toContain('VAT')
+        })
+
+        it('offers the supported codes by sales and purchases, with no VAT as the first choice', async () => {
+            const { wrapper } = await openWithVat()
+
+            const select = lineRows(wrapper)[0].find('select.vat-code')
+            expect(select.findAll('option').map((option) => option.text())).toEqual([
+                'No VAT',
+                'S01 25%',
+                'S23 0%',
+                'K010 25%',
+                'K070 25%',
+                'K260 25%',
+            ])
+            expect(select.findAll('optgroup').map((group) => group.attributes('label'))).toEqual(['Sales', 'Purchases'])
+            expect(select.element.value).toBe('')
+        })
+
+        it('shows no VAT lines for a voucher without codes', async () => {
+            const { wrapper } = await openWithVat()
+            await fillBalancedSale(wrapper)
+
+            expect(wrapper.find('tr.vat-line').exists()).toBe(false)
+            expect(wrapper.find('.difference .badge').text()).toBe('Balanced')
+        })
+
+        it('shows the output VAT of a sale as it will be posted, and balances with it', async () => {
+            const { wrapper } = await openWithVat()
+            await fillLine(wrapper, 0, { account: 1, debit: '1250' })
+            await fillLine(wrapper, 1, { account: 2, credit: '1000' })
+            await setCode(wrapper, 1, 'S01')
+
+            expect(vatRows(wrapper)).toEqual([['7680 Salgsmoms', '', 'VAT S01', '', '250.00', '']])
+            expect(wrapper.find('.total-debit').text()).toBe('1250.00')
+            expect(wrapper.find('.total-credit').text()).toBe('1250.00')
+            expect(wrapper.find('.difference .badge').text()).toBe('Balanced')
+        })
+
+        it('does not balance without the VAT, and says it is with the VAT lines', async () => {
+            const { wrapper } = await openWithVat()
+            await wrapper.find('input.description').setValue('Sale')
+            await fillLine(wrapper, 0, { account: 1, debit: '1000' })
+            await fillLine(wrapper, 1, { account: 2, credit: '1000' })
+            await setCode(wrapper, 1, 'S01')
+
+            await submit(wrapper)
+
+            expect(wrapper.find('.difference').text()).toContain('-250.00')
+            expect(wrapper.find('.balance-error').text()).toBe(
+                'The voucher does not balance (with the VAT lines): the difference is -250.00',
+            )
+            expect(JournalService.create).not.toHaveBeenCalled()
+        })
+
+        it('splits the VAT of a purchase with a share that cannot be deducted', async () => {
+            const { wrapper } = await openWithVat()
+            await fillLine(wrapper, 0, { account: 11, debit: '100' })
+            await fillLine(wrapper, 1, { account: 12, credit: '125' })
+            await setCode(wrapper, 0, 'K070')
+
+            expect(vatRows(wrapper)).toEqual([
+                ['7740 Købsmoms', '', 'VAT K070', '6.25', '', ''],
+                ['1910 Repræsentation', '', 'Non-deductible VAT K070', '18.75', '', ''],
+            ])
+            expect(wrapper.find('.difference .badge').text()).toBe('Balanced')
+        })
+
+        it('shows the acquisition VAT of services from abroad on both sides', async () => {
+            const { wrapper } = await openWithVat()
+            await fillLine(wrapper, 0, { account: 13, debit: '800' })
+            await fillLine(wrapper, 1, { account: 12, credit: '800' })
+            await setCode(wrapper, 0, 'K260')
+
+            expect(vatRows(wrapper)).toEqual([
+                ['7720 Moms af ydelseskøb i udlandet', '', 'VAT K260', '', '200.00', ''],
+                ['7740 Købsmoms', '', 'VAT K260', '200.00', '', ''],
+            ])
+            expect(wrapper.find('.difference .badge').text()).toBe('Balanced')
+        })
+
+        it('puts the VAT of a credit note on the other side', async () => {
+            const { wrapper } = await openWithVat()
+            await fillLine(wrapper, 0, { account: 2, debit: '100' })
+            await fillLine(wrapper, 1, { account: 1, credit: '125' })
+            await setCode(wrapper, 0, 'S01')
+
+            expect(vatRows(wrapper)).toEqual([['7680 Salgsmoms', '', 'VAT S01', '25.00', '', '']])
+            expect(wrapper.find('.difference .badge').text()).toBe('Balanced')
+        })
+
+        it('adds no VAT line for a code that carries no VAT', async () => {
+            const { wrapper } = await openWithVat()
+            await fillLine(wrapper, 0, { account: 1, debit: '400' })
+            await fillLine(wrapper, 1, { account: 2, credit: '400' })
+            await setCode(wrapper, 1, 'S23')
+
+            expect(wrapper.find('tr.vat-line').exists()).toBe(false)
+            expect(wrapper.find('.difference .badge').text()).toBe('Balanced')
+        })
+
+        it('takes the VAT line away again when the code is taken away', async () => {
+            const { wrapper } = await openWithVat()
+            await fillLine(wrapper, 0, { account: 1, debit: '1250' })
+            await fillLine(wrapper, 1, { account: 2, credit: '1000' })
+            await setCode(wrapper, 1, 'S01')
+
+            await setCode(wrapper, 1, '')
+
+            expect(wrapper.find('tr.vat-line').exists()).toBe(false)
+            expect(wrapper.find('.difference').text()).toContain('250.00')
+        })
+
+        it('posts the code of each line and none of the VAT lines, which the server adds', async () => {
+            JournalService.create.mockResolvedValue({ data: { id: 41, voucher_no: 9, lines: [] } })
+            const { wrapper } = await openWithVat()
+            await wrapper.find('input.description').setValue('Sale')
+            await fillLine(wrapper, 0, { account: 1, debit: '1250' })
+            await fillLine(wrapper, 1, { account: 2, credit: '1000' })
+            await setCode(wrapper, 1, 'S01')
+
+            await submit(wrapper)
+
+            expect(JournalService.create).toHaveBeenCalledWith({
+                entry_date: '2026-10-28',
+                description: 'Sale',
+                lines: [
+                    { account_id: 1, debit: 1250, credit: 0, description: null },
+                    { account_id: 2, vat_code: 'S01', debit: 0, credit: 1000, description: null },
+                ],
+            })
+        })
+
+        it('refuses a code on a VAT account, which would count the VAT twice', async () => {
+            const { wrapper } = await openWithVat()
+            await wrapper.find('input.description').setValue('Odd')
+            await fillLine(wrapper, 0, { account: 1, debit: '25' })
+            await fillLine(wrapper, 1, { account: 7, credit: '25' })
+            await setCode(wrapper, 1, 'S01')
+
+            await submit(wrapper)
+
+            expect(wrapper.find('.line-error').text()).toContain('A VAT code cannot be used on a VAT account')
+            expect(JournalService.create).not.toHaveBeenCalled()
+        })
+
+        it('says what the chart is missing when there is no account for the VAT', async () => {
+            const withoutOutputVat = chart.filter((account) => account.system_role !== 'output_vat')
+            const { wrapper } = await openWithVat({ chart: withoutOutputVat })
+            await wrapper.find('input.description').setValue('Sale')
+            await fillLine(wrapper, 0, { account: 1, debit: '1000' })
+            await fillLine(wrapper, 1, { account: 2, credit: '1000' })
+            await setCode(wrapper, 1, 'S01')
+
+            await submit(wrapper)
+
+            expect(wrapper.find('.vat-error').text()).toBe(
+                'The chart of accounts has no output_vat account for the VAT of S01',
+            )
+            expect(JournalService.create).not.toHaveBeenCalled()
+        })
+
+        it('counts a code as something typed in: it asks before leaving', async () => {
+            const { router, wrapper } = await openWithVat()
+            await setCode(wrapper, 0, 'S01')
+
+            await router.push('/vouchers')
+            await flushPromises()
+
+            expect(confirmations).toHaveBeenCalledWith('Confirm navigation')
         })
     })
 })

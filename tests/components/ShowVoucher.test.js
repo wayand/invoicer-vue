@@ -208,4 +208,58 @@ describe('voucher page', () => {
         expect(wrapper.find('.reversed-by').exists()).toBe(false)
         expect(wrapper.find('.reverses').exists()).toBe(true)
     })
+
+    describe('VAT', () => {
+        const withVat = {
+            ...sale,
+            id: 3,
+            voucher_no: 3,
+            lines: [
+                { ...sale.lines[0], vat_code: null, vat_part: null },
+                { ...sale.lines[1], vat_code: 'S01', vat_part: 'base' },
+                {
+                    ...sale.lines[2],
+                    description: 'VAT S01',
+                    vat_code: 'S01',
+                    vat_part: 'vat',
+                },
+                {
+                    id: 14,
+                    line_no: 4,
+                    account_number: 1910,
+                    account_name: 'Repræsentation',
+                    debit: 18.75,
+                    credit: 0,
+                    description: 'Non-deductible VAT K070',
+                    vat_code: 'K070',
+                    vat_part: 'nondeductible',
+                },
+            ],
+        }
+
+        it('shows the code of a line, and what a VAT line is', async () => {
+            const { wrapper } = await openVoucher(3, { 3: withVat })
+
+            expect(wrapper.findAll('th').map((cell) => cell.text())).toContain('VAT')
+            expect(wrapper.findAll('td.vat').map((cell) => cell.text())).toEqual([
+                '',
+                'S01',
+                'S01 VAT',
+                'K070 non-deductible VAT',
+            ])
+        })
+
+        it('keeps the totals under their columns', async () => {
+            const { wrapper } = await openVoucher(3, { 3: withVat })
+
+            expect(wrapper.findAll('tfoot td').map((cell) => cell.text())).toEqual(['Total', '143.75', '125.00'])
+        })
+
+        it('has no VAT column for a voucher without codes', async () => {
+            const { wrapper } = await openVoucher(1, { 1: sale })
+
+            expect(wrapper.find('td.vat').exists()).toBe(false)
+            expect(wrapper.findAll('th').map((cell) => cell.text())).not.toContain('VAT')
+        })
+    })
 })
