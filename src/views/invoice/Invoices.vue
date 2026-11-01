@@ -66,7 +66,9 @@
                                             </svg>
                                         </template>
                                     </td>
-                                    <td>#inv{{ invoice.invoice_no }}</td>
+                                    <td class="number">
+                                        {{ invoice.invoice_no ? '#inv' + invoice.invoice_no : 'Draft' }}
+                                    </td>
                                     <td>{{ invoice.invoice_date }}</td>
                                     <td>{{ invoice.duedate }}</td>
                                     <td>{{ invoice.contact.name }}</td>

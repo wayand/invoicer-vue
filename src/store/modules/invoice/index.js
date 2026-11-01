@@ -35,6 +35,14 @@ export default {
                 return response
             })
         },
+        // The invoice that comes back is the approved one, with its number and voucher
+        approveInvoice({ commit }, { organizationId, invoiceId, invoiceNo }) {
+            return InvoiceService.approve(organizationId, invoiceId, invoiceNo).then((response) => {
+                commit('SET_INVOICE', response.data)
+                commit('UPDATE_INVOICES', response.data)
+                return response
+            })
+        },
         deleteInvoiceLine({ state }, { organizationId, invoiceId, lineIndex }) {
             const lineId = state.invoice.lines[lineIndex]?.id
             console.log(`for organization ${organizationId} and invoice ${invoiceId}`)
@@ -55,6 +63,7 @@ export default {
         markInvoiceAsSent({ commit }, payload) {
             return InvoiceService.markInvoiceAsSent(payload).then((response) => {
                 commit('UPDATE_INVOICES', response.data)
+                commit('SET_INVOICE', response.data)
                 return response
             })
         },

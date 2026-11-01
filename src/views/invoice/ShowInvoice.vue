@@ -3,7 +3,14 @@
         <div class="page-title">
             <div class="row justify-content-between">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>Invoice #{{ invoiceNo }} for {{ contactName }}</h3>
+                    <h3 v-if="isDraft">Draft invoice for {{ contactName }}</h3>
+                    <h3 v-else>Invoice #{{ invoiceNo }} for {{ contactName }}</h3>
+                    <p v-if="invoice.journal_entry_id" class="voucher text-subtitle text-muted mb-0">
+                        Posted as
+                        <router-link :to="{ name: 'ShowVoucher', params: { entryId: invoice.journal_entry_id } }"
+                            >voucher {{ invoice.voucher_no }}</router-link
+                        >
+                    </p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first" style="text-align: right">
                     <div class="btn-group mb-1">
@@ -19,7 +26,9 @@
                                 More
                             </button>
                             <div class="dropdown-menu" aria-labelledby="dropdownMenuButtonSec" style="margin: 0px">
-                                <router-link :to="{ name: 'EditInvoice' }" class="dropdown-item">Edit</router-link>
+                                <router-link v-if="isDraft" :to="{ name: 'EditInvoice' }" class="dropdown-item"
+                                    >Edit</router-link
+                                >
                                 <a
                                     v-if="!invoice.is_sent && isApproved"
                                     class="dropdown-item"
@@ -103,15 +112,11 @@ export default {
         const invoiceNo = computed(() => store.getters.invoice.invoice_no)
         const contactName = computed(() => store.getters.invoice.contact?.name)
         const isApproved = computed(() => store.getters.invoice.state === 'approved')
-        // Only a plain draft can be deleted (the API refuses anything else)
-        const isDraft = computed(() => {
-            const { state, is_sent, is_paid } = store.getters.invoice
-            return state === 'draft' && !is_sent && !is_paid
-        })
+        // Only a draft can be edited or deleted: an approved invoice is part of the books
+        const isDraft = computed(() => store.getters.invoice.state === 'draft')
         const refDialog = ref()
 
         const markInvoiceAsSent = async () => {
-            console.log('Mark invoice as sent.')
             refDialog.value.data = {
                 type: 'warning',
                 title: 'Confirm',

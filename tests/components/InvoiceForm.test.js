@@ -6,10 +6,11 @@ import { defineComponent, h, ref } from 'vue'
 import InvoiceForm from '@/views/invoice/InvoiceForm.vue'
 import invoice from '@/store/modules/invoice'
 import InvoiceService from '@/services/InvoiceService'
+import { toast } from '@/utilities/toast'
 
 // Network-bound modules the form imports but this test does not use
 vi.mock('@/services/InvoiceService', () => ({
-    default: { getOne: vi.fn(), getAll: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+    default: { getOne: vi.fn(), getAll: vi.fn(), create: vi.fn(), update: vi.fn(), delete: vi.fn(), approve: vi.fn() },
 }))
 vi.mock('@/utilities/toast', () => ({ toast: vi.fn() }))
 
@@ -20,7 +21,8 @@ const saved = {
     invoice_no: '1001',
     state: 'draft',
     is_sent: false,
-    is_paid: false,
+    journal_entry_id: null,
+    voucher_no: null,
     currency_id: 'DKK',
     excluding_vat: true,
     template_id: '1',
@@ -70,13 +72,14 @@ const vatRates = { S01: 0.25, S02: 0 }
 // The confirmation dialog the form asks before leaving with unsaved changes.
 // It answers "Stay here", so a navigation that asks is cancelled.
 const confirmations = vi.fn()
+let answer = false
 const PromiseDialog = defineComponent({
     name: 'PromiseDialog',
     setup() {
         const data = ref({})
         const showModal = async () => {
             confirmations(data.value.title)
-            return false
+            return answer
         }
         return { data, showModal }
     },
@@ -84,15 +87,18 @@ const PromiseDialog = defineComponent({
 })
 const page = () => defineComponent({ render: () => h('div') })
 
-const newStore = (salesRates) =>
+const registered = { id: 1, vat_period_type: 'quarter', invoice_setting: {} }
+const sequentialSetting = { invoice_no_mode: 'sequential', next_invoice_no: 1003 }
+
+const newStore = (salesRates, organization = registered, setting = sequentialSetting) =>
     createStore({
         modules: { invoice: { ...invoice, state: () => ({ invoices: [], invoice: {} }) } },
         getters: {
             user: () => ({ organizationId: 1 }),
-            organization: () => ({ id: 1, invoice_setting: {} }),
+            organization: () => organization,
             contacts: () => contacts,
             products: () => products,
-            invoiceSetting: () => ({ invoice_no_mode: 'sequential', next_invoice_no: 1003 }),
+            invoiceSetting: () => setting,
             getAccountById: () => () => ({ name: 'Bank' }),
             salesVatCodes: () => salesVatCodes,
             salesRates: () => salesRates,
@@ -106,8 +112,8 @@ const newStore = (salesRates) =>
         },
     })
 
-const openForm = async (url, salesRates = vatRates) => {
-    const store = newStore(salesRates)
+const openForm = async (url, salesRates = vatRates, { organization, setting } = {}) => {
+    const store = newStore(salesRates, organization, setting)
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -472,5 +478,208 @@ describe('invoice form More menu', () => {
 
         expect(router.currentRoute.value.name).toBe('NewInvoice')
         expect(router.currentRoute.value.query.copyFrom).toBe('2')
+    })
+})
+
+describe('invoice form, approving', () => {
+    const manual = { invoice_no_mode: 'manual', next_invoice_no: 1003 }
+    const approved = { ...saved, state: 'approved', invoice_no: '1001', journal_entry_id: 41, voucher_no: 9 }
+    const buttons = (wrapper) => wrapper.findAll('button[name]').map((button) => button.attributes('name'))
+    const approveButton = (wrapper) => wrapper.find('button[name="approve"]')
+    const approveResponse = { data: { ...approved, id: 2 } }
+
+    beforeEach(() => {
+        vi.clearAllMocks()
+        answer = true
+        InvoiceService.getOne.mockResolvedValue({ data: structuredClone(saved) })
+        InvoiceService.approve.mockResolvedValue(structuredClone(approveResponse))
+        InvoiceService.update.mockResolvedValue({ data: structuredClone(saved) })
+    })
+    afterEach(() => {
+        answer = false
+    })
+
+    it('offers Approve for a saved draft, and not for a new invoice', async () => {
+        const saved_ = await openForm('/invoices/2/edit')
+        const fresh = await openForm('/invoices/new')
+
+        expect(buttons(saved_.wrapper)).toEqual(['approve', 'save-as-draft'])
+        expect(buttons(fresh.wrapper)).toEqual(['save-as-draft'])
+    })
+
+    it('asks first, and says what approving does', async () => {
+        answer = false
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        await approveButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(confirmations).toHaveBeenCalledWith('Approve the invoice')
+        expect(InvoiceService.approve).not.toHaveBeenCalled()
+    })
+
+    it('approves the invoice, says its number and voucher, and shows it', async () => {
+        const { wrapper, router } = await openForm('/invoices/2/edit')
+
+        await approveButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(InvoiceService.approve).toHaveBeenCalledWith(1, '2', null)
+        expect(toast).toHaveBeenCalledWith('Invoice 1001 approved, voucher 9', 'success')
+        expect(router.currentRoute.value.name).toBe('ShowInvoice')
+        expect(router.currentRoute.value.params.invoiceId).toBe('2')
+    })
+
+    it('does not save again when nothing was changed', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        await approveButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(InvoiceService.update).not.toHaveBeenCalled()
+    })
+
+    it('saves what was changed first, so that what is approved is what is on the screen', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+        await wrapper.find('input.description').setValue('Changed')
+
+        await approveButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(InvoiceService.update).toHaveBeenCalledTimes(1)
+        expect(InvoiceService.update.mock.invocationCallOrder[0]).toBeLessThan(
+            InvoiceService.approve.mock.invocationCallOrder[0],
+        )
+    })
+
+    it('does not approve an invoice that is not valid, and shows what is wrong', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+        await wrapper.find('input.description').setValue('')
+
+        await approveButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(confirmations).not.toHaveBeenCalled()
+        expect(InvoiceService.approve).not.toHaveBeenCalled()
+        expect(wrapper.find('input.description').classes()).toContain('is-invalid')
+    })
+
+    it('says why the server refused, and stays on the draft', async () => {
+        InvoiceService.approve.mockRejectedValue({
+            response: { data: { error: 'The VAT period 2026-01-01 to 2026-03-31 is settled' } },
+        })
+        const { wrapper, router } = await openForm('/invoices/2/edit')
+
+        await approveButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(toast).toHaveBeenCalledWith('The VAT period 2026-01-01 to 2026-03-31 is settled', 'error')
+        expect(router.currentRoute.value.name).toBe('EditInvoice')
+        expect(approveButton(wrapper).attributes('disabled')).toBeUndefined()
+    })
+
+    it('does not ask about unsaved changes on the way to the approved invoice', async () => {
+        const { wrapper, router } = await openForm('/invoices/2/edit')
+        await wrapper.find('input.description').setValue('Changed')
+
+        await approveButton(wrapper).trigger('click')
+        await flushPromises()
+
+        expect(router.currentRoute.value.name).toBe('ShowInvoice')
+        expect(confirmations).not.toHaveBeenCalledWith('Confirm navigation')
+    })
+
+    describe('the invoice number', () => {
+        it('is given when approved: a draft in sequential numbering shows no number', async () => {
+            const { wrapper } = await openForm('/invoices/new')
+
+            const input = wrapper.find('input.invoice-no')
+            expect(input.element.value).toBe('')
+            expect(input.attributes('placeholder')).toBe('Given when approved')
+            expect(input.attributes('disabled')).toBeDefined()
+        })
+
+        it('is typed by the user when the organization numbers its invoices by hand', async () => {
+            InvoiceService.getOne.mockResolvedValue({ data: { ...structuredClone(saved), invoice_no: null } })
+            const { wrapper } = await openForm('/invoices/2/edit', vatRates, { setting: manual })
+
+            const input = wrapper.find('input.invoice-no')
+            expect(input.attributes('disabled')).toBeUndefined()
+            expect(input.attributes('placeholder')).toBe('Invoice number')
+        })
+
+        it('is needed to approve, when typed by hand', async () => {
+            InvoiceService.getOne.mockResolvedValue({ data: { ...structuredClone(saved), invoice_no: null } })
+            const { wrapper } = await openForm('/invoices/2/edit', vatRates, { setting: manual })
+
+            await approveButton(wrapper).trigger('click')
+            await flushPromises()
+
+            expect(wrapper.find('input.invoice-no').classes()).toContain('is-invalid')
+            expect(InvoiceService.approve).not.toHaveBeenCalled()
+        })
+
+        it('is sent with the approval, when typed by hand', async () => {
+            InvoiceService.getOne.mockResolvedValue({ data: { ...structuredClone(saved), invoice_no: null } })
+            const { wrapper } = await openForm('/invoices/2/edit', vatRates, { setting: manual })
+            await wrapper.find('input.invoice-no').setValue('  INV-7 ')
+
+            await approveButton(wrapper).trigger('click')
+            await flushPromises()
+
+            expect(InvoiceService.approve).toHaveBeenCalledWith(1, '2', 'INV-7')
+        })
+    })
+
+    describe('an invoice that is approved', () => {
+        it('is not edited: it is shown, and the user is told why', async () => {
+            InvoiceService.getOne.mockResolvedValue({ data: structuredClone(approved) })
+
+            const { router } = await openForm('/invoices/2/edit')
+
+            expect(router.currentRoute.value.name).toBe('ShowInvoice')
+            expect(toast).toHaveBeenCalledWith('An approved invoice cannot be changed', 'warn')
+        })
+
+        it('is shown without asking about unsaved changes', async () => {
+            InvoiceService.getOne.mockResolvedValue({ data: structuredClone(approved) })
+
+            await openForm('/invoices/2/edit')
+
+            expect(confirmations).not.toHaveBeenCalled()
+        })
+    })
+
+    describe('an organization that is not VAT-registered', () => {
+        const unregistered = { id: 1, invoice_setting: {} }
+
+        it('has no VAT column, and starts every line on the code without VAT', async () => {
+            const { store, wrapper } = await openForm('/invoices/new', vatRates, { organization: unregistered })
+
+            expect(wrapper.find('select.vat-code').exists()).toBe(false)
+            expect(wrapper.findAll('th').map((cell) => cell.text())).not.toContain('VAT')
+            expect(store.getters.invoice.lines[0].vat_code).toBe('S81')
+        })
+
+        it('adds lines on the same code', async () => {
+            const { store, wrapper } = await openForm('/invoices/new', vatRates, { organization: unregistered })
+
+            await wrapper.find('button.btn-outline').trigger('click')
+
+            expect(store.getters.invoice.lines.map((line) => line.vat_code)).toEqual(['S81', 'S81'])
+        })
+
+        it('shows one total, and no VAT', async () => {
+            InvoiceService.getOne.mockResolvedValue({
+                data: {
+                    ...structuredClone(saved),
+                    lines: saved.lines.map((line) => ({ ...line, vat_code: 'S81' })),
+                },
+            })
+            const { wrapper } = await openForm('/invoices/2/edit', { S81: 0 }, { organization: unregistered })
+
+            const text = wrapper.find('table.float-end').text()
+            expect(text).toBe('Total300')
+        })
     })
 })

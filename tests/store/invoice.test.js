@@ -12,6 +12,7 @@ vi.mock('@/services/InvoiceService', () => ({
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        approve: vi.fn(),
         markInvoiceAsSent: vi.fn(),
         deleteInvoiceLine: vi.fn(),
     },
@@ -149,5 +150,37 @@ describe('invoice store: actions', () => {
         await expect(store.dispatch('deleteInvoice', { organizationId: 1, invoiceId: 2 })).rejects.toBeTruthy()
 
         expect(store.getters.invoices).toEqual([{ id: 2 }])
+    })
+
+    it('approves an invoice, and has the approved one, with its number and voucher, as the open invoice', async () => {
+        const approved = { id: 2, state: 'approved', invoice_no: '1001', voucher_no: 9 }
+        InvoiceService.approve.mockResolvedValue({ data: approved })
+        store.commit('SET_INVOICES', [{ id: 1 }, { id: 2, state: 'draft', invoice_no: null }])
+        store.commit('SET_INVOICE', { id: 2, state: 'draft', invoice_no: null })
+
+        await store.dispatch('approveInvoice', { organizationId: 1, invoiceId: 2, invoiceNo: null })
+
+        expect(InvoiceService.approve).toHaveBeenCalledWith(1, 2, null)
+        expect(store.getters.invoice).toEqual(approved)
+        expect(store.getters.invoices).toEqual([{ id: 1 }, approved])
+    })
+
+    it('keeps the draft when the API refuses to approve it', async () => {
+        InvoiceService.approve.mockRejectedValue({ response: { status: 409 } })
+        store.commit('SET_INVOICE', { id: 2, state: 'draft' })
+
+        await expect(store.dispatch('approveInvoice', { organizationId: 1, invoiceId: 2 })).rejects.toBeTruthy()
+
+        expect(store.getters.invoice).toEqual({ id: 2, state: 'draft' })
+    })
+
+    it('has the invoice that came back as the open one when it is marked as sent', async () => {
+        const sent = { id: 2, state: 'approved', is_sent: true }
+        InvoiceService.markInvoiceAsSent.mockResolvedValue({ data: sent })
+        store.commit('SET_INVOICE', { id: 2, state: 'approved', is_sent: false })
+
+        await store.dispatch('markInvoiceAsSent', { invoiceId: 2, is_sent: true })
+
+        expect(store.getters.invoice).toEqual(sent)
     })
 })

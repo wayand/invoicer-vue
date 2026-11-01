@@ -13,7 +13,14 @@ vi.mock('@/components/invoice/InvoicePreview', () => ({ default: { render: () =>
 vi.mock('@/utilities/toast', () => ({ toast: vi.fn() }))
 
 const page = () => defineComponent({ render: () => h('div') })
-const draft = { id: 2, invoice_no: '1001', state: 'draft', is_sent: false, is_paid: false, contact: { name: 'Acme' } }
+const draft = { id: 2, invoice_no: null, state: 'draft', is_sent: false, contact: { name: 'Acme' } }
+const approved = {
+    ...draft,
+    invoice_no: '1001',
+    state: 'approved',
+    journal_entry_id: 41,
+    voucher_no: 9,
+}
 
 let actions
 const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
@@ -39,6 +46,7 @@ const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
             { path: '/invoices/new', name: 'NewInvoice', component: page() },
             { path: '/invoices/:invoiceId', name: 'ShowInvoice', component: ShowInvoice, props: true },
             { path: '/invoices/:invoiceId/edit', name: 'EditInvoice', component: page() },
+            { path: '/vouchers/:entryId(\\d+)', name: 'ShowVoucher', component: page(), props: true },
         ],
     })
     router.push('/invoices/2')
@@ -85,24 +93,41 @@ describe('ShowInvoice menu', () => {
         expect(menu(wrapper)).toEqual(['Edit', 'Save as PDF', 'Duplicate', 'Delete'])
     })
 
-    it.each([
-        ['approved', { state: 'approved' }],
-        ['a draft that was sent', { is_sent: true }],
-        ['a draft that was paid', { is_paid: true }],
-        ['a sent and paid invoice', { state: 'approved', is_sent: true, is_paid: true }],
-    ])('does not offer Delete for %s, but still Duplicate', async (_, fields) => {
-        const { wrapper } = await mountPage({ invoice: { ...draft, ...fields } })
+    it('offers neither Edit nor Delete for an approved invoice, which is part of the books, but still Duplicate', async () => {
+        const { wrapper } = await mountPage({ invoice: approved })
 
         expect(menu(wrapper)).toContain('Duplicate')
+        expect(menu(wrapper)).not.toContain('Edit')
         expect(menu(wrapper)).not.toContain('Delete')
     })
 
     it('offers "Mark as sent" only for an approved invoice that was not sent', async () => {
-        const approved = await mountPage({ invoice: { ...draft, state: 'approved' } })
-        const sent = await mountPage({ invoice: { ...draft, state: 'approved', is_sent: true } })
+        const open = await mountPage({ invoice: approved })
+        const sent = await mountPage({ invoice: { ...approved, is_sent: true } })
+        const notApproved = await mountPage()
 
-        expect(menu(approved.wrapper)).toContain('Mark as sent')
+        expect(menu(open.wrapper)).toContain('Mark as sent')
         expect(menu(sent.wrapper)).not.toContain('Mark as sent')
+        expect(menu(notApproved.wrapper)).not.toContain('Mark as sent')
+    })
+})
+
+describe('ShowInvoice heading', () => {
+    it('calls a draft a draft: it has no number yet', async () => {
+        const { wrapper } = await mountPage()
+
+        expect(wrapper.find('h3').text()).toBe('Draft invoice for Acme')
+        expect(wrapper.find('.voucher').exists()).toBe(false)
+    })
+
+    it('gives the number of an approved invoice, and links the voucher it was posted as', async () => {
+        const { wrapper, router } = await mountPage({ invoice: approved })
+
+        expect(wrapper.find('h3').text()).toBe('Invoice #1001 for Acme')
+        expect(wrapper.find('.voucher').text()).toBe('Posted as voucher 9')
+        await wrapper.find('.voucher a').trigger('click')
+        await flushPromises()
+        expect(router.currentRoute.value.path).toBe('/vouchers/41')
     })
 })
 
