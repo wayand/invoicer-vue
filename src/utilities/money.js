@@ -38,20 +38,42 @@ const toNumber = (ore) => Number(ore) / 100
 export const lineAmount = (quantity, unitPrice) =>
     toNumber(divideRounded(scaled(quantity, SCALES.quantity) * scaled(unitPrice, SCALES.price), 10000n))
 
-// The totals of an invoice: every line is rounded, the net total is the sum of the lines,
-// and VAT is calculated once on the net total. `vatRate` is a fraction (0.25 is 25%).
-// Without lines (the invoice is still loading) or a rate (none known yet) the amounts are 0.
-export const invoiceTotals = (lines = [], vatRate = null) => {
+// The rate an invoice charges for a VAT code of the server (a fraction: 0.25 is 25%): the rate of
+// a code with VAT on the sale, and 0 for the codes that carry none (exempt, abroad, outside the
+// VAT law), as in app/invoice_vat.py of the server.
+export const salesRate = (vatCode) => (vatCode?.direction === 'output' && vatCode.rate != null ? vatCode.rate : 0)
+
+// The totals of an invoice: every line is rounded, the net total is the sum of the lines, and
+// VAT is calculated once per VAT code: on the sum of the lines with that code (their base).
+// `rates` gives the rate of each code (a fraction: 0.25 is 25%): { S01: 0.25, S02: 0 }. A line
+// whose code has no rate (the codes are still loading) is counted without VAT. Without lines
+// (the invoice is still loading) the amounts are 0. `by_code` has the base and the VAT of each
+// code in the order the codes first appear, as the server lists them.
+export const invoiceTotals = (lines = [], rates = {}) => {
     const lineOre = lines.map((line) =>
         divideRounded(scaled(line.quantity, SCALES.quantity) * scaled(line.unit_price, SCALES.price), 10000n),
     )
+    const bases = new Map()
+    lines.forEach((line, index) => {
+        bases.set(line.vat_code, (bases.get(line.vat_code) ?? 0n) + lineOre[index])
+    })
+    const byCode = [...bases].map(([code, base]) => {
+        const rate = rates[code] ?? 0
+        return { code, rate, base, vat: divideRounded(base * scaled(rate, SCALES.rate), 10000n) }
+    })
     const net = lineOre.reduce((sum, ore) => sum + ore, 0n)
-    const vat = divideRounded(net * scaled(vatRate, SCALES.rate), 10000n)
+    const vat = byCode.reduce((sum, item) => sum + item.vat, 0n)
     return {
         lines: lineOre.map(toNumber),
         amount: toNumber(net),
         vat_amount: toNumber(vat),
         gross_amount: toNumber(net + vat),
+        by_code: byCode.map((item) => ({
+            code: item.code,
+            rate: item.rate,
+            base: toNumber(item.base),
+            vat: toNumber(item.vat),
+        })),
     }
 }
 

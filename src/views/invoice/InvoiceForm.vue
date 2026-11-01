@@ -176,6 +176,7 @@
                                                         <th>Description</th>
                                                         <th>Quantity</th>
                                                         <th>Unit price</th>
+                                                        <th>VAT</th>
                                                         <th colspan="2">Total</th>
                                                     </tr>
                                                 </thead>
@@ -183,6 +184,7 @@
                                                     <InvoiceLine
                                                         :error="error.lines ? error.lines[index] : {}"
                                                         :products="products"
+                                                        :vat-codes="salesVatCodes"
                                                         v-for="(line, index) in lines"
                                                         :key="index"
                                                         :line-index="index"
@@ -215,9 +217,9 @@
                                                         <td>Total excluding VAT</td>
                                                         <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
                                                     </tr>
-                                                    <tr>
-                                                        <td>Sale VAT{{ vatLabel }}</td>
-                                                        <td>{{ $filters.toCurrency(vatAmount) }}</td>
+                                                    <tr v-for="item in vatByCode" :key="item.code">
+                                                        <td>Sale VAT {{ item.code }} ({{ percent(item.rate) }}%)</td>
+                                                        <td>{{ $filters.toCurrency(item.vat) }}</td>
                                                     </tr>
                                                     <tr class="fw-bold border-bottom border-top">
                                                         <td>Total including VAT</td>
@@ -281,6 +283,9 @@ import { isNum, required } from '@/utilities/validators'
 import { toast } from '@/utilities/toast'
 import { invoiceTotals, ratePercent } from '@/utilities/money'
 
+// 25% VAT on a domestic sale
+const DEFAULT_VAT_CODE = 'S01'
+
 export default {
     props: {
         invoiceId: {
@@ -317,7 +322,7 @@ export default {
             await store.dispatch('fetchContacts', store.getters.user.organizationId)
             await store.dispatch('fetchProducts', store.getters.user.organizationId)
             await store.dispatch('fetchAccounts')
-            await store.dispatch('fetchTaxRates').catch((e) => toast(e.response?.data?.error || e.message, 'error'))
+            await store.dispatch('fetchVatCodes').catch((e) => toast(e.response?.data?.error || e.message, 'error'))
 
             if (props.invoiceId) {
                 await loadEditingInvoice()
@@ -386,13 +391,12 @@ export default {
                 store.commit('UPDATE_INVOICE_PROPERTY', { key: 'duedate', value: luxon(val).toFormat('yyyy-MM-dd') }),
         })
         // The totals shown while editing. The server calculates the saved ones with the same
-        // rules (src/utilities/money.js) and the organization's one active sales VAT rate.
-        const vatRate = computed(() => store.getters.salesVatRate)
-        const totals = computed(() => invoiceTotals(lines.value, vatRate.value))
+        // rules (src/utilities/money.js): the VAT of each VAT code on the lines.
+        const salesVatCodes = computed(() => store.getters.salesVatCodes)
+        const totals = computed(() => invoiceTotals(lines.value, store.getters.salesRates))
         const total_ex_vat = computed(() => totals.value.amount)
-        const vatAmount = computed(() => totals.value.vat_amount)
+        const vatByCode = computed(() => totals.value.by_code)
         const total_inc_vat = computed(() => totals.value.gross_amount)
-        const vatLabel = computed(() => (vatRate.value === null ? '' : ` (${ratePercent(vatRate.value)}%)`))
         const state = computed({
             get: () => store.getters.invoice.state,
             set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'state', value: val }),
@@ -420,6 +424,14 @@ export default {
             }
         }
 
+        const newLine = (vatCode = DEFAULT_VAT_CODE) => ({
+            product_id: -1,
+            description: '',
+            quantity: 1,
+            unit_price: 0,
+            vat_code: vatCode,
+        })
+
         function initNewInvoice(overrides = {}) {
             store.commit('SET_INVOICE', {
                 organization_id: store.getters.user.organizationId,
@@ -432,14 +444,7 @@ export default {
                 duedate: luxon().toFormat('yyyy-MM-dd'),
                 template_id: '1',
                 state: 'draft',
-                lines: [
-                    {
-                        product_id: -1,
-                        description: '',
-                        quantity: 1,
-                        unit_price: 0,
-                    },
-                ],
+                lines: [newLine()],
                 ...overrides,
             })
         }
@@ -491,12 +496,8 @@ export default {
         )
 
         const addNewLine = () => {
-            store.commit('ADD_INVOICE_NEW_LINE', {
-                product_id: -1,
-                description: '',
-                quantity: 1,
-                unit_price: 0,
-            })
+            // A line added to an invoice starts with the VAT code of the line before it
+            store.commit('ADD_INVOICE_NEW_LINE', newLine(lines.value.at(-1)?.vat_code || DEFAULT_VAT_CODE))
         }
         const deleteLine = (lineIndex) => {
             store.commit('REMOVE_INVOICE_LINE', lineIndex)
@@ -552,6 +553,8 @@ export default {
 
                 err = isNum(line.unit_price)
                 if (err !== true) lineErrs.unit_price = err
+
+                if (!line.vat_code) lineErrs.vat_code = 'This field is required'
 
                 return lineErrs
             })
@@ -657,8 +660,9 @@ export default {
             total_ex_vat,
             total_inc_vat,
             state,
-            vatAmount,
-            vatLabel,
+            vatByCode,
+            salesVatCodes,
+            percent: ratePercent,
             error,
             createInvoicePDF,
             duplicateInvoice,

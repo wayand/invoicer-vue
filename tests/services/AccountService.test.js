@@ -11,7 +11,7 @@ const account = {
     organization_id: 1,
     account_type_id: 2,
     account_group_id: 9,
-    tax_rate_id: null,
+    default_vat_code_id: 3,
     name: 'Bankkonto',
     number: 6480,
     description: '',
@@ -21,7 +21,6 @@ const account = {
     system_role: 'bank',
     account_type: { id: 2, name: 'Asset' },
     account_group: { id: 9, name: 'Likvide beholdninger' },
-    tax_rate: null,
     created_at: 'x',
     updated_at: 'y',
 }
@@ -38,7 +37,6 @@ describe('AccountService.update', () => {
             'id',
             'account_type',
             'account_group',
-            'tax_rate',
             'standard_account',
             'system_role',
             'created_at',
@@ -57,6 +55,7 @@ describe('AccountService.update', () => {
             account_type_id: 2,
             account_group_id: 9,
             is_bank_account: true,
+            default_vat_code_id: 3,
         })
     })
 })

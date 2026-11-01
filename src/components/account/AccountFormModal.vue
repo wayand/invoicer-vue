@@ -84,13 +84,17 @@
 
                                     <div class="form-group">
                                         <BaseSelect
-                                            :disabled="isTaxRateDisabled"
-                                            :label="'VAT rate'"
-                                            :name="'VAT rate'"
-                                            :options="taxRates"
-                                            :class="{ 'is-invalid': errors.tax_rate_id }"
-                                            v-model.number="taxRateId"
+                                            :disabled="isVatCodeDisabled"
+                                            :label="'Default VAT code'"
+                                            :name="'Default VAT code'"
+                                            :options="vatCodeOptions"
+                                            :class="{ 'is-invalid': errors.default_vat_code_id }"
+                                            :error="errors.default_vat_code_id"
+                                            v-model.number="defaultVatCodeId"
                                         />
+                                        <small class="text-muted">
+                                            The VAT code a new line on this account starts with. A suggestion only.
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -208,9 +212,11 @@ export default {
                 store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'account_type_id', value: getAccountTypeId.value || 0 })
             },
         })
-        const taxRateId = computed({
-            get: () => store.getters.account.tax_rate_id || 0,
-            set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'tax_rate_id', value: val }),
+        // 0 is "none": the API takes null
+        const defaultVatCodeId = computed({
+            get: () => store.getters.account.default_vat_code_id || 0,
+            set: (val) =>
+                store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'default_vat_code_id', value: val ? val : null }),
         })
         const name = computed({
             get: () => store.getters.account.name,
@@ -261,7 +267,12 @@ export default {
             set: (val) => store.commit('UPDATE_ACCOUNT_PROPERTY', { key: 'is_archived', value: val }),
         })
         const accountGroups = computed(() => store.getters.accountGroups)
-        const taxRates = computed(() => store.getters.taxRates)
+        const vatCodeOptions = computed(() =>
+            store.getters.supportedVatCodes.map((vatCode) => ({
+                id: vatCode.id,
+                name: `${vatCode.code} ${vatCode.title}`,
+            })),
+        )
 
         const isAccountGroupBankAndCashBalance = computed(() => {
             if (
@@ -294,7 +305,7 @@ export default {
             }
         })
 
-        const isTaxRateDisabled = computed(() => {
+        const isVatCodeDisabled = computed(() => {
             const list = [
                 9, // accountGroup -> Bank- og kontantbeholdninger
             ]
@@ -314,7 +325,7 @@ export default {
         ]
 
         onMounted(async () => {
-            await store.dispatch('fetchTaxRates')
+            await store.dispatch('fetchVatCodes')
             await store.dispatch('fetchAccountGroups')
             if (props.accountId) {
                 await store.dispatch('fetchAccount', props.accountId)
@@ -323,7 +334,7 @@ export default {
                     organization_id: store.getters.user.organizationId,
                     account_type_id: null,
                     account_group_id: null,
-                    tax_rate_id: null,
+                    default_vat_code_id: null,
                     name: '',
                     description: '',
                     number: '',
@@ -367,11 +378,9 @@ export default {
             res = isName(description.value, 10, 100)
             if (res !== true) errs.description = res
 
-            if (!isTaxRateDisabled.value) {
-                //req = required(taxRateId.value)
-                res = isNum(taxRateId.value)
-                //if (req !== true) errs.tax_rate_id = req
-                if (res !== true) errs.tax_rate_id = res
+            if (!isVatCodeDisabled.value) {
+                res = isNum(defaultVatCodeId.value)
+                if (res !== true) errs.default_vat_code_id = res
             }
 
             errors.value = errs
@@ -409,11 +418,11 @@ export default {
 
         return {
             banks,
-            taxRates,
+            vatCodeOptions,
             accountGroups,
             accountTypeId,
             accountGroupId,
-            taxRateId,
+            defaultVatCodeId,
             name,
             description,
             number,
@@ -429,7 +438,7 @@ export default {
             errors,
             saveAccount,
             isAccountGroupBankAndCashBalance,
-            isTaxRateDisabled,
+            isVatCodeDisabled,
         }
     },
 }

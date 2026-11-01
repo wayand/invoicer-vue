@@ -88,8 +88,15 @@
                                     <td>I alt ekskl. moms</td>
                                     <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
                                 </tr>
-                                <tr>
-                                    <td>Moms{{ vatLabel }}</td>
+                                <tr v-for="item in vatByCode" :key="item.code">
+                                    <td>
+                                        Moms {{ item.code }} {{ percent(item.rate) }}% af
+                                        {{ $filters.toCurrency(item.base) }}
+                                    </td>
+                                    <td>{{ $filters.toCurrency(item.vat) }}</td>
+                                </tr>
+                                <tr v-if="!vatByCode.length">
+                                    <td>Moms</td>
                                     <td>{{ $filters.toCurrency(vatAmount) }}</td>
                                 </tr>
                                 <tr class="fw-bold border-bottom border-top">
@@ -153,7 +160,6 @@ export default {
 
         onMounted(async () => {
             await store.dispatch('fetchAccounts')
-            await store.dispatch('fetchTaxRates')
         })
 
         const settingDefaultAccount = computed(() =>
@@ -172,15 +178,15 @@ export default {
         const total_ex_vat = computed(() => invoice.value.amount)
         const vatAmount = computed(() => invoice.value.vat_amount)
         const total_inc_vat = computed(() => invoice.value.gross_amount)
-        // The rate is not saved with the invoice yet, so the label shows today's sales rate
-        const salesVatRate = computed(() => store.getters.salesVatRate)
-        const vatLabel = computed(() => (salesVatRate.value === null ? '' : ` (${ratePercent(salesVatRate.value)}%)`))
+        // and the VAT of each code on the invoice, as a Danish invoice must show it
+        const vatByCode = computed(() => invoice.value.vat_by_code || [])
 
         return {
             organizationLogo,
             total_ex_vat,
             vatAmount,
-            vatLabel,
+            vatByCode,
+            percent: ratePercent,
             total_inc_vat,
             settingDefaultAccount,
             settingDefaultDepositAccount,
