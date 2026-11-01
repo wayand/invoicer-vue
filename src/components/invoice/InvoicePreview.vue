@@ -52,7 +52,8 @@
                                 <tr>
                                     <td class="title">Faktura</td>
                                     <td class="text-end">
-                                        Fakturanr.: <span class="fw-bold">{{ invoice.invoice_no }}</span>
+                                        Fakturanr.:
+                                        <span class="invoice-no fw-bold">{{ invoice.invoice_no || 'kladde' }}</span>
                                     </td>
                                     <td class="text-end">
                                         Fakturadato: <span class="fw-bold">{{ invoice.invoice_date }}</span>
@@ -116,7 +117,7 @@
                                     <strong>{{ settingDefaultDepositAccount?.bank_registration_number }}</strong> /
                                     Kontonr. <strong>{{ settingDefaultDepositAccount?.bank_account_number }}</strong
                                     ><br />
-                                    Fakturanr. <strong>{{ invoice.invoice_no }}</strong> bedes angivet ved
+                                    Fakturanr. <strong>{{ invoice.invoice_no || 'kladde' }}</strong> bedes angivet ved
                                     bankoverførsel
                                 </p>
                             </div>

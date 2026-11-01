@@ -73,3 +73,52 @@ describe('InvoiceService, the amounts', () => {
         expect(body.lines).toEqual([{ product_id: 1, description: 'Job', quantity: 3, unit_price: 100 }])
     })
 })
+
+describe('InvoiceService, what the server sets', () => {
+    beforeEach(() => vi.clearAllMocks())
+
+    // An invoice as the server returns it after approving it: the form must not send these back
+    const approved = {
+        ...invoice,
+        state: 'approved',
+        is_sent: true,
+        is_paid: false,
+        journal_entry_id: 41,
+        voucher_no: 9,
+        approved_at: '2026-01-02T10:00:00',
+        approved_by: 1,
+        vat_by_code: [{ code: 'S01', rate: 0.25, base: 300, vat: 75 }],
+    }
+    const SERVER_FIELDS = [
+        'state',
+        'is_sent',
+        'is_paid',
+        'journal_entry_id',
+        'voucher_no',
+        'approved_at',
+        'approved_by',
+        'vat_by_code',
+    ]
+
+    it.each(['update', 'create'])('does not send them when it %ss a draft', (action) => {
+        const call =
+            action === 'update'
+                ? () => InvoiceService.update(1, structuredClone(approved))
+                : () => InvoiceService.create(1, structuredClone(approved))
+        call()
+
+        const [, body] = (action === 'update' ? HTTP.put : HTTP.post).mock.calls[0]
+        for (const field of SERVER_FIELDS) {
+            expect(body).not.toHaveProperty(field)
+        }
+        expect(body).toMatchObject({ contact_id: 5, invoice_no: '1001' })
+    })
+
+    it('approves an invoice, sending the number only when there is one to send', () => {
+        InvoiceService.approve(1, 2)
+        InvoiceService.approve(1, 2, 'INV-7')
+
+        expect(HTTP.post).toHaveBeenNthCalledWith(1, '/organizations/1/invoices/2/approve', {})
+        expect(HTTP.post).toHaveBeenNthCalledWith(2, '/organizations/1/invoices/2/approve', { invoice_no: 'INV-7' })
+    })
+})

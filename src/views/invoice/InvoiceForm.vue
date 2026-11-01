@@ -7,10 +7,11 @@
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first" style="text-align: right">
                     <button
-                        @click="saveInvoice"
-                        type="submit"
-                        name="save-as-approved"
+                        @click.prevent="approveInvoice"
+                        type="button"
+                        name="approve"
                         v-if="state === 'draft' && invoiceId"
+                        :disabled="busy"
                         class="btn btn-primary me-1 mb-1"
                     >
                         <svg
@@ -31,9 +32,10 @@
                         @click="saveInvoice"
                         type="submit"
                         name="save-as-draft"
+                        :disabled="busy"
                         class="btn btn-outline-primary me-1 mb-1"
                     >
-                        Save{{ !invoiceId || state === 'draft' ? ' as draft' : '' }}
+                        Save as draft
                     </button>
                     <div class="btn-group mb-1" v-if="invoiceId">
                         <div class="dropdown">
@@ -129,10 +131,13 @@
                                                         <input
                                                             type="text"
                                                             v-model="invoiceNo"
-                                                            class="form-control"
+                                                            class="invoice-no form-control"
                                                             :class="{ 'is-invalid': error.invoiceNo }"
-                                                            placeholder="Invoice number"
-                                                            disabled
+                                                            :placeholder="
+                                                                numberIsTyped ? 'Invoice number' : 'Given when approved'
+                                                            "
+                                                            maxlength="100"
+                                                            :disabled="!numberIsTyped"
                                                         />
                                                     </div>
                                                 </div>
@@ -176,7 +181,7 @@
                                                         <th>Description</th>
                                                         <th>Quantity</th>
                                                         <th>Unit price</th>
-                                                        <th>VAT</th>
+                                                        <th v-if="vatRegistered">VAT</th>
                                                         <th colspan="2">Total</th>
                                                     </tr>
                                                 </thead>
@@ -185,6 +190,7 @@
                                                         :error="error.lines ? error.lines[index] : {}"
                                                         :products="products"
                                                         :vat-codes="salesVatCodes"
+                                                        :show-vat="vatRegistered"
                                                         v-for="(line, index) in lines"
                                                         :key="index"
                                                         :line-index="index"
@@ -213,16 +219,16 @@
                                             </div>
                                             <table class="table float-end text-end" style="width: 30%">
                                                 <tbody>
-                                                    <tr>
+                                                    <tr v-if="vatRegistered">
                                                         <td>Total excluding VAT</td>
                                                         <td>{{ $filters.toCurrency(total_ex_vat) }}</td>
                                                     </tr>
-                                                    <tr v-for="item in vatByCode" :key="item.code">
+                                                    <tr v-for="item in vatRows" :key="item.code">
                                                         <td>Sale VAT {{ item.code }} ({{ percent(item.rate) }}%)</td>
                                                         <td>{{ $filters.toCurrency(item.vat) }}</td>
                                                     </tr>
                                                     <tr class="fw-bold border-bottom border-top">
-                                                        <td>Total including VAT</td>
+                                                        <td>{{ vatRegistered ? 'Total including VAT' : 'Total' }}</td>
                                                         <td>{{ $filters.toCurrency(total_inc_vat) }}</td>
                                                     </tr>
                                                 </tbody>
@@ -278,13 +284,15 @@ import ContactFormModal from '@/components/contact/ContactFormModal'
 import { watch, ref, computed, onMounted } from 'vue'
 import { useStore } from 'vuex'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
-import MyDatetimeObject from '@/utilities/mydate'
+import MyDatetimeObject, { todayIso } from '@/utilities/mydate'
 import { isNum, required } from '@/utilities/validators'
 import { toast } from '@/utilities/toast'
 import { invoiceTotals, ratePercent } from '@/utilities/money'
 
-// 25% VAT on a domestic sale
+// 25% VAT on a domestic sale, and the code of an organization that is not VAT-registered, which
+// may not show VAT on its invoices
 const DEFAULT_VAT_CODE = 'S01'
+const NO_VAT_CODE = 'S81'
 
 export default {
     props: {
@@ -330,6 +338,7 @@ export default {
                 await prepareNewInvoice()
             }
             markSaved()
+            leaveIfApproved()
         })
 
         const { luxon } = MyDatetimeObject()
@@ -349,6 +358,8 @@ export default {
         )
         // Validation errors stay hidden until a save has been tried
         const showErrors = ref(false)
+        // Saving or approving is under way: the buttons wait
+        const busy = ref(false)
         const showContactFormModal = ref(false)
         const oldContactID = ref(-1)
         const selectedContact = ref(null)
@@ -361,20 +372,22 @@ export default {
             store.getters.getAccountById(organization.value.invoice_setting?.default_deposit_account_id),
         )
 
-        const invoiceNumber = computed(() => {
-            if (store.getters.invoiceSetting?.invoice_no_mode === 'sequential' && props.invoiceId === false) {
-                return String(store.getters.invoiceSetting.next_invoice_no)
-            } else {
-                return store.getters.invoice.invoice_no
-            }
-        })
+        // An organization that numbers its invoices by hand types the number of a draft. Otherwise a
+        // draft has none: the number is given when the invoice is approved, so that a draft that is
+        // deleted leaves no gap in the series.
+        const isManualNumbering = computed(() => store.getters.invoiceSetting?.invoice_no_mode === 'manual')
+        const numberIsTyped = computed(() => isManualNumbering.value && store.getters.invoice.state === 'draft')
+
+        // A VAT-registered organization has a VAT period. One that is not may not show VAT.
+        const vatRegistered = computed(() => Boolean(store.getters.organization?.vat_period_type))
+        const defaultVatCode = () => (vatRegistered.value ? DEFAULT_VAT_CODE : NO_VAT_CODE)
 
         const contactID = computed({
             get: () => store.getters.invoice.contact_id || -1,
             set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'contact_id', value: val }),
         })
         const invoiceNo = computed({
-            get: () => invoiceNumber.value,
+            get: () => store.getters.invoice.invoice_no || '',
             set: (val) => store.commit('UPDATE_INVOICE_PROPERTY', { key: 'invoice_no', value: val }),
         })
         const invoiceDate = computed({
@@ -396,6 +409,8 @@ export default {
         const totals = computed(() => invoiceTotals(lines.value, store.getters.salesRates))
         const total_ex_vat = computed(() => totals.value.amount)
         const vatByCode = computed(() => totals.value.by_code)
+        // The VAT rows of the totals: none for an organization that shows no VAT
+        const vatRows = computed(() => (vatRegistered.value ? vatByCode.value : []))
         const total_inc_vat = computed(() => totals.value.gross_amount)
         const state = computed({
             get: () => store.getters.invoice.state,
@@ -406,11 +421,16 @@ export default {
         const products = computed(() => store.getters.products)
 
         const lines = computed(() => store.getters.invoice.lines)
-        // Only a plain draft can be deleted (the API refuses anything else)
-        const isDraft = computed(() => {
-            const { state, is_sent, is_paid } = store.getters.invoice
-            return state === 'draft' && !is_sent && !is_paid
-        })
+        // Only a draft can be deleted (the API refuses an approved invoice)
+        const isDraft = computed(() => store.getters.invoice.state === 'draft')
+
+        // An approved invoice is part of the books and cannot be edited: show it instead
+        const leaveIfApproved = () => {
+            if (props.invoiceId && store.getters.invoice.state === 'approved') {
+                toast('An approved invoice cannot be changed', 'warn')
+                router.replace({ name: 'ShowInvoice', params: { invoiceId: props.invoiceId } })
+            }
+        }
 
         async function loadEditingInvoice() {
             if (props.invoiceId !== false) {
@@ -424,7 +444,7 @@ export default {
             }
         }
 
-        const newLine = (vatCode = DEFAULT_VAT_CODE) => ({
+        const newLine = (vatCode = defaultVatCode()) => ({
             product_id: -1,
             description: '',
             quantity: 1,
@@ -437,11 +457,11 @@ export default {
                 organization_id: store.getters.user.organizationId,
                 contact_id: null,
                 currency_id: 'DKK',
-                invoice_no: invoiceNumber.value,
-                is_paid: false,
+                invoice_no: null,
                 is_sent: false,
-                invoice_date: luxon().toFormat('yyyy-MM-dd'),
-                duedate: luxon().toFormat('yyyy-MM-dd'),
+                // Today on the wall: the server refuses an invoice dated in the future
+                invoice_date: todayIso(),
+                duedate: todayIso(),
                 template_id: '1',
                 state: 'draft',
                 lines: [newLine()],
@@ -468,7 +488,11 @@ export default {
                 currency_id: source.currency_id,
                 template_id: source.template_id,
                 // eslint-disable-next-line no-unused-vars
-                lines: source.lines.map(({ id, invoice_id, created_at, updated_at, amount, ...line }) => line),
+                lines: source.lines.map(({ id, invoice_id, created_at, updated_at, amount, ...line }) => ({
+                    ...line,
+                    // An organization that shows no VAT has only the code without it
+                    vat_code: vatRegistered.value ? line.vat_code : NO_VAT_CODE,
+                })),
             })
             selectedContact.value = contacts.value.filter((c) => c.id === contactID.value)[0]
             oldContactID.value = contactID.value
@@ -492,12 +516,13 @@ export default {
                     await prepareNewInvoice()
                 }
                 markSaved()
+                leaveIfApproved()
             },
         )
 
         const addNewLine = () => {
             // A line added to an invoice starts with the VAT code of the line before it
-            store.commit('ADD_INVOICE_NEW_LINE', newLine(lines.value.at(-1)?.vat_code || DEFAULT_VAT_CODE))
+            store.commit('ADD_INVOICE_NEW_LINE', newLine(lines.value.at(-1)?.vat_code || defaultVatCode()))
         }
         const deleteLine = (lineIndex) => {
             store.commit('REMOVE_INVOICE_LINE', lineIndex)
@@ -537,10 +562,6 @@ export default {
             if (err !== true) errs.contactID = err
             if (contactID.value == -1) errs.contactID = 'This field is required'
 
-            err = isNum(invoiceNo.value)
-            if (err !== true) errs.invoiceNo = err
-            if (invoiceNo.value == 0) errs.invoiceNo = 'This field is required'
-
             let linesError = lines.value.map((line) => {
                 let lineErrs = {}
 
@@ -566,39 +587,81 @@ export default {
             return Object.keys(errs).length === 0
         }
 
-        const saveInvoice = (e) => {
-            showErrors.value = true
-            if (validate()) {
-                const actionName = props.invoiceId ? 'updateInvoice' : 'createInvoice'
-
-                if (e.target.name === 'save-as-approved') {
-                    state.value = 'approved'
+        const showError = (e) => {
+            if (e.response) {
+                if (e.response.data.errors) {
+                    errors.value = e.response.data.errors
+                    toast('Something went wrong, please check error messages!!', 'error')
+                } else {
+                    error.value = e.response.data.error || e.response.data.msg
+                    toast(e.response.data.error || e.response.data.msg, 'error')
                 }
+            } else {
+                error.value = [e.message]
+                toast(e.message, 'error')
+            }
+        }
 
-                store
-                    .dispatch(actionName, {
-                        organizationId: store.getters.user.organizationId,
-                        invoice: store.getters.invoice,
-                    })
-                    .then((response) => {
-                        markSaved()
-                        toast('Successfully saved !', 'success')
-                        router.push({ name: 'EditInvoice', params: { invoiceId: response.data.id } })
-                    })
-                    .catch((e) => {
-                        if (e.response) {
-                            if (e.response.data.errors) {
-                                errors.value = e.response.data.errors
-                                toast('Something went wrong, please check error messages!!', 'error')
-                            } else {
-                                error.value = e.response.data.error || e.response.data.msg
-                                toast(e.response.data.error || e.response.data.msg, 'error')
-                            }
-                        } else {
-                            error.value = [e.message]
-                            toast(e.message, 'error')
-                        }
-                    })
+        // The draft, as the API takes it: saved, and the form is no longer changed
+        const saveDraft = async () => {
+            const actionName = props.invoiceId ? 'updateInvoice' : 'createInvoice'
+            const response = await store.dispatch(actionName, {
+                organizationId: store.getters.user.organizationId,
+                invoice: store.getters.invoice,
+            })
+            markSaved()
+            return response
+        }
+
+        const saveInvoice = async () => {
+            showErrors.value = true
+            if (!validate() || busy.value) return
+            busy.value = true
+            try {
+                const response = await saveDraft()
+                toast('Successfully saved !', 'success')
+                router.push({ name: 'EditInvoice', params: { invoiceId: response.data.id } })
+            } catch (e) {
+                showError(e)
+            } finally {
+                busy.value = false
+            }
+        }
+
+        // Approving posts the invoice to the books, gives it its number, and locks it. What was
+        // changed in the form is saved first, so that what is approved is what is on the screen.
+        const approveInvoice = async () => {
+            showErrors.value = true
+            if (!validate() || busy.value) return
+            if (numberIsTyped.value && !invoiceNo.value.trim()) {
+                error.value = { ...error.value, invoiceNo: 'Enter the invoice number' }
+                return
+            }
+            refDialog.value.data = {
+                type: 'warning',
+                title: 'Approve the invoice',
+                content:
+                    'Approve the invoice? It is posted to the books and gets its invoice number, and it cannot be ' +
+                    'changed afterwards. A mistake is corrected with a credit note.',
+                accept: 'Yes, approve',
+                reject: 'Cancel',
+            }
+            if ((await refDialog.value.showModal()) !== true) return
+            busy.value = true
+            try {
+                if (!isInvoiceFormSaved.value) await saveDraft()
+                const response = await store.dispatch('approveInvoice', {
+                    organizationId: store.getters.user.organizationId,
+                    invoiceId: props.invoiceId,
+                    invoiceNo: numberIsTyped.value ? invoiceNo.value.trim() : null,
+                })
+                markSaved()
+                toast(`Invoice ${response.data.invoice_no} approved, voucher ${response.data.voucher_no}`, 'success')
+                router.push({ name: 'ShowInvoice', params: { invoiceId: props.invoiceId } })
+            } catch (e) {
+                showError(e)
+            } finally {
+                busy.value = false
             }
         }
 
@@ -656,6 +719,11 @@ export default {
             invoiceDate,
             invoiceDueDate,
             saveInvoice,
+            approveInvoice,
+            busy,
+            numberIsTyped,
+            vatRegistered,
+            vatRows,
             products,
             total_ex_vat,
             total_inc_vat,

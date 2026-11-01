@@ -41,7 +41,7 @@
                 <i class="bx bx-radio-circle"></i>
             </div>
         </td>
-        <td class="w-12">
+        <td v-if="showVat" class="w-12">
             <select
                 :class="{ 'is-invalid': error.vat_code }"
                 class="vat-code form-select"
@@ -95,6 +95,11 @@ export default {
         products: {
             type: Object,
             required: true,
+        },
+        // An organization that is not VAT-registered shows no VAT: the line keeps its code (S81)
+        showVat: {
+            type: Boolean,
+            default: true,
         },
         // The VAT codes an invoice line can have
         vatCodes: {

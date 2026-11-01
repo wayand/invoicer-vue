@@ -14,7 +14,7 @@ vi.mock('@/services/InvoiceService', () => ({
 }))
 vi.mock('@/utilities/toast', () => ({ toast: vi.fn() }))
 
-// An approved, sent and paid invoice with two lines, as the API returns it
+// An approved and sent invoice with two lines, as the API returns it
 const source = {
     id: 2,
     organization_id: 1,
@@ -22,7 +22,10 @@ const source = {
     invoice_no: '1001',
     state: 'approved',
     is_sent: true,
-    is_paid: true,
+    journal_entry_id: 41,
+    voucher_no: 9,
+    approved_at: '2026-01-02T10:00:00',
+    approved_by: 1,
     currency_id: 'EUR',
     excluding_vat: false,
     template_id: '2',
@@ -68,12 +71,12 @@ const contacts = [
 const page = () => defineComponent({ render: () => h('div') })
 const stubbed = (name) => defineComponent({ name, render: () => null })
 
-const newStore = () =>
+const newStore = (organization) =>
     createStore({
         modules: { invoice: { ...invoice, state: () => ({ invoices: [], invoice: {} }) } },
         getters: {
             user: () => ({ organizationId: 1 }),
-            organization: () => ({ id: 1, invoice_setting: {} }),
+            organization: () => organization,
             contacts: () => contacts,
             products: () => [],
             invoiceSetting: () => ({ invoice_no_mode: 'sequential', next_invoice_no: 1003 }),
@@ -90,8 +93,9 @@ const newStore = () =>
         },
     })
 
-const openNewInvoice = async (url) => {
-    const store = newStore()
+const registered = { id: 1, vat_period_type: 'quarter', invoice_setting: {} }
+const openNewInvoice = async (url, organization = registered) => {
+    const store = newStore(organization)
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -130,16 +134,19 @@ describe('new invoice form, copying an existing invoice', () => {
         expect(InvoiceService.getOne).toHaveBeenCalledWith('2')
     })
 
-    it('starts a new draft: the next number, today, nothing sent or paid, no id', async () => {
+    it('starts a new draft: no number yet, today, nothing sent or approved, no id, no voucher', async () => {
         const { store } = await openNewInvoice('/invoices/new?copyFrom=2')
         const copy = store.getters.invoice
 
         expect(copy.id).toBeUndefined()
         expect(copy.created_at).toBeUndefined()
-        expect(copy.invoice_no).toBe('1003')
+        expect(copy.invoice_no).toBeNull() // the number comes when it is approved
         expect(copy.state).toBe('draft')
         expect(copy.is_sent).toBe(false)
-        expect(copy.is_paid).toBe(false)
+        expect(copy.is_paid).toBeUndefined()
+        expect(copy.journal_entry_id).toBeUndefined()
+        expect(copy.voucher_no).toBeUndefined()
+        expect(copy.approved_at).toBeUndefined()
         expect(copy.invoice_date).toBe('2026-10-17')
         expect(copy.duedate).toBe('2026-10-17')
     })
@@ -160,6 +167,13 @@ describe('new invoice form, copying an existing invoice', () => {
             { product_id: 1, description: 'First job', vat_code: 'S01', quantity: 1, unit_price: 100 },
             { product_id: 1, description: 'Second job', vat_code: 'S02', quantity: 2, unit_price: 100 },
         ])
+    })
+
+    it('gives every line the code without VAT when the organization shows no VAT', async () => {
+        const { store, wrapper } = await openNewInvoice('/invoices/new?copyFrom=2', { id: 1, invoice_setting: {} })
+
+        expect(store.getters.invoice.lines.map((line) => line.vat_code)).toEqual(['S81', 'S81'])
+        expect(wrapper.text()).not.toContain('Total excluding VAT')
     })
 
     it('has no amounts of its own: the totals shown are calculated from the lines', async () => {
@@ -191,7 +205,7 @@ describe('new invoice form, copying an existing invoice', () => {
 
         expect(toast).toHaveBeenCalledWith('Invoice with id 2 not found!', 'error')
         expect(store.getters.invoice.contact_id).toBeNull()
-        expect(store.getters.invoice.invoice_no).toBe('1003')
+        expect(store.getters.invoice.invoice_no).toBeNull()
         expect(store.getters.invoice.lines).toHaveLength(1)
         expect(store.getters.invoice.lines[0].description).toBe('')
     })
@@ -205,6 +219,22 @@ describe('new invoice form, without copying', () => {
     })
     afterEach(() => vi.useRealTimers())
 
+    it('is dated today on the wall late in the evening, not tomorrow: the server refuses a date in the future', async () => {
+        const zone = process.env.TZ
+        process.env.TZ = 'Europe/Copenhagen'
+        try {
+            vi.setSystemTime(new Date('2026-10-17T21:30:00Z')) // 23:30 on the 17th in Denmark
+
+            const { store } = await openNewInvoice('/invoices/new')
+
+            expect(store.getters.invoice.invoice_date).toBe('2026-10-17')
+            expect(store.getters.invoice.duedate).toBe('2026-10-17')
+        } finally {
+            if (zone === undefined) delete process.env.TZ
+            else process.env.TZ = zone
+        }
+    })
+
     it('is a blank draft with one empty line and does not fetch any invoice', async () => {
         const { store } = await openNewInvoice('/invoices/new')
         const blank = store.getters.invoice
@@ -212,7 +242,7 @@ describe('new invoice form, without copying', () => {
         expect(InvoiceService.getOne).not.toHaveBeenCalled()
         expect(blank.state).toBe('draft')
         expect(blank.contact_id).toBeNull()
-        expect(blank.invoice_no).toBe('1003')
+        expect(blank.invoice_no).toBeNull()
         expect(blank.invoice_date).toBe('2026-10-17')
         expect(blank.lines).toEqual([{ product_id: -1, description: '', quantity: 1, unit_price: 0, vat_code: 'S01' }])
     })
