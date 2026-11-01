@@ -83,6 +83,18 @@ const routes = [
         meta: { requiresAuth: true, title: 'Invoicer - Account ledger' },
     },
     {
+        path: '/reports/vat',
+        name: 'VatReport',
+        component: () => import('@/views/reports/VatReport'),
+        meta: { requiresAuth: true, title: 'Invoicer - VAT report' },
+    },
+    {
+        path: '/vat/periods',
+        name: 'VatPeriods',
+        component: () => import('@/views/vat/VatPeriods'),
+        meta: { requiresAuth: true, title: 'Invoicer - VAT periods' },
+    },
+    {
         path: '/reports/annual-report',
         name: 'AnnualReport',
         component: AnnualReport,

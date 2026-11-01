@@ -31,4 +31,14 @@ describe('ReportService', () => {
             params: { account_id: 9, from: '2026-01-01' },
         })
     })
+
+    it('asks for the VAT report of a range, and leaves an empty date out', () => {
+        ReportService.vatReport({ from: '2026-01-01', to: '2026-03-31' })
+        ReportService.vatReport({ from: '', to: '' })
+
+        expect(HTTP.get).toHaveBeenNthCalledWith(1, '/reports/vat', {
+            params: { from: '2026-01-01', to: '2026-03-31' },
+        })
+        expect(HTTP.get).toHaveBeenNthCalledWith(2, '/reports/vat', { params: {} })
+    })
 })

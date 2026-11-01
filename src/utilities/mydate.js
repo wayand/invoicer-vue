@@ -45,3 +45,18 @@ export const todayIso = (now = new Date()) =>
 
 // The first and last day of a calendar year as yyyy-mm-dd
 export const yearRange = (year) => ({ from: `${year}-01-01`, to: `${year}-12-31` })
+
+// The first and last day of the calendar quarter that contains the day, as yyyy-mm-dd
+export const quarterRange = (day = new Date()) => {
+    const firstMonth = Math.floor(day.getMonth() / 3) * 3
+    const last = new Date(day.getFullYear(), firstMonth + 3, 0)
+    const pad = (value) => String(value).padStart(2, '0')
+    return {
+        from: `${day.getFullYear()}-${pad(firstMonth + 1)}-01`,
+        to: `${last.getFullYear()}-${pad(last.getMonth() + 1)}-${pad(last.getDate())}`,
+    }
+}
+
+// The quarter before the one that contains the day
+export const previousQuarterRange = (day = new Date()) =>
+    quarterRange(new Date(day.getFullYear(), Math.floor(day.getMonth() / 3) * 3 - 1, 1))

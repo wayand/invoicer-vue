@@ -7,6 +7,9 @@ export default {
     trialBalance({ from, to } = {}) {
         return HTTP.get('/reports/trial-balance', { params: range({ from, to }) })
     },
+    vatReport({ from, to } = {}) {
+        return HTTP.get('/reports/vat', { params: range({ from, to }) })
+    },
     accountLedger({ accountId, from, to }) {
         return HTTP.get('/reports/account-ledger', { params: { account_id: accountId, ...range({ from, to }) } })
     },
