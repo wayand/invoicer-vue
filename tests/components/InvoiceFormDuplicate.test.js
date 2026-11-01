@@ -29,8 +29,8 @@ const source = {
     invoice_date: '2026-01-01',
     duedate: '2026-01-15',
     amount: 300,
-    vat_amount: 75,
-    gross_amount: 375,
+    vat_amount: 25,
+    gross_amount: 325,
     created_at: '2026-01-01T10:00:00',
     updated_at: '2026-01-02T10:00:00',
     lines: [
@@ -39,6 +39,7 @@ const source = {
             invoice_id: 2,
             product_id: 1,
             description: 'First job',
+            vat_code: 'S01',
             quantity: 1,
             unit_price: 100,
             amount: 100,
@@ -50,6 +51,7 @@ const source = {
             invoice_id: 2,
             product_id: 1,
             description: 'Second job',
+            vat_code: 'S02',
             quantity: 2,
             unit_price: 100,
             amount: 200,
@@ -76,14 +78,15 @@ const newStore = () =>
             products: () => [],
             invoiceSetting: () => ({ invoice_no_mode: 'sequential', next_invoice_no: 1003 }),
             getAccountById: () => () => ({ name: 'Bank' }),
-            salesVatRate: () => 0.25,
+            salesVatCodes: () => [],
+            salesRates: () => ({ S01: 0.25, S02: 0 }),
         },
         actions: {
             fetchOrganization: () => {},
             fetchContacts: () => {},
             fetchProducts: () => {},
             fetchAccounts: () => {},
-            fetchTaxRates: () => {},
+            fetchVatCodes: () => {},
         },
     })
 
@@ -150,12 +153,12 @@ describe('new invoice form, copying an existing invoice', () => {
         expect(copy.template_id).toBe('2')
     })
 
-    it('copies the lines without their ids, timestamps and amounts', async () => {
+    it('copies the lines, with their VAT codes, without their ids, timestamps and amounts', async () => {
         const { store } = await openNewInvoice('/invoices/new?copyFrom=2')
 
         expect(store.getters.invoice.lines).toEqual([
-            { product_id: 1, description: 'First job', quantity: 1, unit_price: 100 },
-            { product_id: 1, description: 'Second job', quantity: 2, unit_price: 100 },
+            { product_id: 1, description: 'First job', vat_code: 'S01', quantity: 1, unit_price: 100 },
+            { product_id: 1, description: 'Second job', vat_code: 'S02', quantity: 2, unit_price: 100 },
         ])
     })
 
@@ -168,8 +171,9 @@ describe('new invoice form, copying an existing invoice', () => {
         expect(copy.gross_amount).toBeUndefined()
         expect(copy.excluding_vat).toBeUndefined()
         expect(wrapper.text()).toContain('Total excluding VAT300')
-        expect(wrapper.text()).toContain('Sale VAT (25%)75')
-        expect(wrapper.text()).toContain('Total including VAT375')
+        expect(wrapper.text()).toContain('Sale VAT S01 (25%)25')
+        expect(wrapper.text()).toContain('Sale VAT S02 (0%)0')
+        expect(wrapper.text()).toContain('Total including VAT325')
     })
 
     it('shows the contact of the original as the selected one', async () => {
@@ -210,6 +214,6 @@ describe('new invoice form, without copying', () => {
         expect(blank.contact_id).toBeNull()
         expect(blank.invoice_no).toBe('1003')
         expect(blank.invoice_date).toBe('2026-10-17')
-        expect(blank.lines).toEqual([{ product_id: -1, description: '', quantity: 1, unit_price: 0 }])
+        expect(blank.lines).toEqual([{ product_id: -1, description: '', quantity: 1, unit_price: 0, vat_code: 'S01' }])
     })
 })

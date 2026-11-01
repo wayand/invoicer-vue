@@ -30,12 +30,42 @@ const saved = {
     vat_amount: 75,
     gross_amount: 375,
     lines: [
-        { id: 11, invoice_id: 2, product_id: 1, description: 'First job', quantity: 1, unit_price: 100, amount: 100 },
-        { id: 12, invoice_id: 2, product_id: 1, description: 'Second job', quantity: 2, unit_price: 100, amount: 200 },
+        {
+            id: 11,
+            invoice_id: 2,
+            product_id: 1,
+            description: 'First job',
+            vat_code: 'S01',
+            quantity: 1,
+            unit_price: 100,
+            amount: 100,
+        },
+        {
+            id: 12,
+            invoice_id: 2,
+            product_id: 1,
+            description: 'Second job',
+            vat_code: 'S01',
+            quantity: 2,
+            unit_price: 100,
+            amount: 200,
+        },
     ],
 }
 const contacts = [{ id: 5, name: 'Acme ApS', street: 'Main St 1', zipcode: '8000', city: 'Aarhus' }]
 const products = [{ id: 1, name: 'Consulting', description: 'Consulting', unit_price: 100 }]
+const salesVatCodes = [
+    {
+        id: 1,
+        code: 'S01',
+        title: 'Momspligtige salg (DK), 25% moms',
+        applies_to: 'sales',
+        direction: 'output',
+        rate: 0.25,
+    },
+    { id: 2, code: 'S02', title: 'Momspligtige salg (DK) 0% moms', applies_to: 'sales', direction: 'none', rate: 0 },
+]
+const vatRates = { S01: 0.25, S02: 0 }
 
 // The confirmation dialog the form asks before leaving with unsaved changes.
 // It answers "Stay here", so a navigation that asks is cancelled.
@@ -54,7 +84,7 @@ const PromiseDialog = defineComponent({
 })
 const page = () => defineComponent({ render: () => h('div') })
 
-const newStore = (salesVatRate) =>
+const newStore = (salesRates) =>
     createStore({
         modules: { invoice: { ...invoice, state: () => ({ invoices: [], invoice: {} }) } },
         getters: {
@@ -64,19 +94,20 @@ const newStore = (salesVatRate) =>
             products: () => products,
             invoiceSetting: () => ({ invoice_no_mode: 'sequential', next_invoice_no: 1003 }),
             getAccountById: () => () => ({ name: 'Bank' }),
-            salesVatRate: () => salesVatRate,
+            salesVatCodes: () => salesVatCodes,
+            salesRates: () => salesRates,
         },
         actions: {
             fetchOrganization: () => {},
             fetchContacts: () => {},
             fetchProducts: () => {},
             fetchAccounts: () => {},
-            fetchTaxRates: () => {},
+            fetchVatCodes: () => {},
         },
     })
 
-const openForm = async (url, salesVatRate = 0.25) => {
-    const store = newStore(salesVatRate)
+const openForm = async (url, salesRates = vatRates) => {
+    const store = newStore(salesRates)
     const router = createRouter({
         history: createMemoryHistory(),
         routes: [
@@ -173,11 +204,11 @@ describe('invoice form totals', () => {
 
     const totalsText = (wrapper) => wrapper.find('table.float-end').text()
 
-    it('shows the totals of the lines and the VAT at the active sales rate', async () => {
+    it('shows the totals of the lines and the VAT of the code of the lines', async () => {
         const { wrapper } = await openForm('/invoices/2/edit')
 
         expect(totalsText(wrapper)).toContain('Total excluding VAT300')
-        expect(totalsText(wrapper)).toContain('Sale VAT (25%)75')
+        expect(totalsText(wrapper)).toContain('Sale VAT S01 (25%)75')
         expect(totalsText(wrapper)).toContain('Total including VAT375')
     })
 
@@ -190,28 +221,120 @@ describe('invoice form totals', () => {
 
         expect(wrapper.find('td.total').text()).toBe('1.01')
         expect(totalsText(wrapper)).toContain('Total excluding VAT1.01')
-        expect(totalsText(wrapper)).toContain('Sale VAT (25%)0.25')
+        expect(totalsText(wrapper)).toContain('Sale VAT S01 (25%)0.25')
         expect(totalsText(wrapper)).toContain('Total including VAT1.26')
     })
 
     it('uses the rate from the store, not 25%', async () => {
-        const { wrapper } = await openForm('/invoices/2/edit', 0.0625)
+        const { wrapper } = await openForm('/invoices/2/edit', { S01: 0.0625 })
 
-        expect(totalsText(wrapper)).toContain('Sale VAT (6.25%)18.75') // 6.25% of 300
+        expect(totalsText(wrapper)).toContain('Sale VAT S01 (6.25%)18.75') // 6.25% of 300
         expect(totalsText(wrapper)).toContain('Total including VAT318.75')
     })
 
-    it('shows no VAT while there is no single sales rate', async () => {
-        const { wrapper } = await openForm('/invoices/2/edit', null)
+    it('shows no VAT while the rates are not known', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit', {})
 
-        expect(totalsText(wrapper)).toContain('Sale VAT0')
+        expect(totalsText(wrapper)).toContain('Sale VAT S01 (0%)0')
         expect(totalsText(wrapper)).toContain('Total including VAT300')
+    })
+
+    it('shows the VAT of each code on its own row', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        await wrapper.findAll('select.vat-code')[1].setValue('S02')
+        await flushPromises()
+
+        expect(totalsText(wrapper)).toContain('Total excluding VAT300')
+        expect(totalsText(wrapper)).toContain('Sale VAT S01 (25%)25') // 25% of the first line, 100
+        expect(totalsText(wrapper)).toContain('Sale VAT S02 (0%)0')
+        expect(totalsText(wrapper)).toContain('Total including VAT325')
+    })
+
+    it('rounds the VAT once per code, not once per line', async () => {
+        const { wrapper } = await openForm('/invoices/new')
+        await wrapper.find('input.unit-price').setValue(0.1)
+        await wrapper.find('button.btn-outline').trigger('click')
+        await wrapper.findAll('input.unit-price')[1].setValue(0.1)
+        await wrapper.find('button.btn-outline').trigger('click')
+        await wrapper.findAll('input.unit-price')[2].setValue(0.1)
+        await flushPromises()
+
+        // 0.075 once is 0.08; 0.025 for each of three lines would be 0.09
+        expect(totalsText(wrapper)).toContain('Sale VAT S01 (25%)0.08')
+        expect(totalsText(wrapper)).toContain('Total including VAT0.38')
     })
 
     it('does not count the totals as a change', async () => {
         const { router } = await openForm('/invoices/2/edit')
 
         expect(await leavesWithoutAsking(router)).toBe(true)
+    })
+})
+
+describe('invoice form VAT codes', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        InvoiceService.getOne.mockResolvedValue({ data: structuredClone(saved) })
+    })
+
+    it('offers the sales codes on every line, and shows the code the line has', async () => {
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        const selects = wrapper.findAll('select.vat-code')
+        expect(selects).toHaveLength(2)
+        expect(selects[0].findAll('option').map((option) => option.text())).toEqual(['S01 25%', 'S02 0%'])
+        expect(selects[0].element.value).toBe('S01')
+    })
+
+    it('starts a new invoice with the domestic sales code', async () => {
+        const { store, wrapper } = await openForm('/invoices/new')
+
+        expect(store.getters.invoice.lines[0].vat_code).toBe('S01')
+        expect(wrapper.find('select.vat-code').element.value).toBe('S01')
+    })
+
+    it('starts an added line with the code of the line before it', async () => {
+        const { store, wrapper } = await openForm('/invoices/new')
+        await wrapper.find('select.vat-code').setValue('S02')
+
+        await wrapper.find('button.btn-outline').trigger('click')
+
+        expect(store.getters.invoice.lines.map((line) => line.vat_code)).toEqual(['S02', 'S02'])
+    })
+
+    it('sends the code of every line when the invoice is saved', async () => {
+        InvoiceService.create.mockResolvedValue({ data: { id: 2 } })
+        const { wrapper } = await openForm('/invoices/new')
+        await fillInvoice(wrapper)
+        await wrapper.find('select.vat-code').setValue('S02')
+
+        await wrapper.find('form').trigger('submit')
+        await flushPromises()
+
+        const [, invoice] = InvoiceService.create.mock.calls[0]
+        expect(invoice.lines.map((line) => line.vat_code)).toEqual(['S02'])
+    })
+
+    it('does not send an invoice with a line that has no code, and marks the line', async () => {
+        const { store, wrapper } = await openForm('/invoices/new')
+        await fillInvoice(wrapper)
+        store.commit('UPDATE_INVOICE_LINES_PROPERTY', { index: 0, key: 'vat_code', value: '' })
+
+        await wrapper.find('form').trigger('submit')
+        await flushPromises()
+
+        expect(wrapper.find('select.vat-code').classes()).toContain('is-invalid')
+        expect(InvoiceService.create).not.toHaveBeenCalled()
+    })
+
+    it('counts a change of code as a change to save', async () => {
+        const { router, wrapper } = await openForm('/invoices/2/edit')
+
+        await wrapper.find('select.vat-code').setValue('S02')
+        await flushPromises()
+
+        expect(await leavesWithoutAsking(router)).toBe(false)
     })
 })
 

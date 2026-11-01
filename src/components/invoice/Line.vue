@@ -12,7 +12,7 @@
                 <i class="bx bx-radio-circle"></i>
             </div>
         </td>
-        <td class="w-50">
+        <td class="w-40">
             <input
                 :class="{ 'is-invalid': error.description }"
                 type="text"
@@ -41,6 +41,22 @@
                 <i class="bx bx-radio-circle"></i>
             </div>
         </td>
+        <td class="w-12">
+            <select
+                :class="{ 'is-invalid': error.vat_code }"
+                class="vat-code form-select"
+                name="vat_code"
+                v-model="vat_code"
+            >
+                <option v-if="!hasCode" value="">Select VAT code</option>
+                <option v-for="vatCode in vatCodes" :key="vatCode.code" :value="vatCode.code" :title="vatCode.title">
+                    {{ vatCode.code }} {{ percent(vatCode) }}%
+                </option>
+            </select>
+            <div v-if="error.vat_code" class="invalid-feedback">
+                <i class="bx bx-radio-circle"></i>
+            </div>
+        </td>
         <td class="w-10 total">{{ $filters.toCurrency(total) }}</td>
         <td class="w-auto">
             <a href="javascript:void(0)">
@@ -66,7 +82,7 @@ import { ref, watch, computed } from 'vue'
 import { useStore } from 'vuex'
 import BaseSelectWithAddNew from '@/components/formBaseElements/BaseSelectWithAddNew'
 import ProductFormModal from '@/components/product/ProductFormModal'
-import { lineAmount } from '@/utilities/money'
+import { lineAmount, ratePercent, salesRate } from '@/utilities/money'
 
 export default {
     name: 'InvoiceLine',
@@ -79,6 +95,11 @@ export default {
         products: {
             type: Object,
             required: true,
+        },
+        // The VAT codes an invoice line can have
+        vatCodes: {
+            type: Array,
+            default: () => [],
         },
         lineIndex: {
             type: Number,
@@ -137,6 +158,13 @@ export default {
                     value: val,
                 }),
         })
+        const vat_code = computed({
+            get: () => props.theLine.vat_code || '',
+            set: (val) =>
+                store.commit('UPDATE_INVOICE_LINES_PROPERTY', { index: props.lineIndex, key: 'vat_code', value: val }),
+        })
+        const hasCode = computed(() => props.vatCodes.some((vatCode) => vatCode.code === vat_code.value))
+        const percent = (vatCode) => ratePercent(salesRate(vatCode))
         const total = computed(() => lineAmount(quantity.value, unit_price.value))
 
         const openProductFormModal = () => {
@@ -162,7 +190,7 @@ export default {
             }
         }
 
-        watch([() => product_id.value, () => unit_price.value, () => quantity.value], () => {
+        watch([() => product_id.value, () => unit_price.value, () => quantity.value, () => vat_code.value], () => {
             setTimeout(function () {
                 emit('validate')
             }, 1)
@@ -178,6 +206,9 @@ export default {
             description,
             quantity,
             unit_price,
+            vat_code,
+            hasCode,
+            percent,
             oldProductID,
             total,
         }
@@ -211,7 +242,13 @@ input.unit-price[type='number'] {
 .w-12 {
     width: 12% !important;
 }
+.w-40 {
+    width: 40% !important;
+}
 .w-50 {
     width: 50% !important;
+}
+select.vat-code {
+    min-width: 8rem;
 }
 </style>

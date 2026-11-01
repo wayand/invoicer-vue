@@ -5,6 +5,7 @@ import {
     normalBalanceAmount,
     ratePercent,
     roundAmount,
+    salesRate,
     voucherTotals,
 } from '@/utilities/money'
 import cases from './money_cases.json'
@@ -14,14 +15,56 @@ const money = (value) => value.toFixed(2)
 describe('invoiceTotals, on the cases shared with the server', () => {
     it.each(cases.cases)('$name', ({ lines, rate, line_amounts, amount, vat_amount, gross_amount }) => {
         const totals = invoiceTotals(
-            lines.map(([quantity, unit_price]) => ({ quantity: Number(quantity), unit_price: Number(unit_price) })),
-            Number(rate),
+            lines.map(([quantity, unit_price]) => ({
+                quantity: Number(quantity),
+                unit_price: Number(unit_price),
+                vat_code: 'S',
+            })),
+            { S: Number(rate) },
         )
 
         expect(totals.lines.map(money)).toEqual(line_amounts)
         expect(money(totals.amount)).toBe(amount)
         expect(money(totals.vat_amount)).toBe(vat_amount)
         expect(money(totals.gross_amount)).toBe(gross_amount)
+    })
+})
+
+describe('invoiceTotals, with a VAT code on every line, on the cases shared with the server', () => {
+    const rates = Object.fromEntries(Object.entries(cases.rates).map(([code, rate]) => [code, Number(rate)]))
+
+    it.each(cases.coded_cases)('$name', ({ lines, line_amounts, amount, vat_amount, gross_amount, by_code }) => {
+        const totals = invoiceTotals(
+            lines.map(([quantity, unit_price, vat_code]) => ({
+                quantity: Number(quantity),
+                unit_price: Number(unit_price),
+                vat_code,
+            })),
+            rates,
+        )
+
+        expect(totals.lines.map(money)).toEqual(line_amounts)
+        expect(money(totals.amount)).toBe(amount)
+        expect(money(totals.vat_amount)).toBe(vat_amount)
+        expect(money(totals.gross_amount)).toBe(gross_amount)
+        expect(totals.by_code.map(({ code, base, vat }) => [code, money(base), money(vat)])).toEqual(by_code)
+        expect(totals.by_code.every(({ code, rate }) => rate === rates[code])).toBe(true)
+    })
+})
+
+describe('salesRate', () => {
+    it('is the rate of a code with VAT on the sale', () => {
+        expect(salesRate({ direction: 'output', rate: 0.25 })).toBe(0.25)
+    })
+
+    it.each([
+        [{ direction: 'none', rate: 0 }],
+        [{ direction: 'none', rate: null }], // S81: outside the VAT law, the list gives no rate
+        [{ direction: 'output', rate: null }],
+        [{ direction: 'input', rate: 0.25 }], // a purchase code charges nothing on a sale
+        [undefined],
+    ])('is 0 for a code that carries no VAT on the sale: %j', (vatCode) => {
+        expect(salesRate(vatCode)).toBe(0)
     })
 })
 
@@ -54,9 +97,29 @@ describe('lineAmount', () => {
 
 describe('invoiceTotals', () => {
     it('has no VAT when there is no rate yet', () => {
-        const totals = invoiceTotals([{ quantity: 2, unit_price: 50 }], null)
+        const totals = invoiceTotals([{ quantity: 2, unit_price: 50, vat_code: 'S01' }], {})
 
-        expect(totals).toEqual({ lines: [100], amount: 100, vat_amount: 0, gross_amount: 100 })
+        expect(totals).toEqual({
+            lines: [100],
+            amount: 100,
+            vat_amount: 0,
+            gross_amount: 100,
+            by_code: [{ code: 'S01', rate: 0, base: 100, vat: 0 }],
+        })
+    })
+
+    it('has no codes without lines', () => {
+        expect(invoiceTotals()).toEqual({ lines: [], amount: 0, vat_amount: 0, gross_amount: 0, by_code: [] })
+    })
+
+    it('keeps a negative VAT for a credit note, and no negative zero', () => {
+        const totals = invoiceTotals([{ quantity: 1, unit_price: -100, vat_code: 'S01' }], { S01: 0.25 })
+
+        expect(totals.vat_amount).toBe(-25)
+        expect(totals.gross_amount).toBe(-125)
+        expect(
+            Object.is(invoiceTotals([{ quantity: 1, unit_price: 0, vat_code: 'S01' }], { S01: 0.25 }).vat_amount, 0),
+        ).toBe(true)
     })
 })
 

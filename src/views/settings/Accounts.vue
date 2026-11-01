@@ -55,7 +55,7 @@
                                 <th>Kontonr.</th>
                                 <th>Kontonavn</th>
                                 <th>Type</th>
-                                <th>Momstype</th>
+                                <th>Standard momskode</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -69,7 +69,7 @@
                                         <td>{{ account.number }}</td>
                                         <td>{{ account.name }}</td>
                                         <td>{{ groupName }}</td>
-                                        <td>{{ account.tax_rate?.name }}</td>
+                                        <td>{{ vatCodeOf(account) }}</td>
                                     </tr>
                                 </template>
                             </template>
@@ -115,7 +115,13 @@ export default {
             await store.dispatch('fetchAccounts').catch((e) => toast('Accounts ' + e, 'error'))
         }
 
-        onMounted(() => fetchAccounts())
+        onMounted(() => {
+            fetchAccounts()
+            store.dispatch('fetchVatCodes').catch((e) => toast('VAT codes ' + e, 'error'))
+        })
+
+        // The default VAT code of an account, as its code (S01), or nothing
+        const vatCodeOf = (account) => store.getters.getVatCodeById(account.default_vat_code_id)?.code || ''
 
         const openAccountFormModal = (accountId = null) => {
             if (accountId) {
@@ -141,6 +147,7 @@ export default {
             showArchived,
             accounts,
             filteredAccounts,
+            vatCodeOf,
         }
     },
 }
