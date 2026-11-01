@@ -137,6 +137,25 @@
                         </ul>
                     </li>
 
+                    <li
+                        v-if="vatRegistered"
+                        :class="{ active: isActive('/vat') || route.name === 'VatReport' }"
+                        class="vat-menu sidebar-item has-sub"
+                    >
+                        <a href="#" class="sidebar-link">
+                            <i class="bi bi-percent"></i>
+                            <span>VAT</span>
+                        </a>
+                        <ul class="submenu" :class="{ active: isActive('/vat') || route.name === 'VatReport' }">
+                            <li class="submenu-item" :class="{ active: route.name === 'VatPeriods' }">
+                                <router-link class="submenu-link" :to="{ name: 'VatPeriods' }">VAT periods</router-link>
+                            </li>
+                            <li class="submenu-item" :class="{ active: route.name === 'VatReport' }">
+                                <router-link class="submenu-link" :to="{ name: 'VatReport' }">VAT report</router-link>
+                            </li>
+                        </ul>
+                    </li>
+
                     <li :class="{ active: isActive('/settings') }" class="sidebar-item has-sub">
                         <a href="#" class="sidebar-link">
                             <i class="bi bi-gear-fill"></i>
@@ -174,6 +193,8 @@ import { useStore } from 'vuex'
 import { useRouter, useRoute } from 'vue-router'
 import { onMounted, computed, ref } from 'vue'
 import * as SideBarNav from '@/utilities/sidebar'
+import { toast } from '@/utilities/toast'
+import { apiErrorMessage } from '@/utilities/apiErrors'
 import { UseSetTheme, UseInitTheme } from '@/composables/useDarkTheme'
 
 export default {
@@ -187,13 +208,23 @@ export default {
         const route = useRoute()
         const activeRoute = computed(() => router.currentRoute.value.path)
 
+        // The VAT screens are for an organization that is VAT-registered: it has a VAT period. The
+        // organization is loaded here when no screen has loaded it yet.
+        const vatRegistered = computed(() => Boolean(store.getters.organization?.vat_period_type))
+
         onMounted(() => {
             const sidebarEl = sidebar.value
             SideBarNav.init(sidebarEl)
 
             UseInitTheme(isDarkMode)
+
+            const organizationId = store.getters.user?.organizationId
+            if (organizationId && !store.getters.organization?.id) {
+                store.dispatch('fetchOrganization', organizationId).catch((e) => toast(apiErrorMessage(e), 'error'))
+            }
         })
         return {
+            vatRegistered,
             user: computed(() => store.getters.user),
             isActive: (to) => {
                 return activeRoute.value.startsWith(to)
