@@ -88,6 +88,11 @@ describe('InvoiceService, what the server sets', () => {
         approved_at: '2026-01-02T10:00:00',
         approved_by: 1,
         vat_by_code: [{ code: 'S01', rate: 0.25, base: 300, vat: 75 }],
+        kind: 'credit_note',
+        credits_invoice_id: 1,
+        credits_invoice_no: '10',
+        credit_notes: [{ id: 3, invoice_no: '11', state: 'approved', gross_amount: 500 }],
+        credited_amount: 500,
     }
     const SERVER_FIELDS = [
         'state',
@@ -98,6 +103,11 @@ describe('InvoiceService, what the server sets', () => {
         'approved_at',
         'approved_by',
         'vat_by_code',
+        'kind',
+        'credits_invoice_id',
+        'credits_invoice_no',
+        'credit_notes',
+        'credited_amount',
     ]
 
     it.each(['update', 'create'])('does not send them when it %ss a draft', (action) => {
@@ -120,5 +130,11 @@ describe('InvoiceService, what the server sets', () => {
 
         expect(HTTP.post).toHaveBeenNthCalledWith(1, '/organizations/1/invoices/2/approve', {})
         expect(HTTP.post).toHaveBeenNthCalledWith(2, '/organizations/1/invoices/2/approve', { invoice_no: 'INV-7' })
+    })
+
+    it('makes a draft credit note of an approved invoice', () => {
+        InvoiceService.createCreditNote(1, 2)
+
+        expect(HTTP.post).toHaveBeenCalledWith('/organizations/1/invoices/2/credit-note')
     })
 })

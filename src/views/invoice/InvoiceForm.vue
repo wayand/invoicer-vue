@@ -3,7 +3,18 @@
         <div class="page-title">
             <div class="row justify-content-between">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3>{{ invoiceId ? 'Edit' : 'Create' }} Invoice</h3>
+                    <h3>{{ invoiceId ? 'Edit' : 'Create' }} {{ isCreditNote ? 'credit note' : 'Invoice' }}</h3>
+                    <p v-if="isCreditNote" class="credits text-subtitle text-muted mb-0">
+                        Corrects
+                        <router-link :to="{ name: 'ShowInvoice', params: { invoiceId: credits_invoice_id } }"
+                            >invoice #{{ credits_invoice_no }}</router-link
+                        >
+                        <span v-if="remaining !== null" class="creditable" :class="{ 'text-danger': overCredited }">
+                            –
+                            {{ overCredited ? 'more than the' : 'up to' }} {{ $filters.toCurrency(remaining) }}
+                            {{ overCredited ? 'that can be credited' : 'can be credited' }}
+                        </span>
+                    </p>
                 </div>
                 <div class="col-12 col-md-6 order-md-2 order-first" style="text-align: right">
                     <button
@@ -59,7 +70,11 @@
                                 <a class="dropdown-item" href="#" v-if="invoiceId" @click.prevent="createInvoicePDF()"
                                     >Save as PDF</a
                                 >
-                                <a class="dropdown-item" href="#" v-if="invoiceId" @click.prevent="duplicateInvoice()"
+                                <a
+                                    class="dropdown-item"
+                                    href="#"
+                                    v-if="invoiceId && !isCreditNote"
+                                    @click.prevent="duplicateInvoice()"
                                     >Duplicate</a
                                 >
                                 <a
@@ -89,6 +104,7 @@
                                             <fieldset class="form-group">
                                                 <select
                                                     v-model="contactID"
+                                                    :disabled="isCreditNote"
                                                     class="form-select"
                                                     :class="{ 'is-invalid': error.contactID }"
                                                     @change="contactHandler"
@@ -123,7 +139,9 @@
                                         <div class="col-md-5 col-5">
                                             <div class="row">
                                                 <div class="col-md-5">
-                                                    <label>Invoice Number</label>
+                                                    <label>{{
+                                                        isCreditNote ? 'Credit note number' : 'Invoice Number'
+                                                    }}</label>
                                                 </div>
                                                 <div class="col-md-7 form-group">
                                                     <div class="input-group flex-nowrap">
@@ -234,7 +252,10 @@
                                                 </tbody>
                                             </table>
                                         </div>
-                                        <div class="col-12 d-flex justify-content-start">
+                                        <div
+                                            v-if="!isCreditNote"
+                                            class="payment-terms col-12 d-flex justify-content-start"
+                                        >
                                             <div>
                                                 <div>
                                                     Betalingsbetingelser: Netto 8 dage - Forfaldsdato:
@@ -286,6 +307,7 @@ import { useStore } from 'vuex'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import MyDatetimeObject, { todayIso } from '@/utilities/mydate'
 import { isNum, required } from '@/utilities/validators'
+import InvoiceService from '@/services/InvoiceService'
 import { toast } from '@/utilities/toast'
 import { invoiceTotals, ratePercent } from '@/utilities/money'
 
@@ -424,10 +446,37 @@ export default {
         // Only a draft can be deleted (the API refuses an approved invoice)
         const isDraft = computed(() => store.getters.invoice.state === 'draft')
 
+        // A credit note corrects an approved invoice: its customer is the customer of that invoice, and
+        // what it credits is at most what is left of the invoice
+        const isCreditNote = computed(() => store.getters.invoice.kind === 'credit_note')
+        const kindName = computed(() => (isCreditNote.value ? 'credit note' : 'invoice'))
+        const credits_invoice_id = computed(() => store.getters.invoice.credits_invoice_id)
+        const credits_invoice_no = computed(() => store.getters.invoice.credits_invoice_no)
+        const original = ref(null)
+        async function loadOriginal() {
+            original.value = null
+            if (!isCreditNote.value) return
+            try {
+                original.value = (await InvoiceService.getOne(credits_invoice_id.value)).data
+            } catch (e) {
+                toast(e.response?.data?.error || e.message, 'error')
+            }
+        }
+        // In ore: the server counts in cents, and 0.1 + 0.2 is not 0.3
+        const cents = (amount) => Math.round(amount * 100)
+        const remaining = computed(() =>
+            original.value
+                ? (cents(original.value.gross_amount) - cents(original.value.credited_amount || 0)) / 100
+                : null,
+        )
+        const overCredited = computed(
+            () => remaining.value !== null && cents(totals.value.gross_amount) > cents(remaining.value),
+        )
+
         // An approved invoice is part of the books and cannot be edited: show it instead
         const leaveIfApproved = () => {
             if (props.invoiceId && store.getters.invoice.state === 'approved') {
-                toast('An approved invoice cannot be changed', 'warn')
+                toast(`An approved ${kindName.value} cannot be changed`, 'warn')
                 router.replace({ name: 'ShowInvoice', params: { invoiceId: props.invoiceId } })
             }
         }
@@ -441,6 +490,7 @@ export default {
                     })
                     .catch((e) => console.log('fetchInvoice ' + e))
                 selectedContact.value = contacts.value.filter((c) => c.id === contactID.value)[0]
+                await loadOriginal()
             }
         }
 
@@ -639,10 +689,12 @@ export default {
             }
             refDialog.value.data = {
                 type: 'warning',
-                title: 'Approve the invoice',
-                content:
-                    'Approve the invoice? It is posted to the books and gets its invoice number, and it cannot be ' +
-                    'changed afterwards. A mistake is corrected with a credit note.',
+                title: `Approve the ${kindName.value}`,
+                content: isCreditNote.value
+                    ? `Approve the credit note? It is posted to the books, gets its number, and credits invoice #${credits_invoice_no.value}. ` +
+                      'It cannot be changed afterwards.'
+                    : 'Approve the invoice? It is posted to the books and gets its invoice number, and it cannot be ' +
+                      'changed afterwards. A mistake is corrected with a credit note.',
                 accept: 'Yes, approve',
                 reject: 'Cancel',
             }
@@ -656,7 +708,10 @@ export default {
                     invoiceNo: numberIsTyped.value ? invoiceNo.value.trim() : null,
                 })
                 markSaved()
-                toast(`Invoice ${response.data.invoice_no} approved, voucher ${response.data.voucher_no}`, 'success')
+                toast(
+                    `${isCreditNote.value ? 'Credit note' : 'Invoice'} ${response.data.invoice_no} approved, voucher ${response.data.voucher_no}`,
+                    'success',
+                )
                 router.push({ name: 'ShowInvoice', params: { invoiceId: props.invoiceId } })
             } catch (e) {
                 showError(e)
@@ -675,7 +730,7 @@ export default {
             refDialog.value.data = {
                 type: 'warning',
                 title: 'Confirm delete invoice',
-                content: 'Are you sure, you want to delete this draft invoice?',
+                content: `Are you sure, you want to delete this draft ${kindName.value}?`,
                 accept: 'yes, delete invoice',
                 reject: 'No, Cancel',
             }
@@ -720,6 +775,11 @@ export default {
             invoiceDueDate,
             saveInvoice,
             approveInvoice,
+            isCreditNote,
+            credits_invoice_id,
+            credits_invoice_no,
+            remaining,
+            overCredited,
             busy,
             numberIsTyped,
             vatRegistered,

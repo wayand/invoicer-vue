@@ -67,13 +67,15 @@
                                         </template>
                                     </td>
                                     <td class="number">
-                                        {{ invoice.invoice_no ? '#inv' + invoice.invoice_no : 'Draft' }}
+                                        {{ numberOf(invoice) }}
                                     </td>
                                     <td>{{ invoice.invoice_date }}</td>
                                     <td>{{ invoice.duedate }}</td>
                                     <td>{{ invoice.contact.name }}</td>
-                                    <td>{{ $filters.toCurrency(invoice.amount) }}</td>
-                                    <td>{{ $filters.toCurrency(invoice.gross_amount) }}</td>
+                                    <td class="amount">{{ $filters.toCurrency(signed(invoice, invoice.amount)) }}</td>
+                                    <td class="gross">
+                                        {{ $filters.toCurrency(signed(invoice, invoice.gross_amount)) }}
+                                    </td>
                                     <td>
                                         <button type="button" class="edit__invoice btn btn-primary me-1 mb-1 float-end">
                                             <svg
@@ -135,9 +137,19 @@ export default {
                 .catch((e) => toast('Invoices ' + e, 'error'))
         })
 
+        // A credit note has positive amounts on the document, and reduces what is owed: it is shown with a minus
+        const signed = (invoice, amount) => (invoice.kind === 'credit_note' && amount ? 0 - amount : amount)
+        const numberOf = (invoice) => {
+            const credit = invoice.kind === 'credit_note'
+            if (!invoice.invoice_no) return credit ? 'Draft credit note' : 'Draft'
+            return credit ? `Credit note #${invoice.invoice_no}` : `#inv${invoice.invoice_no}`
+        }
+
         return {
             error,
             invoices,
+            signed,
+            numberOf,
             clickHandler,
             preview,
             edit,

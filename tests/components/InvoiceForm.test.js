@@ -683,3 +683,175 @@ describe('invoice form, approving', () => {
         })
     })
 })
+
+describe('invoice form, credit notes', () => {
+    // A draft credit note of 500 + VAT, for an invoice of 1,250 of which 500 is credited already
+    const note = {
+        ...saved,
+        id: 3,
+        invoice_no: null,
+        kind: 'credit_note',
+        credits_invoice_id: 2,
+        credits_invoice_no: '10',
+        lines: [{ ...saved.lines[0], id: 21, invoice_id: 3, quantity: 4, unit_price: 100 }],
+    }
+    const original = { ...saved, id: 2, invoice_no: '10', state: 'approved', gross_amount: 1250, credited_amount: 500 }
+
+    const open = async (invoice = note, source = original) => {
+        InvoiceService.getOne.mockImplementation(async (id) => ({
+            data: structuredClone(String(id) === String(invoice.id) ? invoice : source),
+        }))
+        return openForm(`/invoices/${invoice.id}/edit`)
+    }
+
+    beforeEach(() => {
+        vi.clearAllMocks()
+        answer = true
+        InvoiceService.approve.mockResolvedValue({
+            data: { ...note, state: 'approved', invoice_no: '11', voucher_no: 2, journal_entry_id: 42 },
+        })
+    })
+    afterEach(() => {
+        answer = false
+    })
+
+    it('is a credit note: the title, and the invoice it corrects, which is linked', async () => {
+        const { wrapper, router } = await open()
+
+        expect(wrapper.find('h3').text()).toBe('Edit credit note')
+        expect(wrapper.find('.credits').text()).toContain('Corrects invoice #10')
+        await wrapper.find('.credits a').trigger('click')
+        await flushPromises()
+        expect(router.currentRoute.value.path).toBe('/invoices/2')
+    })
+
+    it('has the customer of the invoice, which cannot be changed', async () => {
+        const { wrapper } = await open()
+
+        expect(wrapper.find('select.form-select').attributes('disabled')).toBeDefined()
+        expect(wrapper.find('select.form-select').element.value).toBe('5')
+    })
+
+    it('has its own number, and is not duplicated', async () => {
+        const { wrapper } = await open()
+
+        expect(wrapper.text()).toContain('Credit note number')
+        expect(wrapper.findAll('a.dropdown-item').map((link) => link.text())).toEqual([
+            'Preview',
+            'Save as PDF',
+            'Delete',
+        ])
+    })
+
+    it('says how much of the invoice can still be credited', async () => {
+        const { wrapper } = await open()
+
+        // 1,250 less the 500 that is credited already
+        expect(wrapper.find('.creditable').text()).toBe('– up to 750 can be credited')
+        expect(wrapper.find('.creditable').classes()).not.toContain('text-danger')
+        expect(InvoiceService.getOne).toHaveBeenCalledWith(2)
+    })
+
+    it('warns in red when the credit note credits more than that', async () => {
+        const { wrapper } = await open({
+            ...note,
+            lines: [{ ...note.lines[0], quantity: 7 }], // 700 + 175 VAT is more than 750
+        })
+
+        expect(wrapper.find('.creditable').text()).toBe('– more than the 750 that can be credited')
+        expect(wrapper.find('.creditable').classes()).toContain('text-danger')
+    })
+
+    it('follows the lines as they are changed', async () => {
+        const { wrapper } = await open({ ...note, lines: [{ ...note.lines[0], quantity: 7 }] })
+
+        await wrapper.find('input.quantity').setValue(4)
+        await flushPromises()
+
+        expect(wrapper.find('.creditable').classes()).not.toContain('text-danger')
+    })
+
+    it('asks first, and says which invoice it credits', async () => {
+        answer = false
+        const { wrapper } = await open()
+
+        await wrapper.find('button[name="approve"]').trigger('click')
+        await flushPromises()
+
+        expect(confirmations).toHaveBeenCalledWith('Approve the credit note')
+        expect(InvoiceService.approve).not.toHaveBeenCalled()
+    })
+
+    it('is approved like an invoice, and the message says it is a credit note', async () => {
+        const { wrapper, router } = await open()
+
+        await wrapper.find('button[name="approve"]').trigger('click')
+        await flushPromises()
+
+        expect(InvoiceService.approve).toHaveBeenCalledWith(1, '3', null)
+        expect(toast).toHaveBeenCalledWith('Credit note 11 approved, voucher 2', 'success')
+        expect(router.currentRoute.value.name).toBe('ShowInvoice')
+    })
+
+    it('shows the reason when the server refuses it', async () => {
+        InvoiceService.approve.mockRejectedValue({
+            response: { data: { error: 'Invoice 10 is 1250.00, and 500.00 is credited already' } },
+        })
+        const { wrapper, router } = await open()
+
+        await wrapper.find('button[name="approve"]').trigger('click')
+        await flushPromises()
+
+        expect(toast).toHaveBeenCalledWith('Invoice 10 is 1250.00, and 500.00 is credited already', 'error')
+        expect(router.currentRoute.value.name).toBe('EditInvoice')
+    })
+
+    it('can be deleted as a draft, and asks about the credit note', async () => {
+        InvoiceService.delete.mockResolvedValue({})
+        const { wrapper } = await open()
+        const del = wrapper.findAll('a.dropdown-item').find((link) => link.text() === 'Delete')
+
+        del.element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+        await flushPromises()
+
+        expect(confirmations).toHaveBeenCalledWith('Confirm delete invoice')
+        expect(InvoiceService.delete).toHaveBeenCalledWith(1, 3)
+    })
+
+    it('is not edited once approved: it is shown, and the user is told it is a credit note', async () => {
+        const { router } = await open({ ...note, state: 'approved', invoice_no: '11', journal_entry_id: 42 })
+
+        expect(router.currentRoute.value.name).toBe('ShowInvoice')
+        expect(toast).toHaveBeenCalledWith('An approved credit note cannot be changed', 'warn')
+    })
+
+    it('says so when the invoice it corrects cannot be read', async () => {
+        InvoiceService.getOne.mockImplementation(async (id) => {
+            if (String(id) === '3') return { data: structuredClone(note) }
+            throw { response: { data: { error: 'Invoice with id 2 not found!' } } }
+        })
+
+        const { wrapper } = await openForm('/invoices/3/edit')
+
+        expect(toast).toHaveBeenCalledWith('Invoice with id 2 not found!', 'error')
+        expect(wrapper.find('.creditable').exists()).toBe(false)
+    })
+
+    it('has no payment terms: a credit note is not paid', async () => {
+        const { wrapper } = await open()
+
+        expect(wrapper.find('.payment-terms').exists()).toBe(false)
+    })
+
+    it('is an invoice again when it is not a credit note: the title, the customer, the menu', async () => {
+        InvoiceService.getOne.mockResolvedValue({ data: structuredClone(saved) })
+
+        const { wrapper } = await openForm('/invoices/2/edit')
+
+        expect(wrapper.find('h3').text()).toBe('Edit Invoice')
+        expect(wrapper.find('.credits').exists()).toBe(false)
+        expect(wrapper.find('.payment-terms').exists()).toBe(true)
+        expect(wrapper.find('select.form-select').attributes('disabled')).toBeUndefined()
+        expect(wrapper.findAll('a.dropdown-item').map((link) => link.text())).toContain('Duplicate')
+    })
+})

@@ -35,6 +35,12 @@ export default {
                 return response
             })
         },
+        createCreditNote({ commit }, { organizationId, invoiceId }) {
+            return InvoiceService.createCreditNote(organizationId, invoiceId).then((response) => {
+                commit('ADD_INVOICE', response.data)
+                return response
+            })
+        },
         // The invoice that comes back is the approved one, with its number and voucher
         approveInvoice({ commit }, { organizationId, invoiceId, invoiceNo }) {
             return InvoiceService.approve(organizationId, invoiceId, invoiceNo).then((response) => {

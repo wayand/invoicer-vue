@@ -117,4 +117,39 @@ describe('InvoicePreview', () => {
             expect(text).toContain(expected)
         }
     })
+
+    it('is a Faktura with payment terms and a due date', () => {
+        const wrapper = mountPreview({}, { invoice_no: '10', duedate: '2026-11-15', kind: 'invoice' })
+
+        expect(wrapper.find('td.title').text()).toBe('Faktura')
+        expect(wrapper.text()).toContain('Fakturanr.: 10')
+        expect(wrapper.text()).toContain('Forfaldsdato: 2026-11-15')
+        expect(wrapper.find('.payment-terms').exists()).toBe(true)
+    })
+
+    it('is a Kreditnota for a credit note: its own number, and the invoice it refers to, and no payment terms', () => {
+        const wrapper = mountPreview(
+            {},
+            {
+                kind: 'credit_note',
+                invoice_no: '11',
+                credits_invoice_no: '10',
+                invoice_date: '2026-11-01',
+                duedate: '2026-11-01',
+                amount: 400,
+                vat_amount: 100,
+                gross_amount: 500,
+                vat_by_code: [{ code: 'S01', rate: 0.25, base: 400, vat: 100 }],
+            },
+        )
+
+        expect(wrapper.find('td.title').text()).toBe('Kreditnota')
+        expect(wrapper.text()).toContain('Kreditnotanr.: 11')
+        expect(wrapper.text()).toContain('Kreditnotadato: 2026-11-01')
+        expect(wrapper.find('.credits').text()).toBe('Vedrører faktura nr.: 10')
+        expect(wrapper.text()).not.toContain('Forfaldsdato')
+        expect(wrapper.find('.payment-terms').exists()).toBe(false)
+        // The amounts are positive, as on a printed credit note
+        expect(wrapper.text()).toContain('I alt inkl. momskr 500.00')
+    })
 })
