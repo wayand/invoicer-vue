@@ -18,6 +18,11 @@ const withoutAmounts = ({
     approved_at,
     approved_by,
     vat_by_code,
+    kind,
+    credits_invoice_id,
+    credits_invoice_no,
+    credit_notes,
+    credited_amount,
     lines = [],
     ...invoice
 }) => ({
@@ -48,6 +53,11 @@ export default {
             `/organizations/${organizationId}/invoices/${invoiceId}/approve`,
             invoiceNo ? { invoice_no: invoiceNo } : {},
         )
+    },
+    // A draft credit note for an approved invoice, with its lines copied. It is edited and approved
+    // like an invoice.
+    createCreditNote(organizationId, invoiceId) {
+        return HTTP.post(`/organizations/${organizationId}/invoices/${invoiceId}/credit-note`)
     },
     delete(organizationId, invoiceId) {
         return HTTP.delete(`/organizations/${organizationId}/invoices/${invoiceId}`)

@@ -3,8 +3,26 @@
         <div class="page-title">
             <div class="row justify-content-between">
                 <div class="col-12 col-md-6 order-md-1 order-last">
-                    <h3 v-if="isDraft">Draft invoice for {{ contactName }}</h3>
-                    <h3 v-else>Invoice #{{ invoiceNo }} for {{ contactName }}</h3>
+                    <h3 v-if="isDraft">Draft {{ kindName.toLowerCase() }} for {{ contactName }}</h3>
+                    <h3 v-else>{{ kindName }} #{{ invoiceNo }} for {{ contactName }}</h3>
+                    <p v-if="isCreditNote" class="credits text-subtitle text-muted mb-0">
+                        Corrects
+                        <router-link :to="{ name: 'ShowInvoice', params: { invoiceId: invoice.credits_invoice_id } }"
+                            >invoice #{{ invoice.credits_invoice_no }}</router-link
+                        >
+                    </p>
+                    <p v-if="creditNotes.length" class="credit-notes text-subtitle text-muted mb-0">
+                        Credit notes:
+                        <template v-for="(note, index) in creditNotes" :key="note.id">
+                            <router-link :to="{ name: 'ShowInvoice', params: { invoiceId: note.id } }">{{
+                                note.invoice_no ? '#' + note.invoice_no : 'draft'
+                            }}</router-link>
+                            {{ '(' + $filters.toCurrency(note.gross_amount) + ')' + commaAfter(index) }}
+                        </template>
+                        <span v-if="invoice.credited_amount" class="credited"
+                            >{{ $filters.toCurrency(invoice.credited_amount) }} credited</span
+                        >
+                    </p>
                     <p v-if="invoice.journal_entry_id" class="voucher text-subtitle text-muted mb-0">
                         Posted as
                         <router-link :to="{ name: 'ShowVoucher', params: { entryId: invoice.journal_entry_id } }"
@@ -36,8 +54,13 @@
                                     @click="markInvoiceAsSent"
                                     >Mark as sent</a
                                 >
+                                <a v-if="canCredit" class="dropdown-item" href="#" @click.prevent="createCreditNote"
+                                    >Credit note</a
+                                >
                                 <a class="dropdown-item" href="#" @click="generatePdf()">Save as PDF</a>
-                                <a class="dropdown-item" href="#" @click.prevent="duplicateInvoice">Duplicate</a>
+                                <a v-if="!isCreditNote" class="dropdown-item" href="#" @click.prevent="duplicateInvoice"
+                                    >Duplicate</a
+                                >
                                 <a v-if="isDraft" class="dropdown-item" href="#" @click.prevent="deleteInvoice"
                                     >Delete</a
                                 >
@@ -112,6 +135,14 @@ export default {
         const invoiceNo = computed(() => store.getters.invoice.invoice_no)
         const contactName = computed(() => store.getters.invoice.contact?.name)
         const isApproved = computed(() => store.getters.invoice.state === 'approved')
+        const isCreditNote = computed(() => store.getters.invoice.kind === 'credit_note')
+        const kindName = computed(() => (isCreditNote.value ? 'Credit note' : 'Invoice'))
+        const creditNotes = computed(() => store.getters.invoice.credit_notes || [])
+        // An approved invoice can be credited, until it is credited in full
+        const canCredit = computed(() => {
+            const { gross_amount, credited_amount = 0 } = store.getters.invoice
+            return isApproved.value && !isCreditNote.value && gross_amount > 0 && credited_amount < gross_amount
+        })
         // Only a draft can be edited or deleted: an approved invoice is part of the books
         const isDraft = computed(() => store.getters.invoice.state === 'draft')
         const refDialog = ref()
@@ -137,6 +168,23 @@ export default {
                         console.log(e.message)
                         toast(e.response.data.error || e.message, 'error')
                     })
+            }
+        }
+
+        // A comma after a credit note when something follows it in the list
+        const commaAfter = (index) =>
+            index < creditNotes.value.length - 1 || store.getters.invoice.credited_amount ? ', ' : ''
+
+        // A draft credit note with the lines of this invoice, to edit and approve
+        const createCreditNote = async () => {
+            try {
+                const response = await store.dispatch('createCreditNote', {
+                    organizationId: store.getters.user.organizationId,
+                    invoiceId: parseInt(invoiceId.value),
+                })
+                router.push({ name: 'EditInvoice', params: { invoiceId: response.data.id } })
+            } catch (e) {
+                toast(e.response?.data?.error || e.message, 'error')
             }
         }
 
@@ -186,6 +234,12 @@ export default {
             invoice,
             isApproved,
             isDraft,
+            isCreditNote,
+            kindName,
+            creditNotes,
+            canCredit,
+            createCreditNote,
+            commaAfter,
             invoiceNo,
             contactName,
             markInvoiceAsSent,

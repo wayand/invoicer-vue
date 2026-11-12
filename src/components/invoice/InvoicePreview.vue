@@ -50,15 +50,20 @@
                         <table class="table">
                             <tbody>
                                 <tr>
-                                    <td class="title">Faktura</td>
+                                    <td class="title">{{ isCreditNote ? 'Kreditnota' : 'Faktura' }}</td>
                                     <td class="text-end">
-                                        Fakturanr.:
+                                        {{ isCreditNote ? 'Kreditnotanr.' : 'Fakturanr.' }}:
                                         <span class="invoice-no fw-bold">{{ invoice.invoice_no || 'kladde' }}</span>
                                     </td>
                                     <td class="text-end">
-                                        Fakturadato: <span class="fw-bold">{{ invoice.invoice_date }}</span>
+                                        {{ isCreditNote ? 'Kreditnotadato' : 'Fakturadato' }}:
+                                        <span class="fw-bold">{{ invoice.invoice_date }}</span>
                                     </td>
-                                    <td class="text-end">
+                                    <td v-if="isCreditNote" class="credits text-end">
+                                        Vedrører faktura nr.:
+                                        <span class="fw-bold">{{ invoice.credits_invoice_no }}</span>
+                                    </td>
+                                    <td v-else class="text-end">
                                         Forfaldsdato: <span class="fw-bold">{{ invoice.duedate }}</span>
                                     </td>
                                 </tr>
@@ -107,7 +112,7 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="col-12 d-flex justify-content-start mt-5">
+                    <div v-if="!isCreditNote" class="payment-terms col-12 d-flex justify-content-start mt-5">
                         <div>
                             <div>
                                 Betalingsbetingelser: Netto 8 dage - Forfaldsdato: {{ invoice.duedate }}
@@ -182,7 +187,11 @@ export default {
         // and the VAT of each code on the invoice, as a Danish invoice must show it
         const vatByCode = computed(() => invoice.value.vat_by_code || [])
 
+        // A credit note is shown as one: its amounts are positive, as on a printed credit note
+        const isCreditNote = computed(() => invoice.value.kind === 'credit_note')
+
         return {
+            isCreditNote,
             organizationLogo,
             total_ex_vat,
             vatAmount,

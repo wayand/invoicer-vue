@@ -29,6 +29,7 @@ const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
         fetchInvoice: vi.fn(),
         deleteInvoice: vi.fn(),
         markInvoiceAsSent: vi.fn(),
+        createCreditNote: vi.fn(),
     }
     const store = createStore({
         state: () => ({ invoice }),
@@ -45,7 +46,7 @@ const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
             { path: '/invoices', name: 'Invoices', component: page() },
             { path: '/invoices/new', name: 'NewInvoice', component: page() },
             { path: '/invoices/:invoiceId', name: 'ShowInvoice', component: ShowInvoice, props: true },
-            { path: '/invoices/:invoiceId/edit', name: 'EditInvoice', component: page() },
+            { path: '/invoices/:invoiceId/edit', name: 'EditInvoice', component: page(), props: true },
             { path: '/vouchers/:entryId(\\d+)', name: 'ShowVoucher', component: page(), props: true },
         ],
     })
@@ -69,7 +70,12 @@ const mountPage = async ({ invoice = draft, confirm = true } = {}) => {
     // Mounted inside a router view like in the app, so the page goes away when
     // the route changes
     const wrapper = mount(defineComponent({ render: () => h(RouterView) }), {
-        global: { plugins: [store, router], components: { PromiseDialog }, stubs: { teleport: true } },
+        global: {
+            plugins: [store, router],
+            components: { PromiseDialog },
+            stubs: { teleport: true },
+            mocks: { $filters: { toCurrency: (value) => Number(value).toFixed(2) } },
+        },
     })
     await flushPromises()
     return { wrapper, router, asked }
@@ -184,5 +190,125 @@ describe('ShowInvoice Delete', () => {
         await click(wrapper, 'Delete')
 
         expect(toast).toHaveBeenCalledWith('Network Error', 'error')
+    })
+})
+
+describe('ShowInvoice, credit notes', () => {
+    beforeEach(() => vi.clearAllMocks())
+
+    const credited = { ...approved, gross_amount: 1250, credited_amount: 0, credit_notes: [] }
+    const note = {
+        ...approved,
+        id: 3,
+        invoice_no: '11',
+        kind: 'credit_note',
+        credits_invoice_id: 2,
+        credits_invoice_no: '10',
+        gross_amount: 500,
+    }
+
+    describe('making one', () => {
+        it.each([
+            ['an approved invoice', credited, true],
+            ['an invoice that is credited in part', { ...credited, credited_amount: 500 }, true],
+            ['an invoice that is credited in full', { ...credited, credited_amount: 1250 }, false],
+            ['a draft', { ...draft, gross_amount: 1250 }, false],
+            ['a credit note: there is no credit note of a credit note', note, false],
+            ['an invoice of nothing', { ...credited, gross_amount: 0 }, false],
+        ])('%s: the Credit note item is %s', async (_name, invoice, shown) => {
+            const { wrapper } = await mountPage({ invoice })
+
+            expect(menu(wrapper).includes('Credit note')).toBe(shown)
+        })
+
+        it('makes a draft credit note and opens it for editing', async () => {
+            const { wrapper, router } = await mountPage({ invoice: credited })
+            actions.createCreditNote.mockResolvedValue({ data: { id: 7 } })
+
+            await click(wrapper, 'Credit note')
+
+            expect(actions.createCreditNote).toHaveBeenCalledTimes(1)
+            expect(actions.createCreditNote.mock.calls[0][1]).toEqual({ organizationId: 1, invoiceId: 2 })
+            expect(router.currentRoute.value.name).toBe('EditInvoice')
+            expect(router.currentRoute.value.params.invoiceId).toBe('7')
+        })
+
+        it('says why the server refused, and stays on the invoice', async () => {
+            const { wrapper, router } = await mountPage({ invoice: credited })
+            actions.createCreditNote.mockRejectedValue({
+                response: { data: { error: 'Invoice 10 is already credited in full' } },
+            })
+
+            await click(wrapper, 'Credit note')
+
+            expect(toast).toHaveBeenCalledWith('Invoice 10 is already credited in full', 'error')
+            expect(router.currentRoute.value.name).toBe('ShowInvoice')
+        })
+    })
+
+    describe('showing one', () => {
+        it('says it is a credit note, and links the invoice it corrects', async () => {
+            const { wrapper, router } = await mountPage({ invoice: note })
+
+            expect(wrapper.find('h3').text()).toBe('Credit note #11 for Acme')
+            expect(wrapper.find('.credits').text()).toBe('Corrects invoice #10')
+            await wrapper.find('.credits a').trigger('click')
+            await flushPromises()
+            expect(router.currentRoute.value.path).toBe('/invoices/2')
+        })
+
+        it('is a draft credit note while it has no number', async () => {
+            const { wrapper } = await mountPage({ invoice: { ...note, state: 'draft', invoice_no: null } })
+
+            expect(wrapper.find('h3').text()).toBe('Draft credit note for Acme')
+        })
+
+        it('is not duplicated: a mistake is corrected with a new invoice', async () => {
+            const { wrapper } = await mountPage({ invoice: note })
+
+            expect(menu(wrapper)).not.toContain('Duplicate')
+        })
+
+        it('is read-only once approved, like an invoice, and can be marked as sent', async () => {
+            const { wrapper } = await mountPage({ invoice: note })
+
+            expect(menu(wrapper)).toEqual(['Mark as sent', 'Save as PDF'])
+        })
+    })
+
+    describe('what an invoice shows of its credit notes', () => {
+        const withNotes = {
+            ...credited,
+            credited_amount: 500,
+            credit_notes: [
+                { id: 3, invoice_no: '11', state: 'approved', gross_amount: 500 },
+                { id: 4, invoice_no: null, state: 'draft', gross_amount: 750 },
+            ],
+        }
+
+        it('lists them with links, drafts too, and what the approved ones credit', async () => {
+            const { wrapper, router } = await mountPage({ invoice: withNotes })
+
+            expect(wrapper.find('.credit-notes').text()).toBe(
+                'Credit notes: #11 (500.00), draft (750.00), 500.00 credited',
+            )
+            await wrapper.findAll('.credit-notes a')[0].trigger('click')
+            await flushPromises()
+            expect(router.currentRoute.value.path).toBe('/invoices/3')
+        })
+
+        it('says nothing when there are none', async () => {
+            const { wrapper } = await mountPage({ invoice: credited })
+
+            expect(wrapper.find('.credit-notes').exists()).toBe(false)
+        })
+
+        it('does not say "credited" while only drafts exist', async () => {
+            const { wrapper } = await mountPage({
+                invoice: { ...credited, credit_notes: [withNotes.credit_notes[1]] },
+            })
+
+            expect(wrapper.find('.credit-notes').text()).toBe('Credit notes: draft (750.00)')
+        })
     })
 })

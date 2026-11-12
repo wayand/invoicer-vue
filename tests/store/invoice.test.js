@@ -13,6 +13,7 @@ vi.mock('@/services/InvoiceService', () => ({
         update: vi.fn(),
         delete: vi.fn(),
         approve: vi.fn(),
+        createCreditNote: vi.fn(),
         markInvoiceAsSent: vi.fn(),
         deleteInvoiceLine: vi.fn(),
     },
@@ -182,5 +183,26 @@ describe('invoice store: actions', () => {
         await store.dispatch('markInvoiceAsSent', { invoiceId: 2, is_sent: true })
 
         expect(store.getters.invoice).toEqual(sent)
+    })
+
+    it('adds the draft credit note to the list', async () => {
+        const note = { id: 3, kind: 'credit_note', credits_invoice_id: 2, state: 'draft' }
+        InvoiceService.createCreditNote.mockResolvedValue({ data: note })
+        store.commit('SET_INVOICES', [{ id: 2 }])
+
+        const response = await store.dispatch('createCreditNote', { organizationId: 1, invoiceId: 2 })
+
+        expect(InvoiceService.createCreditNote).toHaveBeenCalledWith(1, 2)
+        expect(response.data).toEqual(note)
+        expect(store.getters.invoices).toEqual([{ id: 2 }, note])
+    })
+
+    it('does not add anything when the API refuses the credit note', async () => {
+        InvoiceService.createCreditNote.mockRejectedValue({ response: { status: 409 } })
+        store.commit('SET_INVOICES', [{ id: 2 }])
+
+        await expect(store.dispatch('createCreditNote', { organizationId: 1, invoiceId: 2 })).rejects.toBeTruthy()
+
+        expect(store.getters.invoices).toEqual([{ id: 2 }])
     })
 })
